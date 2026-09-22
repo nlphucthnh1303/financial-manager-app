@@ -1,0 +1,6 @@
+node_modules
+dist
+stitch_shadcn_ui_dashboard_redesign
+.env
+.env.*
+!.env.example

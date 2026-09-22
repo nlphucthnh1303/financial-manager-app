@@ -1,0 +1,21 @@
+# Dependencies / build output
+node_modules/
+dist/
+bin/
+obj/
+*.user
+.vs/
+.idea/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Test output
+tests/reports/
+
+# OS / logs
+.DS_Store
+*.log
+db-backups/

@@ -1,0 +1,15 @@
+{
+  "name": "financial-manager-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Financial Manager Application - Personal Finance Management (PFM)",
+  "scripts": {
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"cyan,magenta\" \"dotnet run --project back-end/src/FinancialManager.Api/FinancialManager.Api.csproj\" \"npm --prefix front-end run dev\"",
+    "start": "npm run dev",
+    "backend": "dotnet run --project back-end/src/FinancialManager.Api/FinancialManager.Api.csproj",
+    "frontend": "npm --prefix front-end run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.4"
+  }
+}

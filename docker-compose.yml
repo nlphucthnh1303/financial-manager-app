@@ -1,0 +1,39 @@
+# Triển khai: cp .env.example .env  →  sửa mật khẩu/secret  →  docker compose up -d --build
+# Ứng dụng chạy ở http://localhost:${APP_PORT:-8080}
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: financial-manager-app
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Cần đặt POSTGRES_PASSWORD trong .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d financial-manager-app"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: ./back-end
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=financial-manager-app;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      JwtSettings__Secret: ${JWT_SECRET:?Cần đặt JWT_SECRET trong .env (ít nhất 32 ký tự)}
+      Cors__AllowedOrigins__0: ${APP_ORIGIN:-http://localhost:8080}
+      RateLimiting__AuthPermitPerMinute: ${AUTH_RATE_LIMIT:-10}
+
+  web:
+    build: ./front-end
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${APP_PORT:-8080}:80"
+
+volumes:
+  db-data:

@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Financial Manager - PFM System</title>
+<!-- Google Fonts: Inter & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 CDN with forms and container queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Lucide Icons via unpkg -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Tailwind Configuration for High-End Linear/Vercel Aesthetic -->
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
+          },
+          colors: {
+            app: {
+              bg: '#090a0c',
+              subtle: '#0f1115',
+              surface: 'rgba(18, 20, 26, 0.65)',
+              border: 'rgba(255, 255, 255, 0.08)',
+              borderHover: 'rgba(255, 255, 255, 0.14)',
+            },
+            gain: {
+              light: '#34d399',
+              DEFAULT: '#10b981',
+              dark: '#064e3b',
+              surface: 'rgba(16, 185, 129, 0.08)',
+              border: 'rgba(16, 185, 129, 0.22)',
+            },
+            loss: {
+              light: '#fb7185',
+              DEFAULT: '#f43f5e',
+              dark: '#4c0519',
+              surface: 'rgba(244, 63, 94, 0.08)',
+              border: 'rgba(244, 63, 94, 0.22)',
+            }
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-scrollbar">
+    /* Subtle dark scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  </style>
+<style data-purpose="chart-craft">
+    .chart-bar-glow {
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .chart-bar-glow:hover {
+      filter: brightness(1.2) drop-shadow(0 0 10px rgba(52, 211, 153, 0.35));
+    }
+    .chart-bar-loss-glow:hover {
+      filter: brightness(1.2) drop-shadow(0 0 10px rgba(251, 113, 133, 0.35));
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body class="bg-[#090a0c] text-zinc-100 antialiased font-sans min-h-screen flex selection:bg-zinc-800 selection:text-white relative" style="font-family: 'Inter', sans-serif; font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'tnum' 1;">
+<!-- Subtle radial ambient background light -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-35">
+<div class="absolute -top-[20%] left-1/3 w-[600px] h-[500px] bg-gradient-to-br from-emerald-500/10 via-sky-500/5 to-transparent blur-[120px] rounded-full"></div>
+<div class="absolute top-[40%] right-[-10%] w-[500px] h-[500px] bg-gradient-to-bl from-indigo-500/10 via-purple-500/5 to-transparent blur-[130px] rounded-full"></div>
+</div>
+<!-- BEGIN: MainSidebar -->
+<aside class="w-64 border-r border-white/[0.07] bg-[#090a0c]/95 backdrop-blur-xl flex flex-col fixed inset-y-0 left-0 z-30 transition-all duration-300" data-purpose="application-sidebar">
+<!-- Brand / Workspace switcher -->
+<div class="h-16 px-4 border-b border-white/[0.07] flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="h-8 w-8 rounded-lg bg-white/[0.06] border border-white/[0.12] text-zinc-100 flex items-center justify-center shadow-inner">
+<i class="w-4 h-4 stroke-[2]" data-lucide="wallet"></i>
+</div>
+<div class="flex flex-col">
+<span class="text-xs font-semibold tracking-tight text-zinc-100 leading-tight">Financial Manager</span>
+<span class="text-[10px] font-mono text-zinc-400">PFM System v2.4</span>
+</div>
+</div>
+<button aria-label="Dark mode toggle" class="h-7 w-7 flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] rounded-md border border-white/[0.06] transition-colors" type="button">
+<i class="w-3.5 h-3.5 text-zinc-300" data-lucide="moon"></i>
+</button>
+</div>
+<!-- Quick action create transaction -->
+<div class="px-3 pt-3.5 pb-1.5">
+<button class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium bg-zinc-100 hover:bg-white text-zinc-950 rounded-lg shadow-sm transition-all duration-150 active:scale-[0.98]" type="button">
+<i class="w-3.5 h-3.5 stroke-[2.2]" data-lucide="plus-circle"></i>
+<span>Tạo giao dịch mới</span>
+</button>
+</div>
+<!-- Navigation links -->
+<nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto" data-purpose="sidebar-navigation">
+<div class="text-[10px] uppercase font-semibold text-zinc-400/80 tracking-widest px-2.5 pt-3 pb-1.5 font-mono">Menu chính</div>
+<a class="flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-lg bg-white/[0.07] text-zinc-100 border border-white/[0.08] shadow-sm transition-colors" href="#">
+<i class="w-4 h-4 text-emerald-400" data-lucide="layout-dashboard"></i>
+<span>Bảng tổng quan</span>
+</a>
+<a class="flex items-center justify-between px-2.5 py-2 text-xs font-medium rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] transition-colors group" href="#">
+<div class="flex items-center gap-2.5">
+<i class="w-4 h-4 text-zinc-400 group-hover:text-zinc-300 transition-colors" data-lucide="arrow-left-right"></i>
+<span>Giao dịch</span>
+</div>
+<span class="text-[10px] bg-white/[0.06] text-zinc-400 border border-white/[0.06] px-1.5 py-0.2 rounded font-mono">14</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] transition-colors group" href="#">
+<i class="w-4 h-4 text-zinc-400 group-hover:text-zinc-300 transition-colors" data-lucide="credit-card"></i>
+<span>Ví &amp; Tài khoản</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] transition-colors group" href="#">
+<i class="w-4 h-4 text-zinc-400 group-hover:text-zinc-300 transition-colors" data-lucide="tags"></i>
+<span>Danh mục &amp; Tags</span>
+</a>
+<div class="text-[10px] uppercase font-semibold text-zinc-400/80 tracking-widest px-2.5 pt-4 pb-1.5 font-mono">Kế hoạch &amp; Báo cáo</div>
+<a class="flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] transition-colors group" href="#">
+<i class="w-4 h-4 text-zinc-400 group-hover:text-zinc-300 transition-colors" data-lucide="pie-chart"></i>
+<span>Ngân sách</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] transition-colors group" href="#">
+<i class="w-4 h-4 text-zinc-400 group-hover:text-zinc-300 transition-colors" data-lucide="receipt"></i>
+<span>Hóa đơn &amp; Định kỳ</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] transition-colors group" href="#">
+<i class="w-4 h-4 text-zinc-400 group-hover:text-zinc-300 transition-colors" data-lucide="piggy-bank"></i>
+<span>Hũ tiết kiệm</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] transition-colors group" href="#">
+<i class="w-4 h-4 text-zinc-400 group-hover:text-zinc-300 transition-colors" data-lucide="bar-chart-3"></i>
+<span>Báo cáo Thống kê</span>
+</a>
+<a class="flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] transition-colors group" href="#">
+<i class="w-4 h-4 text-zinc-400 group-hover:text-zinc-300 transition-colors" data-lucide="dollar-sign"></i>
+<span>Tiền tệ &amp; Tỷ giá</span>
+</a>
+</nav>
+<!-- Bottom user profile card -->
+<div class="p-3 border-t border-white/[0.07] bg-transparent">
+<div class="flex items-center justify-between p-2 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.12] transition-colors cursor-pointer group">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="h-7 w-7 rounded-full bg-gradient-to-tr from-zinc-800 to-zinc-700 text-zinc-200 flex items-center justify-center font-mono font-medium text-xs border border-white/[0.1] flex-shrink-0">
+  N
+</div>
+<div class="truncate">
+<p class="text-xs font-medium text-zinc-200 truncate group-hover:text-white">Nguyễn Lê Phúc Thịnh</p>
+<p class="text-[10px] text-zinc-400 font-mono truncate">niphucnh@gmail.com</p>
+</div>
+</div>
+<i class="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300 flex-shrink-0 ml-1" data-lucide="log-out"></i>
+</div>
+</div>
+</aside>
+<!-- END: MainSidebar -->
+<!-- BEGIN: MainContentWrapper -->
+<div class="pl-64 flex-1 flex flex-col min-w-0 min-h-screen relative z-10">
+<!-- BEGIN: TopBar -->
+<header class="sticky top-0 z-20 h-16 bg-[#090a0c]/80 backdrop-blur-xl border-b border-white/[0.07] px-8 flex items-center justify-between gap-4" data-purpose="top-navigation">
+<!-- Breadcrumbs and context -->
+<div class="flex items-center gap-3">
+<div class="flex items-center text-xs font-medium text-zinc-400">
+<span class="hover:text-zinc-300 cursor-pointer">PFM</span>
+<i class="w-3.5 h-3.5 mx-1.5 text-zinc-600 stroke-[1.5]" data-lucide="chevron-right"></i>
+<span class="text-zinc-200">Bảng tổng quan</span>
+</div>
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+  Hệ thống kết nối
+</span>
+</div>
+<!-- Header actions & search -->
+<div class="flex items-center gap-2.5">
+<!-- Command Search Bar -->
+<div class="relative hidden sm:block w-64">
+<i class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" data-lucide="search"></i>
+<input class="w-full bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.14] rounded-lg pl-8.5 pr-11 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition font-sans" placeholder="Tìm kiếm nhanh..." type="text"/>
+<kbd class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 hidden h-4 select-none items-center gap-0.5 rounded border border-white/[0.1] bg-white/[0.05] px-1 font-mono text-[9px] font-medium text-zinc-400 sm:flex">
+  ⌘K
+</kbd>
+</div>
+<!-- Date Range Filter Dropdown Trigger -->
+<div class="flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-300 cursor-pointer transition">
+<i class="w-3.5 h-3.5 text-zinc-400" data-lucide="calendar"></i>
+<span class="font-mono text-[11px]">01/09/2026 - 30/09/2026</span>
+<i class="w-3 h-3 text-zinc-500 ml-0.5" data-lucide="chevron-down"></i>
+</div>
+<!-- Notifications -->
+<button aria-label="Thông báo" class="relative p-2 text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05] rounded-lg border border-white/[0.08] transition" type="button">
+<i class="w-3.5 h-3.5" data-lucide="bell"></i>
+<span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-rose-500 rounded-full ring-2 ring-[#090a0c]"></span>
+</button>
+<!-- Primary CTA in TopBar -->
+<button class="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs rounded-lg shadow-sm transition active:scale-95" type="button">
+<i class="w-3.5 h-3.5" data-lucide="plus"></i>
+<span>Tạo giao dịch</span>
+</button>
+</div>
+</header>
+<!-- END: TopBar -->
+<!-- BEGIN: DashboardBody -->
+<main class="flex-1 p-8 space-y-6 max-w-7xl mx-auto w-full">
+<!-- Greeting & Header info -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div>
+<h1 class="text-xl font-semibold tracking-tight text-zinc-100">
+  Xin chào, Thịnh
+</h1>
+<p class="text-xs text-zinc-400 mt-1">
+  Tổng quan tài chính tháng 9/2026 • Cập nhật tự động lúc 10:22 AM
+</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1.5 text-xs font-medium bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border border-white/[0.08] px-3 py-1.5 rounded-lg transition" type="button">
+<i class="w-3.5 h-3.5 text-zinc-400" data-lucide="refresh-cw"></i>
+<span>Làm mới</span>
+</button>
+<button class="flex items-center gap-1.5 text-xs font-medium bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border border-white/[0.08] px-3 py-1.5 rounded-lg transition" type="button">
+<i class="w-3.5 h-3.5 text-zinc-400" data-lucide="download"></i>
+<span>Xuất CSV</span>
+</button>
+</div>
+</div>
+<!-- BEGIN: StatCardsGrid -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-purpose="metrics-cards">
+<!-- Card 1: Tổng thu nhập -->
+<div class="rounded-xl border border-white/[0.08] bg-zinc-900/60 backdrop-blur-md p-6 shadow-sm hover:border-white/[0.14] transition group">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-medium uppercase tracking-wider text-zinc-400 font-mono">Tổng Thu nhập</span>
+<div class="h-7 w-7 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+<i class="w-3.5 h-3.5" data-lucide="trending-up"></i>
+</div>
+</div>
+<div class="mt-3">
+<div class="text-2xl font-semibold tracking-tight text-zinc-100 font-mono tabular-nums">45.200.000 <span class="text-xs font-sans text-zinc-400 font-normal">đ</span></div>
+<div class="flex items-center gap-1.5 mt-2 text-xs">
+<span class="inline-flex items-center gap-0.5 text-emerald-400 font-mono font-medium text-[11px] bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+<i class="w-2.5 h-2.5" data-lucide="arrow-up-right"></i> +12.5%
+</span>
+<span class="text-zinc-400 text-[11px]">so với tháng trước</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Tổng chi tiêu -->
+<div class="rounded-xl border border-white/[0.08] bg-zinc-900/60 backdrop-blur-md p-6 shadow-sm hover:border-white/[0.14] transition group">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-medium uppercase tracking-wider text-zinc-400 font-mono">Tổng Chi tiêu</span>
+<div class="h-7 w-7 rounded-md bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+<i class="w-3.5 h-3.5" data-lucide="trending-down"></i>
+</div>
+</div>
+<div class="mt-3">
+<div class="text-2xl font-semibold tracking-tight text-zinc-100 font-mono tabular-nums">18.450.000 <span class="text-xs font-sans text-zinc-400 font-normal">đ</span></div>
+<div class="flex items-center gap-1.5 mt-2 text-xs">
+<span class="inline-flex items-center gap-0.5 text-rose-400 font-mono font-medium text-[11px] bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded">
+<i class="w-2.5 h-2.5" data-lucide="arrow-down-right"></i> -4.2%
+</span>
+<span class="text-zinc-400 text-[11px]">so với định mức</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Dòng tiền ròng -->
+<div class="rounded-xl border border-white/[0.08] bg-zinc-900/60 backdrop-blur-md p-6 shadow-sm hover:border-white/[0.14] transition group">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-medium uppercase tracking-wider text-zinc-400 font-mono">Dòng tiền ròng</span>
+<div class="h-7 w-7 rounded-md bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+<i class="w-3.5 h-3.5" data-lucide="wallet"></i>
+</div>
+</div>
+<div class="mt-3">
+<div class="text-2xl font-semibold tracking-tight text-emerald-400 font-mono tabular-nums">+26.750.000 <span class="text-xs font-sans text-zinc-400 font-normal">đ</span></div>
+<div class="flex items-center gap-1.5 mt-2 text-[11px]">
+<span class="text-zinc-400">Tỷ lệ tiết kiệm:</span>
+<span class="font-mono font-medium text-zinc-300">59.1%</span>
+</div>
+</div>
+</div>
+<!-- Card 4: Tài sản ròng -->
+<div class="rounded-xl border border-white/[0.08] bg-zinc-900/60 backdrop-blur-md p-6 shadow-sm hover:border-white/[0.14] transition group">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-medium uppercase tracking-wider text-zinc-400 font-mono">Tài sản ròng</span>
+<div class="h-7 w-7 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+<i class="w-3.5 h-3.5" data-lucide="landmark"></i>
+</div>
+</div>
+<div class="mt-3">
+<div class="text-2xl font-semibold tracking-tight text-zinc-100 font-mono tabular-nums">320.800.000 <span class="text-xs font-sans text-zinc-400 font-normal">đ</span></div>
+<div class="flex items-center gap-1.5 mt-2 text-[11px]">
+<span class="text-zinc-400">Tổng tài sản 3 tài khoản</span>
+</div>
+</div>
+</div>
+</section>
+<!-- END: StatCardsGrid -->
+<!-- BEGIN: DashboardMainGrid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Left 2 Cols: Main Charts & Recent Transactions -->
+<div class="lg:col-span-2 space-y-6">
+<!-- Section: Sleek Financial Cash Flow Chart -->
+<div class="rounded-xl border border-white/[0.08] bg-zinc-900/60 backdrop-blur-md p-6 sm:p-8 shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-white/[0.06]">
+<div>
+<h2 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+<i class="w-4 h-4 text-zinc-400" data-lucide="bar-chart-2"></i>
+  Xu hướng Dòng tiền
+</h2>
+<p class="text-xs text-zinc-400 mt-0.5">Thu nhập và chi tiêu theo ngày trong tháng 9/2026</p>
+</div>
+<div class="flex items-center p-0.5 bg-black/40 border border-white/[0.07] rounded-lg self-start sm:self-auto">
+<button class="px-2.5 py-1 text-[11px] font-medium rounded-md bg-white/[0.08] text-white shadow-sm transition" type="button">7 ngày</button>
+<button class="px-2.5 py-1 text-[11px] font-medium rounded-md text-zinc-400 hover:text-zinc-200 transition" type="button">30 ngày</button>
+<button class="px-2.5 py-1 text-[11px] font-medium rounded-md text-zinc-400 hover:text-zinc-200 transition" type="button">3 tháng</button>
+</div>
+</div>
+<div class="flex items-center justify-between pt-5 pb-2 text-xs">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-400/90 shadow-[0_0_8px_rgba(52,211,153,0.3)]"></span>
+<span class="text-zinc-300 text-xs">Thu nhập</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-rose-400/80 shadow-[0_0_8px_rgba(251,113,133,0.3)]"></span>
+<span class="text-zinc-300 text-xs">Chi tiêu</span>
+</div>
+</div>
+<span class="text-zinc-400 font-mono text-[10px]">Đơn vị: Triệu VNĐ</span>
+</div>
+<div class="h-60 w-full pt-4 flex items-end justify-between gap-2 sm:gap-5 border-b border-white/[0.06] pb-3 relative">
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none pb-7">
+<div class="w-full border-b border-dashed border-white/[0.05]"></div>
+<div class="w-full border-b border-dashed border-white/[0.05]"></div>
+<div class="w-full border-b border-dashed border-white/[0.05]"></div>
+<div class="w-full border-b border-dashed border-white/[0.05]"></div>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 h-full justify-end group relative z-10 cursor-pointer">
+<div class="w-full flex items-end justify-center gap-1.5 h-44">
+<div class="w-2.5 sm:w-3 bg-gradient-to-t from-emerald-500/50 to-emerald-400 rounded-t-sm chart-bar-glow transition-all" style="height: 65%;"></div>
+<div class="w-2.5 sm:w-3 bg-gradient-to-t from-rose-500/40 to-rose-400/80 rounded-t-sm chart-bar-loss-glow transition-all" style="height: 25%;"></div>
+</div>
+<span class="text-[10px] font-mono text-zinc-400">15/09</span>
+<div class="absolute -top-11 hidden group-hover:flex flex-col items-center bg-zinc-900 border border-white/[0.12] px-2.5 py-1 rounded-md shadow-xl z-20 text-[10px] font-mono pointer-events-none whitespace-nowrap">
+<span class="text-emerald-400">+12.0M</span>
+<span class="text-rose-400">-3.2M</span>
+</div>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 h-full justify-end group relative z-10 cursor-pointer">
+<div class="w-full flex items-end justify-center gap-1.5 h-44">
+<div class="w-2.5 sm:w-3 bg-gradient-to-t from-emerald-500/50 to-emerald-400 rounded-t-sm chart-bar-glow transition-all" style="height: 30%;"></div>
+<div class="w-2.5 sm:w-3 bg-gradient-to-t from-rose-500/40 to-rose-400/80 rounded-t-sm chart-bar-loss-glow transition-all" style="height: 45%;"></div>
+</div>
+<span class="text-[10px] font-mono text-zinc-400">16/09</span>
+<div class="absolute -top-11 hidden group-hover:flex flex-col items-center bg-zinc-900 border border-white/[0.12] px-2.5 py-1 rounded-md shadow-xl z-20 text-[10px] font-mono pointer-events-none whitespace-nowrap">
+<span class="text-emerald-400">+4.5M</span>
+<span class="text-rose-400">-6.8M</span>
+</div>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 h-full justify-end group relative z-10 cursor-pointer">
+<div class="w-full flex items-end justify-center gap-1.5 h-44">
+<div class="w-2.5 sm:w-3 bg-gradient-to-t from-emerald-500/50 to-emerald-400 rounded-t-sm chart-bar-glow transition-all" style="height: 40%;"></div>
+<div class="w-2.5 sm:w-3 bg-gradient-to-t from-rose-500/40 to-rose-400/80 rounded-t-sm chart-bar-loss-glow transition-all" style="height: 20%;"></div>
+</div>
+<span class="text-[10px] font-mono text-zinc-400">17/09</span>
+<div class="absolute -top-11 hidden group-hover:flex flex-col items-center bg-zinc-900 border border-white/[0.12] px-2.5 py-1 rounded-md shadow-xl z-20 text-[10px] font-mono pointer-events-none whitespace-nowrap">
+<span class="text-emerald-400">+6.0M</span>
+<span class="text-rose-400">-1.8M</span>
+</div>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 h-full justify-end group relative z-10 cursor-pointer">
+<div class="w-full flex items-end justify-center gap-1.5 h-44">
+<div class="w-2.5 sm:w-3 bg-gradient-to-t from-emerald-500/50 to-emerald-400 rounded-t-sm chart-bar-glow transition-all" style="height: 85%;"></div>
+<div class="w-2.5 sm:w-3 bg-gradient-to-t from-rose-500/40 to-rose-400/80 rounded-t-sm chart-bar-loss-glow transition-all" style="height: 35%;"></div>
+</div>
+<span class="text-[10px] font-mono text-zinc-400">18/09</span>
+<div class="absolute -top-11 hidden group-hover:flex flex-col items-center bg-zinc-900 border border-white/[0.12] px-2.5 py-1 rounded-md shadow-xl z-20 text-[10px] font-mono pointer-events-none whitespace-nowrap">
+<span class="text-emerald-400">+10.2M</span>
+<span class="text-rose-400">-4.1M</span>
+</div>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 h-full justify-end group relative z-10 cursor-pointer">
+<div class="w-full flex items-end justify-center gap-1.5 h-44">
+<div class="w-2.5 sm:w-3 bg-gradient-to-t from-emerald-500/50 to-emerald-400 rounded-t-sm chart-bar-glow transition-all" style="height: 20%;"></div>
+<div class="w-2.5 sm:w-3 bg-gradient-to-t from-rose-500/40 to-rose-400/80 rounded-t-sm chart-bar-loss-glow transition-all" style="height: 70%;"></div>
+</div>
+<span class="text-[10px] font-mono text-zinc-400">19/09</span>
+<div class="absolute -top-11 hidden group-hover:flex flex-col items-center bg-zinc-900 border border-white/[0.12] px-2.5 py-1 rounded-md shadow-xl z-20 text-[10px] font-mono pointer-events-none whitespace-nowrap">
+<span class="text-emerald-400">+2.5M</span>
+<span class="text-rose-400">-9.4M</span>
+</div>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 h-full justify-end group relative z-10 cursor-pointer">
+<div class="w-full flex items-end justify-center gap-1.5 h-44">
+<div class="w-2.5 sm:w-3 bg-gradient-to-t from-emerald-500/50 to-emerald-400 rounded-t-sm chart-bar-glow transition-all" style="height: 50%;"></div>
+<div class="w-2.5 sm:w-3 bg-gradient-to-t from-rose-500/40 to-rose-400/80 rounded-t-sm chart-bar-loss-glow transition-all" style="height: 30%;"></div>
+</div>
+<span class="text-[10px] font-mono text-zinc-400">20/09</span>
+<div class="absolute -top-11 hidden group-hover:flex flex-col items-center bg-zinc-900 border border-white/[0.12] px-2.5 py-1 rounded-md shadow-xl z-20 text-[10px] font-mono pointer-events-none whitespace-nowrap">
+<span class="text-emerald-400">+7.5M</span>
+<span class="text-rose-400">-3.8M</span>
+</div>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 h-full justify-end group relative z-10 cursor-pointer">
+<div class="w-full flex items-end justify-center gap-1.5 h-44">
+<div class="w-2.5 sm:w-3 bg-emerald-400 rounded-t-sm chart-bar-glow shadow-[0_0_12px_rgba(52,211,153,0.4)]" style="height: 95%;"></div>
+<div class="w-2.5 sm:w-3 bg-rose-400/90 rounded-t-sm chart-bar-loss-glow" style="height: 38%;"></div>
+</div>
+<span class="text-[10px] font-mono font-medium text-emerald-400">Hôm nay</span>
+<div class="absolute -top-11 hidden group-hover:flex flex-col items-center bg-zinc-900 border border-white/[0.12] px-2.5 py-1 rounded-md shadow-xl z-20 text-[10px] font-mono pointer-events-none whitespace-nowrap">
+<span class="text-emerald-400">+35.0M</span>
+<span class="text-rose-400">-0.9M</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Recent Transactions Table -->
+<div class="rounded-xl border border-white/[0.08] bg-zinc-900/60 backdrop-blur-md overflow-hidden shadow-sm">
+<div class="px-6 sm:px-8 py-5 border-b border-white/[0.06] flex items-center justify-between">
+<div>
+<h3 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+<i class="w-4 h-4 text-zinc-400" data-lucide="receipt"></i>
+  Giao dịch gần đây
+</h3>
+<p class="text-xs text-zinc-400 mt-0.5">5 giao dịch mới nhất được hạch toán</p>
+</div>
+<a class="text-xs font-medium text-zinc-400 hover:text-zinc-200 flex items-center gap-1 transition group" href="#">
+<span>Xem tất cả</span>
+<i class="w-3 h-3 group-hover:translate-x-0.5 transition-transform" data-lucide="arrow-right"></i>
+</a>
+</div>
+<div class="overflow-x-auto px-2 sm:px-4 pb-3">
+<table class="w-full text-left text-xs">
+<thead class="bg-black/30 text-zinc-400/90 border-b border-white/[0.06] text-[10px] uppercase tracking-wider font-mono">
+<tr>
+<th class="px-5 py-3.5 font-medium" scope="col">Mô tả</th>
+<th class="px-4 py-3.5 font-medium" scope="col">Danh mục</th>
+<th class="px-4 py-3.5 font-medium" scope="col">Ví / Tài khoản</th>
+<th class="px-4 py-3.5 font-medium" scope="col">Thời gian</th>
+<th class="px-5 py-3.5 font-medium text-right" scope="col">Số tiền</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/[0.04] text-zinc-300">
+<tr class="hover:bg-white/[0.02] transition-colors">
+<td class="px-5 py-4 flex items-center gap-3">
+<div class="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+<i class="w-3.5 h-3.5 stroke-[2]" data-lucide="arrow-down-left"></i>
+</div>
+<div>
+<span class="font-medium text-zinc-100 block">Lương tháng 09/2026</span>
+<span class="text-[10px] text-zinc-400">Chuyển khoản định kỳ</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-zinc-800/60 text-zinc-300 border border-zinc-700/50">
+  Thu nhập chính
+</span>
+</td>
+<td class="px-4 py-4 text-zinc-400 text-xs">Techcombank</td>
+<td class="px-4 py-4 text-zinc-400 font-mono text-[11px]">Hôm nay, 08:30</td>
+<td class="px-5 py-4 text-right font-mono font-medium text-emerald-400 text-xs tabular-nums">
+  +35.000.000 đ
+</td>
+</tr>
+<tr class="hover:bg-white/[0.02] transition-colors">
+<td class="px-5 py-4 flex items-center gap-3">
+<div class="h-7 w-7 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center flex-shrink-0">
+<i class="w-3.5 h-3.5 stroke-[2]" data-lucide="shopping-bag"></i>
+</div>
+<div>
+<span class="font-medium text-zinc-100 block">Siêu thị Co.opmart</span>
+<span class="text-[10px] text-zinc-400">Thực phẩm hàng tuần</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-300/90 border border-amber-500/20">
+  Ăn uống &amp; Nhu yếu
+</span>
+</td>
+<td class="px-4 py-4 text-zinc-400 text-xs">MB Bank</td>
+<td class="px-4 py-4 text-zinc-400 font-mono text-[11px]">Hôm qua, 18:45</td>
+<td class="px-5 py-4 text-right font-mono font-medium text-zinc-200 text-xs tabular-nums">
+  -850.000 đ
+</td>
+</tr>
+<tr class="hover:bg-white/[0.02] transition-colors">
+<td class="px-5 py-4 flex items-center gap-3">
+<div class="h-7 w-7 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center flex-shrink-0">
+<i class="w-3.5 h-3.5 stroke-[2]" data-lucide="zap"></i>
+</div>
+<div>
+<span class="font-medium text-zinc-100 block">Hóa đơn điện nước &amp; Internet</span>
+<span class="text-[10px] text-zinc-400">Tự động trừ ví</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-sky-500/10 text-sky-300/90 border border-sky-500/20">
+  Hóa đơn tiện ích
+</span>
+</td>
+<td class="px-4 py-4 text-zinc-400 text-xs">Techcombank</td>
+<td class="px-4 py-4 text-zinc-400 font-mono text-[11px]">19/09/2026</td>
+<td class="px-5 py-4 text-right font-mono font-medium text-zinc-200 text-xs tabular-nums">
+  -1.420.000 đ
+</td>
+</tr>
+<tr class="hover:bg-white/[0.02] transition-colors">
+<td class="px-5 py-4 flex items-center gap-3">
+<div class="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+<i class="w-3.5 h-3.5 stroke-[2]" data-lucide="briefcase"></i>
+</div>
+<div>
+<span class="font-medium text-zinc-100 block">Thù lao Freelance UI/UX</span>
+<span class="text-[10px] text-zinc-400">Dự án Web App SaaS</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-zinc-800/60 text-zinc-300 border border-zinc-700/50">
+  Thu nhập phụ
+</span>
+</td>
+<td class="px-4 py-4 text-zinc-400 text-xs">MB Bank</td>
+<td class="px-4 py-4 text-zinc-400 font-mono text-[11px]">18/09/2026</td>
+<td class="px-5 py-4 text-right font-mono font-medium text-emerald-400 text-xs tabular-nums">
+  +10.200.000 đ
+</td>
+</tr>
+<tr class="hover:bg-white/[0.02] transition-colors">
+<td class="px-5 py-4 flex items-center gap-3">
+<div class="h-7 w-7 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center flex-shrink-0">
+<i class="w-3.5 h-3.5 stroke-[2]" data-lucide="coffee"></i>
+</div>
+<div>
+<span class="font-medium text-zinc-100 block">Cà phê The Coffee House</span>
+<span class="text-[10px] text-zinc-400">Tiền mặt</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-300/90 border border-amber-500/20">
+  Ăn uống &amp; Nhu yếu
+</span>
+</td>
+<td class="px-4 py-4 text-zinc-400 text-xs">Ví Tiền mặt</td>
+<td class="px-4 py-4 text-zinc-400 font-mono text-[11px]">17/09/2026</td>
+<td class="px-5 py-4 text-right font-mono font-medium text-zinc-200 text-xs tabular-nums">
+  -65.000 đ
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Right 1 Col: Structure, Saving Goals & Accounts -->
+<div class="space-y-6">
+<!-- Card: Cơ cấu Chi tiêu -->
+<div class="rounded-xl border border-white/[0.08] bg-zinc-900/60 backdrop-blur-md p-6 sm:p-7 shadow-sm">
+<div class="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+<div>
+<h3 class="text-sm font-semibold text-zinc-100">Cơ cấu Chi tiêu</h3>
+<p class="text-xs text-zinc-400">Tỷ lệ theo từng nhóm chi tiêu</p>
+</div>
+<span class="text-xs font-mono text-zinc-300 tabular-nums">18.45M đ</span>
+</div>
+<div class="mt-5">
+<div class="h-2 w-full bg-white/[0.06] rounded-full overflow-hidden flex gap-0.5 p-0.5">
+<div class="bg-amber-400/80 rounded-sm h-full" style="width: 40%;" title="Ăn uống (40%)"></div>
+<div class="bg-sky-400/80 rounded-sm h-full" style="width: 25%;" title="Nhà cửa (25%)"></div>
+<div class="bg-indigo-400/80 rounded-sm h-full" style="width: 15%;" title="Mua sắm (15%)"></div>
+<div class="bg-rose-400/80 rounded-sm h-full" style="width: 10%;" title="Giải trí (10%)"></div>
+<div class="bg-zinc-500/80 rounded-sm h-full" style="width: 10%;" title="Khác (10%)"></div>
+</div>
+<div class="mt-5 space-y-3">
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-amber-400/80"></span>
+<span class="text-zinc-300">Ăn uống &amp; Nhu yếu phẩm</span>
+</div>
+<div class="flex items-center gap-2.5">
+<span class="font-mono text-[11px] text-zinc-400 tabular-nums">7.380.000 đ</span>
+<span class="font-mono text-zinc-200 text-xs w-7 text-right">40%</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-sky-400/80"></span>
+<span class="text-zinc-300">Nhà ở &amp; Tiện ích</span>
+</div>
+<div class="flex items-center gap-2.5">
+<span class="font-mono text-[11px] text-zinc-400 tabular-nums">4.612.000 đ</span>
+<span class="font-mono text-zinc-200 text-xs w-7 text-right">25%</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-indigo-400/80"></span>
+<span class="text-zinc-300">Mua sắm &amp; Đồ dùng</span>
+</div>
+<div class="flex items-center gap-2.5">
+<span class="font-mono text-[11px] text-zinc-400 tabular-nums">2.767.000 đ</span>
+<span class="font-mono text-zinc-200 text-xs w-7 text-right">15%</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-rose-400/80"></span>
+<span class="text-zinc-300">Giải trí &amp; Bạn bè</span>
+</div>
+<div class="flex items-center gap-2.5">
+<span class="font-mono text-[11px] text-zinc-400 tabular-nums">1.845.000 đ</span>
+<span class="font-mono text-zinc-200 text-xs w-7 text-right">10%</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-zinc-500"></span>
+<span class="text-zinc-300">Chi phí khác</span>
+</div>
+<div class="flex items-center gap-2.5">
+<span class="font-mono text-[11px] text-zinc-400 tabular-nums">1.845.000 đ</span>
+<span class="font-mono text-zinc-200 text-xs w-7 text-right">10%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card: Hũ Tiết kiệm & Mục tiêu -->
+<div class="rounded-xl border border-white/[0.08] bg-zinc-900/60 backdrop-blur-md p-6 sm:p-7 shadow-sm">
+<div class="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+<h3 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+<i class="w-4 h-4 text-emerald-400" data-lucide="target"></i>
+  Hũ Tiết kiệm &amp; Mục tiêu
+</h3>
+<a class="text-xs text-zinc-400 hover:text-zinc-200 transition" href="#">+ Thêm</a>
+</div>
+<div class="mt-5 space-y-4.5">
+<div>
+<div class="flex items-center justify-between text-xs mb-2">
+<span class="font-medium text-zinc-200">Quỹ khẩn cấp 6 tháng</span>
+<span class="font-mono text-[11px] text-emerald-400">75% (75M / 100M)</span>
+</div>
+<div class="h-2 w-full bg-white/[0.06] rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" style="width: 75%;"></div>
+</div>
+</div>
+<div>
+<div class="flex items-center justify-between text-xs mb-2">
+<span class="font-medium text-zinc-200">Mua MacBook Pro M4</span>
+<span class="font-mono text-[11px] text-sky-400">40% (24M / 60M)</span>
+</div>
+<div class="h-2 w-full bg-white/[0.06] rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-sky-500 to-sky-400 rounded-full" style="width: 40%;"></div>
+</div>
+</div>
+<div>
+<div class="flex items-center justify-between text-xs mb-2">
+<span class="font-medium text-zinc-200">Du lịch Nhật Bản 2027</span>
+<span class="font-mono text-[11px] text-indigo-400">20% (10M / 50M)</span>
+</div>
+<div class="h-2 w-full bg-white/[0.06] rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-full" style="width: 20%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card: Ví & Tài khoản -->
+<div class="rounded-xl border border-white/[0.08] bg-zinc-900/60 backdrop-blur-md p-6 sm:p-7 shadow-sm">
+<div class="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+<h3 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+<i class="w-4 h-4 text-zinc-400" data-lucide="credit-card"></i>
+  Ví &amp; Tài khoản
+</h3>
+<span class="text-[11px] font-mono text-zinc-400">3 nguồn tiền</span>
+</div>
+<div class="mt-4.5 space-y-2.5">
+<div class="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04] transition">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-md bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-xs text-zinc-300">
+<i class="w-4 h-4 text-zinc-400" data-lucide="banknote"></i>
+</div>
+<div>
+<span class="text-xs font-medium text-zinc-200 block">Ví Tiền mặt</span>
+<span class="text-[10px] text-zinc-400">Tiền mặt trong ví</span>
+</div>
+</div>
+<span class="text-xs font-mono font-medium text-zinc-200 tabular-nums">5.200.000 đ</span>
+</div>
+<div class="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04] transition">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-md bg-rose-500/10 border border-rose-500/20 flex items-center justify-center font-mono font-semibold text-[10px] text-rose-300">
+  TCB
+</div>
+<div>
+<span class="text-xs font-medium text-zinc-200 block">Techcombank</span>
+<span class="text-[10px] text-zinc-400 font-mono">Tài khoản lương (..8821)</span>
+</div>
+</div>
+<span class="text-xs font-mono font-medium text-zinc-200 tabular-nums">145.000.000 đ</span>
+</div>
+<div class="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04] transition">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-md bg-sky-500/10 border border-sky-500/20 flex items-center justify-center font-mono font-semibold text-[10px] text-sky-300">
+  MB
+</div>
+<div>
+<span class="text-xs font-medium text-zinc-200 block">MB Bank</span>
+<span class="text-[10px] text-zinc-400 font-mono">Tài khoản phụ (..3309)</span>
+</div>
+</div>
+<span class="text-xs font-mono font-medium text-zinc-200 tabular-nums">170.600.000 đ</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- END: DashboardMainGrid -->
+</main>
+<!-- END: DashboardBody -->
+<!-- BEGIN: Footer -->
+<footer class="mt-auto border-t border-white/[0.06] bg-[#090a0c]/60 px-8 py-4 text-center text-xs text-zinc-400 font-mono">
+  Financial Manager (PFM System) © 2026 • Được xây dựng với phong cách shadcn/ui &amp; Tailwind CSS
+</footer>
+<!-- END: Footer -->
+</div>
+<!-- END: MainContentWrapper -->
+<!-- Lucide icons initialization script -->
+<script data-purpose="icons-init">
+    document.addEventListener("DOMContentLoaded", function() {
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    });
+  </script>
+</body></html>
