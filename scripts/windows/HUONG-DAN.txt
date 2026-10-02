@@ -1,0 +1,38 @@
+FINANCIAL MANAGER – HƯỚNG DẪN SỬ DỤNG TRÊN WINDOWS
+===================================================
+
+YÊU CẦU
+  - Windows 10 hoặc 11 (64-bit). Không cần cài .NET.
+  - PostgreSQL (bản 13 trở lên) đã cài và đang chạy trên máy.
+    Tải tại: https://www.postgresql.org/download/windows/
+    Khi cài, nhớ mật khẩu của tài khoản "postgres".
+  - Microsoft Edge WebView2 Runtime (Windows 10/11 thường đã có sẵn).
+    Nếu mở app bị trắng hoặc báo lỗi WebView2, tải tại:
+    https://developer.microsoft.com/microsoft-edge/webview2/
+
+CHẠY ỨNG DỤNG
+  1. Giải nén toàn bộ thư mục này (ví dụ vào D:\FinancialManager).
+     Không chạy trực tiếp bên trong file .zip.
+  2. Mở FinancialManager.exe.
+  3. Lần đầu: nhập thông tin PostgreSQL (máy chủ localhost, cổng 5432,
+     tài khoản postgres và mật khẩu) rồi bấm "Kết nối & mở ứng dụng".
+     Database "financial-manager-app" sẽ được tự tạo.
+  4. Đăng ký tài khoản và bắt đầu sử dụng.
+
+  Nếu Windows SmartScreen cảnh báo "Windows protected your PC":
+  bấm "More info" → "Run anyway" (ứng dụng chưa được ký số).
+
+DỮ LIỆU & CẤU HÌNH
+  - Dữ liệu tài chính nằm trong PostgreSQL (database financial-manager-app).
+  - Cấu hình kết nối (mật khẩu được mã hoá theo tài khoản Windows):
+      %APPDATA%\FinancialManager\settings.json
+    Xoá file này để nhập lại thông tin kết nối.
+  - Nhật ký lỗi: %APPDATA%\FinancialManager\error.log
+
+SAO LƯU
+  Dùng pgAdmin hoặc lệnh:
+    pg_dump -U postgres -Fc -f backup.dump financial-manager-app
+
+CẬP NHẬT PHIÊN BẢN MỚI
+  Giải nén bản mới đè lên thư mục cũ (hoặc sang thư mục khác).
+  Dữ liệu và cấu hình được giữ nguyên, cấu trúc database tự cập nhật.

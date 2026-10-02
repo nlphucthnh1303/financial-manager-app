@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- WinExe: no console window behind the app on Windows -->
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>FinancialManager</AssemblyName>
+    <RootNamespace>FinancialManager.Desktop</RootNamespace>
+    <Product>Financial Manager</Product>
+    <Version>1.0.0</Version>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Window icon (the exe icon comes from ApplicationIcon) -->
+    <None Update="app.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FinancialManager.Api\FinancialManager.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Photino.NET" Version="4.0.16" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>
