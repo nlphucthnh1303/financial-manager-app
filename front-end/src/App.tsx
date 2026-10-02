@@ -13,6 +13,10 @@ import { PiggyBanksPage } from '@/pages/piggybanks/PiggyBanksPage';
 import { BudgetsPage, BillsPage } from '@/pages/budgets/BudgetsPage';
 import { StatisticsPage, CurrenciesPage } from '@/pages/stats/OtherPages';
 import { CategoriesPage } from '@/pages/categories/CategoriesPage';
+import { DebtsPage } from '@/pages/debts/DebtsPage';
+import { FinancialCalendarPage } from '@/pages/calendar/FinancialCalendarPage';
+import { FrameworksPage } from '@/pages/frameworks/FrameworksPage';
+import { UtilitiesPage } from '@/pages/utilities/UtilitiesPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const token = localStorage.getItem('accessToken');
@@ -25,20 +29,32 @@ const AppWithLayout: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   return (
-    <AppLayout onOpenQuickAddTx={() => setShowQuickAdd(true)} onDataCleared={() => setRefreshKey(k => k + 1)}>
-      {/* Remount the current page after a transaction is added from the header so its numbers refresh */}
+    <AppLayout 
+      onOpenQuickAddTx={() => setShowQuickAdd(true)} 
+      onDataCleared={() => setRefreshKey(k => k + 1)}
+    >
       <Routes key={refreshKey}>
+        {/* Main */}
         <Route path="/" element={<DashboardPage />} />
         <Route path="/transactions" element={<TransactionsPage />} />
+        <Route path="/calendar" element={<FinancialCalendarPage />} />
         <Route path="/accounts" element={<AccountsPage />} />
-        <Route path="/categories" element={<CategoriesPage />} />
+        
+        {/* Planning & Frameworks */}
+        <Route path="/debts" element={<DebtsPage />} />
+        <Route path="/frameworks" element={<FrameworksPage />} />
         <Route path="/budgets" element={<BudgetsPage />} />
         <Route path="/bills" element={<BillsPage />} />
         <Route path="/piggy-banks" element={<PiggyBanksPage />} />
+
+        {/* Tools & Reports */}
+        <Route path="/utilities" element={<UtilitiesPage />} />
         <Route path="/statistics" element={<StatisticsPage />} />
+        <Route path="/categories" element={<CategoriesPage />} />
         <Route path="/currencies" element={<CurrenciesPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+
       <CreateTransactionModal
         open={showQuickAdd}
         onClose={() => setShowQuickAdd(false)}

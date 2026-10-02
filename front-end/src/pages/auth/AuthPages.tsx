@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, Sparkles, Wallet, ArrowRight } from 'lucide-react';
 import { FieldError } from '@/components/ui/field-error';
 import { check, collectErrors, type FormErrors } from '@/lib/validation';
 
@@ -17,17 +17,20 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (e?: React.FormEvent, customEmail?: string, customPass?: string) => {
+    if (e) e.preventDefault();
+    const loginEmail = (customEmail || email).trim();
+    const loginPassword = customPass || password;
+
     const found = collectErrors({
-      email: check.email(email),
-      password: check.required(password, 'Vui lòng nhập mật khẩu.'),
+      email: check.email(loginEmail),
+      password: check.required(loginPassword, 'Vui lòng nhập mật khẩu.'),
     });
     setErrors(found);
     if (Object.keys(found).length) return;
     try {
       setLoading(true);
-      const res: any = await api.post('/auth/login', { email: email.trim(), password });
+      const res: any = await api.post('/auth/login', { email: loginEmail, password: loginPassword });
       localStorage.setItem('accessToken', res.data.accessToken);
       localStorage.setItem('refreshToken', res.data.refreshToken);
       localStorage.setItem('user', JSON.stringify(res.data.user));
@@ -40,26 +43,39 @@ export const LoginPage: React.FC = () => {
     }
   };
 
+  const fillDemoAccount = () => {
+    setEmail('demo@financialmanager.vn');
+    setPassword('Demo@123456');
+    handleLogin(undefined, 'demo@financialmanager.vn', 'Demo@123456');
+  };
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-sm space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-zinc-900 to-zinc-950 text-white flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Ambient background glows */}
+      <div className="absolute top-[-10%] left-1/4 w-[500px] h-[500px] bg-emerald-500/10 blur-[130px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-1/4 w-[500px] h-[500px] bg-sky-500/10 blur-[140px] rounded-full pointer-events-none" />
+
+      <div className="w-full max-w-sm space-y-6 relative z-10">
+        {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="w-10 h-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl mx-auto shadow-sm">
-            $
+          <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-2xl mx-auto shadow-lg shadow-emerald-900/30">
+            ₫
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Financial Manager</h1>
-          <p className="text-sm text-muted-foreground">Đăng nhập vào tài khoản của bạn</p>
+          <h1 className="text-2xl font-bold tracking-tight text-white">Financial Manager</h1>
+          <p className="text-xs text-zinc-400">Hệ thống Quản lý Tài chính Cá nhân Thông minh</p>
         </div>
 
-        <Card className="shadow-sm">
+        <Card className="shadow-2xl border-zinc-800 bg-zinc-900/90 backdrop-blur-xl text-zinc-100">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl">Đăng nhập</CardTitle>
-            <CardDescription>Nhập thông tin bên dưới để truy cập hệ thống</CardDescription>
+            <CardTitle className="text-lg font-bold text-white">Đăng nhập</CardTitle>
+            <CardDescription className="text-xs text-zinc-400">
+              Nhập thông tin tài khoản hoặc dùng thử bản demo
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} noValidate className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-foreground block">Địa chỉ Email</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-zinc-300 block">Địa chỉ Email</label>
                 <Input
                   type="email"
                   placeholder="name@example.com"
@@ -67,13 +83,14 @@ export const LoginPage: React.FC = () => {
                   onChange={e => setEmail(e.target.value)}
                   aria-invalid={!!errors.email}
                   autoComplete="email"
+                  className="bg-zinc-800/80 border-zinc-700 text-xs text-white"
                   autoFocus
                 />
                 <FieldError message={errors.email} />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-foreground block">Mật khẩu</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-zinc-300 block">Mật khẩu</label>
                 <div className="relative">
                   <Input
                     type={showPassword ? 'text' : 'password'}
@@ -82,12 +99,12 @@ export const LoginPage: React.FC = () => {
                     onChange={e => setPassword(e.target.value)}
                     aria-invalid={!!errors.password}
                     autoComplete="current-password"
-                    className="pr-10"
+                    className="bg-zinc-800/80 border-zinc-700 pr-10 text-xs text-white"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -95,20 +112,37 @@ export const LoginPage: React.FC = () => {
                 <FieldError message={errors.password} />
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs h-9" disabled={loading}>
+                {loading ? 'Đang xác thực...' : 'Đăng nhập'}
               </Button>
+
+              {/* Demo Account Quick Access */}
+              <button
+                type="button"
+                onClick={fillDemoAccount}
+                className="w-full py-2 px-3 rounded-lg border border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-xs"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Trải nghiệm nhanh với Tài khoản Demo</span>
+              </button>
             </form>
           </CardContent>
-          <CardFooter className="flex flex-col items-center justify-center border-t p-4 text-center text-sm text-muted-foreground">
+
+          <CardFooter className="flex flex-col items-center justify-center border-t border-zinc-800 p-4 text-center text-xs text-zinc-400">
             <p>
               Chưa có tài khoản?{' '}
-              <Link to="/register" className="text-primary font-medium underline-offset-4 hover:underline">
+              <Link to="/register" className="text-emerald-400 font-semibold underline-offset-4 hover:underline">
                 Đăng ký ngay
               </Link>
             </p>
           </CardFooter>
         </Card>
+
+        {/* Security watermark */}
+        <div className="text-center text-[11px] text-zinc-500 flex items-center justify-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+          <span>Bảo mật kép theo tiêu chuẩn kế toán & VietQR</span>
+        </div>
       </div>
     </div>
   );
@@ -152,70 +186,98 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-sm space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-zinc-900 to-zinc-950 text-white flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute top-[-10%] right-1/4 w-[500px] h-[500px] bg-emerald-500/10 blur-[130px] rounded-full pointer-events-none" />
+
+      <div className="w-full max-w-sm space-y-6 relative z-10">
         <div className="text-center space-y-2">
-          <div className="w-10 h-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl mx-auto shadow-sm">
-            $
+          <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-2xl mx-auto shadow-lg shadow-emerald-900/30">
+            ₫
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Financial Manager</h1>
-          <p className="text-sm text-muted-foreground">Tạo tài khoản mới</p>
+          <h1 className="text-2xl font-bold tracking-tight text-white">Financial Manager</h1>
+          <p className="text-xs text-zinc-400">Tạo tài khoản quản lý tài chính mới</p>
         </div>
 
-        <Card className="shadow-sm">
+        <Card className="shadow-2xl border-zinc-800 bg-zinc-900/90 backdrop-blur-xl text-zinc-100">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl">Đăng ký</CardTitle>
-            <CardDescription>Nhập thông tin cá nhân của bạn bên dưới</CardDescription>
+            <CardTitle className="text-lg font-bold text-white">Đăng ký tài khoản</CardTitle>
+            <CardDescription className="text-xs text-zinc-400">
+              Nhập thông tin cá nhân của bạn bên dưới
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleRegister} noValidate className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-foreground block">Họ và tên</label>
-                <Input placeholder="Nguyễn Văn A" value={form.fullName} onChange={e => setField('fullName', e.target.value)} aria-invalid={!!errors.fullName} maxLength={100} />
+            <form onSubmit={handleRegister} noValidate className="space-y-3.5">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-zinc-300 block">Họ và tên</label>
+                <Input 
+                  placeholder="VD: Nguyễn Văn An" 
+                  value={form.fullName} 
+                  onChange={e => setField('fullName', e.target.value)} 
+                  aria-invalid={!!errors.fullName} 
+                  maxLength={100} 
+                  className="bg-zinc-800/80 border-zinc-700 text-xs text-white"
+                />
                 <FieldError message={errors.fullName} />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-foreground block">Địa chỉ Email</label>
-                <Input type="email" placeholder="name@example.com" value={form.email} onChange={e => setField('email', e.target.value)} aria-invalid={!!errors.email} autoComplete="email" />
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-zinc-300 block">Địa chỉ Email</label>
+                <Input 
+                  type="email" 
+                  placeholder="name@example.com" 
+                  value={form.email} 
+                  onChange={e => setField('email', e.target.value)} 
+                  aria-invalid={!!errors.email} 
+                  autoComplete="email" 
+                  className="bg-zinc-800/80 border-zinc-700 text-xs text-white"
+                />
                 <FieldError message={errors.email} />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-foreground block">Mật khẩu</label>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-zinc-300 block">Mật khẩu</label>
                 <div className="relative">
-                  <Input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={form.password} onChange={e => setField('password', e.target.value)} aria-invalid={!!errors.password} autoComplete="new-password" className="pr-10" />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <Input 
+                    type={showPassword ? 'text' : 'password'} 
+                    placeholder="••••••••" 
+                    value={form.password} 
+                    onChange={e => setField('password', e.target.value)} 
+                    aria-invalid={!!errors.password} 
+                    autoComplete="new-password" 
+                    className="bg-zinc-800/80 border-zinc-700 pr-10 text-xs text-white"
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
                 <FieldError message={errors.password} />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-foreground block">Xác nhận mật khẩu</label>
-                <Input type="password" placeholder="••••••••" value={form.confirmPassword} onChange={e => setField('confirmPassword', e.target.value)} aria-invalid={!!errors.confirmPassword} autoComplete="new-password" />
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-zinc-300 block">Xác nhận mật khẩu</label>
+                <Input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  value={form.confirmPassword} 
+                  onChange={e => setField('confirmPassword', e.target.value)} 
+                  aria-invalid={!!errors.confirmPassword} 
+                  autoComplete="new-password" 
+                  className="bg-zinc-800/80 border-zinc-700 text-xs text-white"
+                />
                 <FieldError message={errors.confirmPassword} />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-foreground block">Đơn vị tiền tệ mặc định</label>
-                <select value={form.currencyCode} onChange={e => setField('currencyCode', e.target.value)} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-foreground">
-                  <option value="VND" className="bg-background text-foreground">VND - Việt Nam Đồng</option>
-                  <option value="USD" className="bg-background text-foreground">USD - US Dollar</option>
-                  <option value="EUR" className="bg-background text-foreground">EUR - Euro</option>
-                </select>
-              </div>
-
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
+              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs h-9" disabled={loading}>
+                {loading ? 'Đang tạo tài khoản...' : 'Đăng ký ngay'}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex flex-col items-center justify-center border-t p-4 text-center text-sm text-muted-foreground">
+          <CardFooter className="flex flex-col items-center justify-center border-t border-zinc-800 p-4 text-center text-xs text-zinc-400">
             <p>
               Đã có tài khoản?{' '}
-              <Link to="/login" className="text-primary font-medium underline-offset-4 hover:underline">Đăng nhập</Link>
+              <Link to="/login" className="text-emerald-400 font-semibold underline-offset-4 hover:underline">
+                Đăng nhập
+              </Link>
             </p>
           </CardFooter>
         </Card>
