@@ -16,6 +16,8 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -143,10 +145,19 @@ const AddPiggyModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: (
           </div>
           <div>
             <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block">Liên kết với Ví *</label>
-            <select value={form.accountId} onChange={e => setForm(f => ({ ...f, accountId: e.target.value }))} className={`flex h-9 w-full rounded-md border ${errors.accountId ? 'border-rose-500' : 'border-zinc-200 dark:border-zinc-700'} bg-white dark:bg-zinc-800 px-3 py-1 text-xs shadow-xs text-zinc-900 dark:text-white focus:outline-none`}>
-              {accounts.length === 0 && <option value="">Chưa có ví nào</option>}
-              {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
+            <Select value={form.accountId} onValueChange={v => setForm(f => ({ ...f, accountId: v }))}>
+              <SelectTrigger className={`shadow-input text-xs h-9 ${errors.accountId ? 'ring-1 ring-[#ff5b4f]' : ''}`}>
+                <SelectValue placeholder="Chọn ví liên kết..." />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.length === 0 && <SelectItem value="none" disabled className="text-xs">Chưa có ví nào</SelectItem>}
+                {accounts.map(a => (
+                  <SelectItem key={a.id} value={a.id} className="text-xs">
+                    {a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FieldError message={errors.accountId} />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -163,7 +174,7 @@ const AddPiggyModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: (
           </div>
           <div>
             <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block">Ngày hoàn thành dự kiến</label>
-            <Input type="date" value={form.targetDate} min={toDateInput(new Date(Date.now() + 86400000))} onChange={e => setForm(f => ({ ...f, targetDate: e.target.value }))} aria-invalid={!!errors.targetDate} />
+            <DatePicker value={form.targetDate} min={toDateInput(new Date(Date.now() + 86400000))} onChange={v => setForm(f => ({ ...f, targetDate: v }))} aria-invalid={!!errors.targetDate} />
             <FieldError message={errors.targetDate} />
           </div>
           <DialogFooter className="pt-2">

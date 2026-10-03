@@ -10,9 +10,7 @@ import {
   QrCode,
   Copy,
   Check,
-  CreditCard as CardIcon,
-  ShieldCheck,
-  Wallet
+  ShieldCheck
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -25,7 +23,7 @@ import { VietQrModal } from '@/components/modals/VietQrModal';
 import { CreateTransactionModal } from '@/components/modals/CreateTransactionModal';
 import { toast } from 'sonner';
 
-const labelCls = 'text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block';
+const labelCls = 'text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block';
 
 const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: () => void; onSuccess: () => void }> = ({ open, editing, onClose, onSuccess }) => {
   const empty = { name: '', currencyId: '', openingBalance: '', includeInNetWorth: true, bankName: 'Vietcombank', accountNumber: '', notes: '' };
@@ -89,7 +87,7 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
       };
       if (editing) {
         await api.put(`/accounts/${editing.id}`, { ...common, active: editing.active });
-        toast.success('Đã cập nhật thông tin ví.');
+        toast.success('Đã cập nhật thông tin tài khoản.');
       } else {
         await api.post('/accounts', { ...common, currencyId: form.currencyId || null, openingBalance: Number(form.openingBalance) || 0 });
         toast.success('Tạo tài khoản / ví mới thành công!');
@@ -105,25 +103,26 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
         <DialogHeader>
-          <DialogTitle>{editing ? 'Sửa tài khoản / Ví' : 'Thêm Ví / Tài khoản Ngân hàng mới'}</DialogTitle>
-          <DialogDescription>
-            {editing ? 'Cập nhật thông tin hiển thị của ví.' : 'Chọn ngân hàng hoặc ví điện tử Việt Nam phổ biến để tạo nhanh.'}
+          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">
+            {editing ? 'Sửa tài khoản' : 'Thêm tài khoản / Ví ngân hàng'}
+          </DialogTitle>
+          <DialogDescription className="text-xs text-[#888888]">
+            {editing ? 'Cập nhật thông tin hiển thị của tài khoản.' : 'Chọn ngân hàng hoặc ví điện tử Việt Nam để tạo nhanh.'}
           </DialogDescription>
         </DialogHeader>
 
-        {/* Bank Quick Preset Chips */}
         {!editing && (
           <div>
-            <span className="text-[11px] text-zinc-500 font-medium block mb-1.5">Ngân hàng & Ví VN gợi ý:</span>
+            <span className="text-[11px] text-[#888888] font-medium block mb-1.5">Ngân hàng & Ví gợi ý:</span>
             <div className="flex flex-wrap gap-1.5">
               {VIETNAM_BANKS.slice(0, 8).map(b => (
                 <button
                   key={b.id}
                   type="button"
                   onClick={() => handleSelectPresetBank(b.code)}
-                  className="px-2 py-1 rounded-md text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200/60 dark:border-zinc-700 flex items-center gap-1 transition"
+                  className="px-2 py-1 rounded text-[11px] font-medium shadow-border bg-[#fafafa] dark:bg-[#111111] text-[#171717] dark:text-[#ededed] flex items-center gap-1 hover:bg-[#f0f0f0] transition-colors"
                 >
                   <span>{b.logo}</span>
                   <span>{b.shortName}</span>
@@ -137,11 +136,12 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
           <div>
             <label className={labelCls}>Tên ví / Tài khoản hiển thị *</label>
             <Input 
-              placeholder="VD: Vietcombank Digi, MB Bank Quân Đội, Ví MoMo..." 
+              placeholder="Vietcombank Digi, Ví MoMo…" 
               value={form.name} 
               onChange={e => set('name', e.target.value)} 
               aria-invalid={!!errors.name} 
               maxLength={100} 
+              className="shadow-input text-xs"
               autoFocus 
             />
             <FieldError message={errors.name} />
@@ -149,26 +149,28 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>Ngân hàng / Đơn vị phát hành</label>
+              <label className={labelCls}>Ngân hàng / Đơn vị</label>
               <Input 
-                placeholder="Vietcombank, MB Bank..." 
+                placeholder="Vietcombank, MB Bank…" 
                 value={form.bankName} 
                 onChange={e => set('bankName', e.target.value)} 
                 aria-invalid={!!errors.bankName} 
                 maxLength={100} 
+                className="shadow-input text-xs"
               />
               <FieldError message={errors.bankName} />
             </div>
 
             <div>
-              <label className={labelCls}>Số tài khoản / Số thẻ</label>
+              <label className={labelCls}>Số tài khoản</label>
               <Input 
-                placeholder="VD: 0123456789" 
+                placeholder="0123456789…" 
                 inputMode="numeric" 
                 value={form.accountNumber} 
                 onChange={e => set('accountNumber', e.target.value)} 
                 aria-invalid={!!errors.accountNumber} 
                 maxLength={30} 
+                className="shadow-input text-xs"
               />
               <FieldError message={errors.accountNumber} />
             </div>
@@ -178,15 +180,15 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
             <div>
               <label className={labelCls}>Số dư ban đầu (VNĐ)</label>
               <MoneyInput 
-                placeholder="0" 
+                placeholder="0…" 
                 value={form.openingBalance} 
                 onValueChange={v => set('openingBalance', v)} 
                 aria-invalid={!!errors.openingBalance} 
-                className="font-bold text-sm"
+                className="font-semibold text-sm shadow-input"
               />
               <FieldError message={errors.openingBalance} />
               {numOpening > 0 && (
-                <div className="mt-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                <div className="mt-1 text-[11px] font-medium text-[#10b981]">
                   {numberToVietnameseWords(numOpening)}
                 </div>
               )}
@@ -199,19 +201,19 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
               id="netWorth"
               checked={form.includeInNetWorth}
               onChange={e => set('includeInNetWorth', e.target.checked)}
-              className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+              className="w-4 h-4 rounded border-zinc-300 text-black focus:ring-0"
             />
-            <label htmlFor="netWorth" className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">
+            <label htmlFor="netWorth" className="text-xs text-[#171717] dark:text-[#ededed]">
               Tính vào Tổng tài sản ròng (Net Worth)
             </label>
           </div>
 
           <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs">
+            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border">
               Hủy
             </Button>
-            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-zinc-900 dark:bg-white text-white dark:text-zinc-900">
-              {loading ? 'Đang lưu...' : editing ? 'Lưu thay đổi' : 'Tạo tài khoản'}
+            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black">
+              {loading ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Tạo tài khoản'}
             </Button>
           </DialogFooter>
         </form>
@@ -236,7 +238,7 @@ export const AccountsPage: React.FC = () => {
       const res: any = await api.get('/accounts?type=Asset');
       setAccounts(res.data || []);
     } catch {
-      toast.error('Không thể kết nối danh sách tài khoản.');
+      toast.error('Không thể tải danh sách tài khoản.');
     } finally {
       setLoading(false);
     }
@@ -273,34 +275,34 @@ export const AccountsPage: React.FC = () => {
       {/* Header & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-white">
-            Ví & Tài khoản Ngân hàng
+          <h1 className="text-2xl font-semibold tracking-tight text-[#171717] dark:text-[#ededed]">
+            Tài khoản & Thẻ ngân hàng
           </h1>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Quản lý dòng tiền, số dư thanh khoản, tạo mã VietQR Napas247 cho từng thẻ ngân hàng.
+          <p className="text-xs text-[#666666] dark:text-[#888888] mt-0.5">
+            Quản lý số dư thanh khoản và tạo mã VietQR Napas247 từng thẻ
           </p>
         </div>
 
         <div className="flex items-center flex-wrap gap-2">
           <button 
             onClick={loadAccounts}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-750 transition shadow-xs" 
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-xs font-medium text-[#171717] dark:text-[#ededed]" 
             type="button"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-zinc-500 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-[#888888] ${loading ? 'animate-spin' : ''}`} />
             <span>Làm mới</span>
           </button>
           <button 
             onClick={() => setShowTransferModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-750 transition shadow-xs" 
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-xs font-medium text-[#171717] dark:text-[#ededed]" 
             type="button"
           >
-            <ArrowLeftRight className="w-3.5 h-3.5 text-zinc-500" />
-            <span>Chuyển tiền nội bộ</span>
+            <ArrowLeftRight className="w-3.5 h-3.5 text-[#888888]" />
+            <span>Chuyển tiền</span>
           </button>
           <button 
             onClick={openCreate}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition shadow-xs" 
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] text-xs font-medium shadow-sm transition-colors duration-150" 
             type="button"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -310,39 +312,34 @@ export const AccountsPage: React.FC = () => {
       </div>
 
       {/* Hero Net Worth Card */}
-      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-gradient-to-br from-zinc-900 via-zinc-850 to-zinc-950 p-6 shadow-md text-white relative overflow-hidden">
-        <div className="absolute right-[-10px] top-[-10px] w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-          <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-400 block">
-              TỔNG TÀI SẢN RÒNG (NET WORTH)
-            </span>
-            <div className="text-3xl sm:text-4xl font-extrabold tracking-tight tabular-nums mt-1 text-white">
-              {formatCurrency(totalNetWorth)}
-            </div>
-            <div className="mt-2 text-xs text-zinc-400 flex items-center gap-2">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Tổng số dư từ {activeCount} tài khoản & ví thanh toán đang hoạt động</span>
-            </div>
-          </div>
+      <div className="rounded-lg shadow-card p-6 bg-[#ffffff] dark:bg-[#0a0a0a]">
+        <span className="text-xs font-medium text-[#666666] dark:text-[#888888] uppercase tracking-wider block">
+          Tổng tài sản ròng (Net Worth)
+        </span>
+        <div className="text-3xl sm:text-4xl font-semibold tracking-tight tabular-nums mt-1 text-[#171717] dark:text-[#ededed]">
+          {formatCurrency(totalNetWorth)}
+        </div>
+        <div className="mt-2 text-xs text-[#888888] flex items-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5 text-[#10b981]" />
+          <span>Tổng số dư từ {activeCount} tài khoản & ví thanh toán đang hoạt động</span>
         </div>
       </div>
 
       {/* Account Cards Grid */}
       <div>
         <div className="flex items-center justify-between mb-3.5">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">
-            Danh sách Thẻ & Ví thanh toán ({accounts.length})
+          <h2 className="text-xs font-semibold text-[#171717] dark:text-[#ededed]">
+            Danh sách tài khoản ({accounts.length})
           </h2>
         </div>
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(3)].map((_, i) => <div key={i} className="h-44 rounded-xl bg-zinc-200 dark:bg-zinc-800 animate-pulse" />)}
+            {[...Array(3)].map((_, i) => <div key={i} className="h-36 rounded-lg shadow-border bg-[#fafafa] dark:bg-[#0a0a0a] animate-pulse" />)}
           </div>
         ) : accounts.length === 0 ? (
-          <div className="p-12 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900 text-center space-y-3">
-            <p className="text-xs text-zinc-500">Chưa có tài khoản nào. Hãy tạo ví tiền mặt hoặc tài khoản ngân hàng đầu tiên!</p>
+          <div className="p-12 shadow-card rounded-lg bg-[#ffffff] dark:bg-[#0a0a0a] text-center space-y-3">
+            <p className="text-xs text-[#888888]">Chưa có tài khoản nào. Hãy thêm ví tiền mặt hoặc ngân hàng đầu tiên!</p>
             <Button size="sm" onClick={openCreate} className="text-xs">
               <Plus className="w-3.5 h-3.5 mr-1" /> Thêm tài khoản mới
             </Button>
@@ -357,24 +354,23 @@ export const AccountsPage: React.FC = () => {
               return (
                 <div
                   key={acc.id}
-                  className={`rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 transition flex flex-col justify-between group ${acc.active ? '' : 'opacity-60'}`}
+                  className={`rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a] p-4 flex flex-col justify-between hover:shadow-card-hover transition-shadow ${acc.active ? '' : 'opacity-60'}`}
                 >
                   <div>
-                    {/* Top bank identity & controls */}
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-lg shrink-0 shadow-xs">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border flex items-center justify-center text-sm shrink-0">
                           {matchedBank?.logo || '💳'}
                         </div>
                         <div className="truncate">
-                          <h3 className="font-bold text-sm text-zinc-900 dark:text-white truncate">{acc.name}</h3>
-                          <span className="text-[11px] text-zinc-500 font-medium block truncate">
+                          <h3 className="font-semibold text-xs text-[#171717] dark:text-[#ededed] truncate">{acc.name}</h3>
+                          <span className="text-[11px] text-[#888888] block truncate">
                             {bankName}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-0.5 shrink-0">
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
                           onClick={() => setVietQrTarget({
@@ -382,16 +378,18 @@ export const AccountsPage: React.FC = () => {
                             accountNumber: accNum || '',
                             accountName: acc.name
                           })}
-                          className="p-1.5 text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/40 rounded-md transition"
+                          className="p-1 text-[#0070f3] hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded transition-colors"
                           title="Tạo mã VietQR"
+                          aria-label="Tạo mã VietQR"
                         >
                           <QrCode className="w-4 h-4" />
                         </button>
                         <button 
                           type="button" 
                           onClick={() => openEdit(acc)} 
-                          className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition rounded-md" 
+                          className="p-1 text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed] transition-colors rounded" 
                           title="Sửa tài khoản"
+                          aria-label="Sửa tài khoản"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
@@ -399,8 +397,9 @@ export const AccountsPage: React.FC = () => {
                           <button 
                             type="button" 
                             onClick={() => setPendingDelete(acc)} 
-                            className="p-1.5 text-zinc-400 hover:text-rose-600 transition rounded-md" 
+                            className="p-1 text-[#888888] hover:text-[#ff5b4f] transition-colors rounded" 
                             title="Xóa tài khoản"
+                            aria-label="Xóa tài khoản"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -408,27 +407,26 @@ export const AccountsPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Account Number & Copy */}
                     {accNum && (
                       <div className="mt-3 flex items-center gap-2 text-xs">
-                        <span className="font-mono text-zinc-600 dark:text-zinc-400 font-semibold bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded">
+                        <span className="text-[#888888] font-mono text-[11px] bg-[#fafafa] dark:bg-[#111111] px-2 py-0.5 rounded shadow-border">
                           {accNum}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleCopyAccNumber(acc.id, accNum)}
-                          className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition"
+                          className="text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed] transition-colors"
                           title="Sao chép số tài khoản"
+                          aria-label="Sao chép số tài khoản"
                         >
-                          {copiedId === acc.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                          {copiedId === acc.id ? <Check className="w-3.5 h-3.5 text-[#10b981]" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       </div>
                     )}
 
-                    {/* Balance */}
-                    <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800">
-                      <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold block">Số dư hiện có</span>
-                      <div className="text-xl font-bold text-zinc-900 dark:text-white tabular-nums mt-0.5">
+                    <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-900">
+                      <span className="text-[10px] uppercase tracking-wider text-[#888888] block">Số dư hiện tại</span>
+                      <div className="text-xl font-semibold text-[#171717] dark:text-[#ededed] tabular-nums mt-0.5">
                         {formatCurrency(acc.currentBalance || 0)}
                       </div>
                     </div>
@@ -437,19 +435,15 @@ export const AccountsPage: React.FC = () => {
               );
             })}
 
-            {/* Add card button */}
             <button 
               onClick={openCreate}
-              className="rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/30 p-5 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40 hover:border-zinc-400 dark:hover:border-zinc-600 transition flex flex-col items-center justify-center text-center gap-2 min-h-[170px] group"
+              className="rounded-lg shadow-border bg-[#fafafa] dark:bg-[#0a0a0a] p-5 hover:bg-[#f5f5f5] dark:hover:bg-[#111111] transition-colors flex flex-col items-center justify-center text-center gap-2 min-h-[140px]"
               type="button"
             >
-              <div className="w-10 h-10 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white group-hover:scale-110 transition shadow-xs">
-                <Plus className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-full bg-[#ffffff] dark:bg-[#1a1a1a] shadow-border flex items-center justify-center text-[#888888]">
+                <Plus className="w-4 h-4" />
               </div>
-              <div>
-                <span className="text-xs font-semibold text-zinc-900 dark:text-white block">Thêm tài khoản mới</span>
-                <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Vietcombank, MB, Techcombank, MoMo...</span>
-              </div>
+              <span className="text-xs font-medium text-[#171717] dark:text-[#ededed]">Thêm tài khoản mới</span>
             </button>
           </div>
         )}
@@ -459,16 +453,16 @@ export const AccountsPage: React.FC = () => {
       
       {/* Delete confirmation */}
       <Dialog open={!!pendingDelete} onOpenChange={() => setPendingDelete(null)}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-sm bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold">Xóa tài khoản</DialogTitle>
-            <DialogDescription className="text-xs">
-              Xóa "{pendingDelete?.name}"? Ví sẽ bị ẩn khỏi danh sách, các giao dịch cũ vẫn được giữ trong lịch sử.
+            <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">Xóa tài khoản</DialogTitle>
+            <DialogDescription className="text-xs text-[#888888]">
+              Xóa "{pendingDelete?.name}"? Tài khoản sẽ bị ẩn khỏi danh sách, giao dịch cũ vẫn được lưu trong sổ cái.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" size="sm" className="text-xs" onClick={() => setPendingDelete(null)}>Hủy</Button>
-            <Button size="sm" className="text-xs bg-rose-600 hover:bg-rose-700 text-white" onClick={handleDelete}>Xóa</Button>
+            <Button variant="outline" size="sm" className="text-xs shadow-border" onClick={() => setPendingDelete(null)}>Hủy</Button>
+            <Button size="sm" className="text-xs bg-[#ff5b4f] text-white" onClick={handleDelete}>Xóa</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

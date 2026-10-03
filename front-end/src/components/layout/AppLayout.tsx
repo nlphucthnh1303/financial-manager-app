@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  Wallet,
   LayoutDashboard, 
   ArrowLeftRight, 
   CreditCard, 
@@ -10,15 +9,11 @@ import {
   Receipt, 
   PiggyBank, 
   BarChart3, 
-  DollarSign, 
   LogOut, 
-  PlusCircle, 
   Plus,
   Search, 
   Calendar, 
   Bell,
-  ChevronRight,
-  ChevronDown,
   Trash2,
   Menu,
   X,
@@ -28,7 +23,11 @@ import {
   Layers,
   HeartPulse,
   Coins,
-  CalendarDays
+  CalendarDays,
+  ChevronDown,
+  ShieldCheck,
+  TrendingUp,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -52,7 +51,22 @@ interface AppLayoutProps {
   onApplyParsedSms?: (res: ParsedSmsResult) => void;
 }
 
-export const AppLayout: React.FC<AppLayoutProps> = ({ children, onOpenQuickAddTx, onDataCleared, onApplyParsedSms }) => {
+interface NavGroup {
+  label: string;
+  items: {
+    name: string;
+    path: string;
+    icon: React.ComponentType<{ className?: string }>;
+    badge?: string;
+  }[];
+}
+
+export const AppLayout: React.FC<AppLayoutProps> = ({ 
+  children, 
+  onOpenQuickAddTx, 
+  onDataCleared, 
+  onApplyParsedSms 
+}) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -78,7 +92,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, onOpenQuickAddTx
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Compute financial health stats in background
   useEffect(() => {
     api.get(`/statistics/summary?startDate=${startDate}T00:00:00Z&endDate=${endDate}T23:59:59Z`)
       .then((res: any) => {
@@ -113,337 +126,426 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, onOpenQuickAddTx
     }
   };
 
-  const mainNav = [
-    { name: 'Bảng tổng quan', path: '/', icon: LayoutDashboard },
-    { name: 'Sổ Giao dịch', path: '/transactions', icon: ArrowLeftRight, badge: 'Live' },
-    { name: 'Lịch Thu Chi', path: '/calendar', icon: CalendarDays },
-    { name: 'Ví & Tài khoản', path: '/accounts', icon: CreditCard },
+  const navGroups: NavGroup[] = [
+    {
+      label: 'Tổng quan & Sổ ghi',
+      items: [
+        { name: 'Tổng quan', path: '/', icon: LayoutDashboard },
+        { name: 'Sổ giao dịch', path: '/transactions', icon: ArrowLeftRight },
+        { name: 'Sổ vay nợ', path: '/debts', icon: HandCoins },
+        { name: 'Lịch thu chi', path: '/calendar', icon: CalendarDays },
+      ]
+    },
+    {
+      label: 'Phương pháp & Kế hoạch',
+      items: [
+        { name: '6 Chiếc Hũ & 50/30/20', path: '/frameworks', icon: Layers },
+        { name: 'Ngân sách chi tiêu', path: '/budgets', icon: PieChart },
+        { name: 'Định kỳ & Hóa đơn', path: '/bills', icon: Receipt },
+        { name: 'Heo tiết kiệm', path: '/piggy-banks', icon: PiggyBank },
+      ]
+    },
+    {
+      label: 'Tài sản & Tiện ích',
+      items: [
+        { name: 'Tài khoản & Thẻ', path: '/accounts', icon: CreditCard },
+        { name: 'Thị trường & Tiện ích VN', path: '/utilities', icon: Coins, badge: 'SJC' },
+        { name: 'Thống kê & Báo cáo', path: '/statistics', icon: BarChart3 },
+        { name: 'Danh mục thu chi', path: '/categories', icon: Tags },
+      ]
+    }
   ];
 
-  const planNav = [
-    { name: 'Sổ Nợ & Cho Vay', path: '/debts', icon: HandCoins, badge: 'Mới' },
-    { name: '6 Hũ & 50/30/20', path: '/frameworks', icon: Layers },
-    { name: 'Ngân sách', path: '/budgets', icon: PieChart },
-    { name: 'Hóa đơn & Định kỳ', path: '/bills', icon: Receipt },
-    { name: 'Hũ tiết kiệm', path: '/piggy-banks', icon: PiggyBank },
-  ];
+  const userInitial = user.fullName ? user.fullName[0].toUpperCase() : (user.email ? user.email[0].toUpperCase() : 'U');
 
-  const toolsNav = [
-    { name: 'Tiện ích Thị trường VN', path: '/utilities', icon: Coins, badge: 'Vàng & FX' },
-    { name: 'Báo cáo Thống kê', path: '/statistics', icon: BarChart3 },
-    { name: 'Danh mục & Tags', path: '/categories', icon: Tags },
-    { name: 'Tiền tệ & Tỷ giá', path: '/currencies', icon: DollarSign },
-  ];
-
-  const getCurrentPageTitle = () => {
-    const all = [...mainNav, ...planNav, ...toolsNav];
-    const match = all.find(item => item.path === location.pathname);
-    return match ? match.name : 'Quản lý Tài chính';
-  };
-
-  const userInitial = user.fullName ? user.fullName[0].toUpperCase() : 'N';
+  // Find active nav item title for mobile header
+  const allItems = navGroups.flatMap(g => g.items);
+  const currentItem = allItems.find(i => i.path === location.pathname) || { name: 'Financial Manager' };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex relative">
-      {/* Ambient background light glows */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-40">
-        <div className="absolute -top-[15%] left-1/3 w-[600px] h-[500px] bg-gradient-to-br from-emerald-100/50 via-sky-100/30 to-transparent dark:from-emerald-950/20 dark:via-sky-950/20 blur-[120px] rounded-full"></div>
-        <div className="absolute top-[40%] right-[-5%] w-[500px] h-[500px] bg-gradient-to-bl from-amber-100/40 via-indigo-100/30 to-transparent dark:from-amber-950/15 dark:via-indigo-950/20 blur-[130px] rounded-full"></div>
-      </div>
-
-      {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800 z-50 px-4 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center shadow-sm">
-            <Wallet className="w-4 h-4" />
-          </div>
-          <span className="text-sm font-bold text-zinc-900 dark:text-white">PFM Việt Nam</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setVietQrOpen(true)}
-            className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sky-600"
-            title="VietQR"
-          >
-            <QrCode className="w-4 h-4" />
-          </button>
-          <ThemeToggle />
-          <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Sidebar */}
-      <aside className={`
-        w-64 border-r border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl flex flex-col fixed inset-y-0 left-0 z-40 transition-transform duration-300
-        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
-        {/* Brand & Workspace */}
-        <div className="h-16 px-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-emerald-600 dark:bg-emerald-500 text-white flex items-center justify-center shadow-sm font-bold text-sm">
-              ₫
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] text-[#171717] dark:text-[#ededed] flex antialiased">
+      
+      {/* ------------------------------------------------------------- */}
+      {/* LEFT SIDEBAR (Desktop Fixed w-64)                             */}
+      {/* ------------------------------------------------------------- */}
+      <aside aria-label="Main Navigation" className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 flex-col bg-[#ffffff] dark:bg-[#0a0a0a] border-r border-[#e5e5e5] dark:border-[#222222] z-40 select-none">
+        
+        {/* Brand Header */}
+        <div className="h-14 px-4 flex items-center justify-between border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="w-7 h-7 rounded-md bg-[#171717] dark:bg-[#ededed] text-white dark:text-black flex items-center justify-center font-bold text-xs shadow-xs transition-transform duration-150 group-hover:scale-105">
+              ▲
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-bold tracking-tight text-zinc-900 dark:text-white leading-tight">Financial Manager</span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Phiên bản Việt Nam</span>
+              <span className="font-semibold text-xs tracking-tight text-[#171717] dark:text-[#ededed] leading-tight">
+                Financial Manager
+              </span>
+              <span className="text-[10px] text-[#888888] font-mono leading-none">
+                v2.0 • Vietnam Edition
+              </span>
             </div>
+          </Link>
+
+          <div className="flex items-center">
+            <ThemeToggle />
           </div>
-          <ThemeToggle />
         </div>
 
-        {/* Quick action create transaction */}
-        <div className="px-3 pt-3 pb-1.5 space-y-1.5">
-          <button 
-            onClick={() => { onOpenQuickAddTx?.(); setMobileMenuOpen(false); }}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 rounded-lg shadow-sm transition-all duration-150 active:scale-[0.98]"
+        {/* Quick Action CTA Button */}
+        <div className="p-3 border-b border-[#f5f5f5] dark:border-[#161616]">
+          <button
             type="button"
+            onClick={onOpenQuickAddTx}
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-md text-xs font-medium bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] shadow-sm transition-all duration-150 active:scale-[0.98]"
           >
-            <PlusCircle className="w-4 h-4 stroke-[2.2]" />
-            <span>Tạo giao dịch mới</span>
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>Thêm giao dịch mới</span>
           </button>
         </div>
 
-        {/* Navigation links */}
-        <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
-          {/* Main Menu */}
-          <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider px-2.5 pt-2 pb-1">Menu chính</div>
-          {mainNav.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`
-                  flex items-center justify-between px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors group
-                  ${isActive 
-                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold border border-zinc-200/80 dark:border-zinc-700 shadow-xs' 
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/70 dark:hover:bg-zinc-800/50'}
-                `}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300'}`} />
-                  <span>{item.name}</span>
-                </div>
-                {item.badge && (
-                  <span className="text-[9px] bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.2 rounded font-semibold">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-
-          {/* Planning & Sổ Nợ */}
-          <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider px-2.5 pt-3.5 pb-1">Kế hoạch & Sổ nợ</div>
-          {planNav.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`
-                  flex items-center justify-between px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors group
-                  ${isActive 
-                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold border border-zinc-200/80 dark:border-zinc-700 shadow-xs' 
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/70 dark:hover:bg-zinc-800/50'}
-                `}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300'}`} />
-                  <span>{item.name}</span>
-                </div>
-                {item.badge && (
-                  <span className="text-[9px] bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-1.5 py-0.2 rounded font-semibold">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-
-          {/* Tools & Reports */}
-          <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider px-2.5 pt-3.5 pb-1">Tiện ích & Báo cáo</div>
-          {toolsNav.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`
-                  flex items-center justify-between px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors group
-                  ${isActive 
-                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold border border-zinc-200/80 dark:border-zinc-700 shadow-xs' 
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/70 dark:hover:bg-zinc-800/50'}
-                `}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300'}`} />
-                  <span>{item.name}</span>
-                </div>
-                {item.badge && (
-                  <span className="text-[9px] bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-1.5 py-0.2 rounded font-semibold">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Bottom user profile card */}
-        <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
-          <div className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-750 transition-colors shadow-xs">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="h-7 w-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                {userInitial}
+        {/* Navigation Item Groups */}
+        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-5 no-scrollbar">
+          {navGroups.map((group) => (
+            <div key={group.label} className="space-y-1">
+              <div className="px-2 pb-1 text-[10px] font-semibold tracking-wider uppercase text-[#888888] dark:text-[#666666]">
+                {group.label}
               </div>
-              <div className="truncate">
-                <p className="text-xs font-semibold text-zinc-900 dark:text-white truncate">{user.fullName || 'Người dùng PFM'}</p>
-                <p className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">{user.email || 'user@example.com'}</p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={`
+                        group flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors duration-150
+                        ${isActive 
+                          ? 'bg-[#f4f4f5] dark:bg-[#18181b] text-[#171717] dark:text-[#ededed] font-semibold shadow-xs' 
+                          : 'text-[#666666] dark:text-[#888888] hover:bg-[#fafafa] dark:hover:bg-[#121212] hover:text-[#171717] dark:hover:text-[#ededed]'}
+                      `}
+                    >
+                      <div className="flex items-center gap-2.5 truncate">
+                        <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-[#171717] dark:text-[#ededed]' : 'text-[#888888] group-hover:text-[#171717] dark:group-hover:text-[#ededed]'}`} />
+                        <span className="truncate">{item.name}</span>
+                      </div>
+                      {item.badge && (
+                        <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
+          ))}
+        </div>
+
+        {/* Sidebar Footer: Health Check & User Profile */}
+        <div className="p-3 border-t border-[#f0f0f0] dark:border-[#1a1a1a] space-y-2.5 bg-[#fafafa] dark:bg-[#0c0c0c]">
+          
+          {/* Health Score Pill Mini */}
+          {healthEvaluation && (
             <button
-              onClick={() => { setClearDataOpen(true); setMobileMenuOpen(false); }}
-              className="p-1 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-md transition-colors ml-auto"
-              title="Xoá dữ liệu"
-              aria-label="Xoá dữ liệu"
+              type="button"
+              onClick={() => setHealthModalOpen(true)}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium bg-[#ffffff] dark:bg-[#141414] shadow-border-interactive text-[#171717] dark:text-[#ededed]"
+              title="Xem chuẩn đoán sức khỏe tài chính"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-2">
+                <HeartPulse className="w-3.5 h-3.5 text-[#0070f3]" />
+                <span className="text-[11px]">Sức khỏe tài chính</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span 
+                  className="w-2 h-2 rounded-full" 
+                  style={{ backgroundColor: healthEvaluation.color }}
+                />
+                <span className="tabular-nums font-mono text-[11px] font-semibold">{healthEvaluation.score}/100</span>
+              </div>
             </button>
-            <button
-              onClick={handleLogout}
-              className="p-1 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-md transition-colors ml-1"
-              title="Đăng xuất"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
+          )}
+
+          {/* User Account Info & Quick Actions */}
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-2 truncate max-w-[140px]">
+              <div 
+                className="w-7 h-7 shrink-0 rounded-full bg-[#171717] dark:bg-[#ededed] text-white dark:text-black font-semibold text-xs flex items-center justify-center shadow-xs"
+                title={user.email || 'Người dùng'}
+              >
+                {userInitial}
+              </div>
+              <div className="truncate flex flex-col">
+                <span className="text-xs font-medium text-[#171717] dark:text-[#ededed] truncate">
+                  {user.fullName || 'Người dùng'}
+                </span>
+                <span className="text-[10px] text-[#888888] truncate font-mono">
+                  {user.email || 'Free tier'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => setClearDataOpen(true)}
+                className="p-1.5 rounded-md text-[#888888] hover:text-[#ff5b4f] hover:bg-[#ffffff] dark:hover:bg-[#171717] transition-colors"
+                title="Xóa dữ liệu làm lại"
+                aria-label="Xóa dữ liệu"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="p-1.5 rounded-md text-[#888888] hover:text-[#ff5b4f] hover:bg-[#ffffff] dark:hover:bg-[#171717] transition-colors"
+                title="Đăng xuất"
+                aria-label="Đăng xuất"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </aside>
 
-      {/* Main Content Wrapper */}
-      <div className="lg:pl-64 flex-1 flex flex-col min-w-0 min-h-screen relative z-10 pt-16 lg:pt-0 pb-16 lg:pb-0">
-        {/* TopBar */}
-        <header className="sticky top-0 z-20 h-16 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800 px-4 lg:px-8 flex items-center justify-between gap-4">
-          {/* Breadcrumbs & Status */}
+      {/* ------------------------------------------------------------- */}
+      {/* MAIN CONTAINER (Desktop padding-left 64 = 16rem)              */}
+      {/* ------------------------------------------------------------- */}
+      <div className="flex-1 flex flex-col lg:pl-64 min-w-0 transition-all duration-200">
+        
+        {/* Top Header Bar (Search, Date Filter, VietQR, Notifications) */}
+        <header className="sticky top-0 z-30 h-14 bg-[#ffffff]/90 dark:bg-[#000000]/90 backdrop-blur-md border-b border-[#e5e5e5] dark:border-[#222222] px-4 sm:px-6 flex items-center justify-between gap-3">
+          
+          {/* Left: Mobile Menu Toggle / Breadcrumb */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center text-xs font-medium text-zinc-500 dark:text-zinc-400">
-              <span className="hover:text-zinc-900 dark:hover:text-white cursor-pointer">PFM VN</span>
-              <ChevronRight className="w-3.5 h-3.5 mx-1.5 text-zinc-400 stroke-[1.5]" />
-              <span className="text-zinc-900 dark:text-white font-semibold">{getCurrentPageTitle()}</span>
-            </div>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-8 w-8 lg:hidden shadow-border bg-transparent border-0" 
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Menu điều hướng"
+            >
+              <Menu className="w-4 h-4" />
+            </Button>
 
-            {/* Health Score Pill */}
-            {healthEvaluation && (
-              <button
-                type="button"
-                onClick={() => setHealthModalOpen(true)}
-                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border transition hover:scale-105"
-                style={{
-                  backgroundColor: `${healthEvaluation.color}15`,
-                  borderColor: `${healthEvaluation.color}40`,
-                  color: healthEvaluation.color
-                }}
-              >
-                <HeartPulse className="w-3 h-3" />
-                <span>Sức khỏe: {healthEvaluation.score}đ ({healthEvaluation.rating})</span>
-              </button>
-            )}
+            {/* Current Page Title on Header */}
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm text-[#171717] dark:text-[#ededed]">
+                {currentItem.name}
+              </span>
+            </div>
           </div>
 
-          {/* Header Quick Actions */}
+          {/* Right Action Tools */}
           <div className="flex items-center gap-2">
-            {/* VietQR Generator Quick Button */}
+            
+            {/* Search Input Button */}
+            <button
+              type="button"
+              onClick={() => setCommandPaletteOpen(true)}
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-[#666666] dark:text-[#888888] shadow-border-interactive bg-[#fafafa] dark:bg-[#111111] hover:text-[#171717] dark:hover:text-[#ededed]"
+            >
+              <Search className="w-3.5 h-3.5 text-[#888888]" />
+              <span className="hidden sm:inline">Tìm kiếm nhanh…</span>
+              <kbd className="h-4 px-1 rounded bg-[#ffffff] dark:bg-[#1a1a1a] shadow-border text-[10px] font-sans">
+                ⌘K
+              </kbd>
+            </button>
+
+            {/* Date Range Picker */}
+            <button
+              type="button"
+              onClick={() => setDateRangePickerOpen(true)}
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-[#171717] dark:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a]"
+            >
+              <Calendar className="w-3.5 h-3.5 text-[#888888]" />
+              <span className="tabular-nums text-[11px]">{startDate.split('-').reverse().join('/')} – {endDate.split('-').reverse().join('/')}</span>
+              <ChevronDown className="w-3 h-3 text-[#888888]" />
+            </button>
+
+            {/* VietQR Quick Tool */}
             <button
               type="button"
               onClick={() => setVietQrOpen(true)}
-              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 text-xs font-semibold hover:bg-sky-100 transition shadow-xs"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-[#171717] dark:text-[#ededed]"
               title="Tạo mã VietQR Napas247"
             >
-              <QrCode className="w-3.5 h-3.5" />
+              <QrCode className="w-3.5 h-3.5 text-[#0070f3]" />
               <span>VietQR</span>
             </button>
 
-            {/* Smart SMS Import Quick Button */}
+            {/* Smart SMS Import */}
             <button
               type="button"
               onClick={() => setSmsModalOpen(true)}
-              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-semibold hover:bg-emerald-100 transition shadow-xs"
-              title="Quét tin nhắn SMS Banking"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-[#171717] dark:text-[#ededed]"
+              title="Quét tin nhắn SMS biến động số dư"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Sparkles className="w-3.5 h-3.5 text-[#10b981]" />
               <span>Quét SMS</span>
             </button>
 
-            {/* Command Search Bar */}
-            <div 
-              onClick={() => setCommandPaletteOpen(true)}
-              className="relative hidden xl:flex items-center cursor-pointer w-48 bg-zinc-50/80 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 rounded-lg pl-8 pr-10 py-1.5 text-xs text-zinc-500 dark:text-zinc-400 transition"
-            >
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-              <span>Tìm kiếm...</span>
-              <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 hidden h-4 select-none items-center gap-0.5 rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-1 font-sans text-[9px] font-medium text-zinc-500 shadow-xs sm:flex">
-                ⌘K
-              </kbd>
+            {/* Mobile Theme Toggle */}
+            <div className="lg:hidden">
+              <ThemeToggle />
             </div>
 
-            {/* Date Range Filter Dropdown */}
-            <div 
-              onClick={() => setDateRangePickerOpen(true)}
-              className="hidden sm:flex items-center gap-1.5 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-750 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer shadow-xs transition"
-            >
-              <Calendar className="w-3.5 h-3.5 text-zinc-500" />
-              <span className="text-[11px] font-medium">{startDate.split('-').reverse().join('/')} - {endDate.split('-').reverse().join('/')}</span>
-              <ChevronDown className="w-3 h-3 text-zinc-400 ml-0.5" />
-            </div>
-
-            {/* Notifications */}
-            <button 
-              type="button" 
+            {/* Notification Bell */}
+            <button
+              type="button"
               onClick={() => setNotificationOpen(true)}
+              className="p-1.5 rounded-md text-[#666666] dark:text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a]"
               aria-label="Thông báo"
-              className="relative p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 transition shadow-xs"
             >
               <Bell className="w-3.5 h-3.5" />
             </button>
 
-            {/* Primary CTA */}
-            <button 
-              type="button" 
+            {/* Mobile Header Primary CTA */}
+            <button
+              type="button"
               onClick={onOpenQuickAddTx}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-semibold text-xs rounded-lg shadow-xs transition active:scale-95"
+              className="lg:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] shadow-xs active:scale-95"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span className="hidden sm:inline">Tạo giao dịch</span>
+              <span>Giao dịch</span>
             </button>
           </div>
         </header>
 
-        {/* Dashboard / Screen Content */}
-        <main className="flex-1 p-4 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
+        {/* Main Content Area */}
+        <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20 lg:pb-12">
           {children}
         </main>
 
-        {/* Footer */}
-        <footer className="mt-auto border-t border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 px-8 py-4 text-center text-xs text-zinc-500 dark:text-zinc-400">
-          Financial Manager (PFM System) © 2026 • Được tùy chỉnh tối ưu cho người Việt • Kế toán kép & VietQR
+        {/* Minimal Bottom Footer */}
+        <footer className="mt-auto border-t border-[#e5e5e5] dark:border-[#222222] bg-[#ffffff] dark:bg-[#0a0a0a] py-4 text-center text-xs text-[#888888] hidden lg:block">
+          <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between">
+            <span>Financial Manager © 2026 — Thiết kế tối giản chuẩn Vercel Interface</span>
+            <span className="tabular-nums font-mono text-[11px]">VietQR Napas247 • SMS Banking • 6 JARS • 50/30/20</span>
+          </div>
         </footer>
       </div>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 h-14 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-200 dark:border-zinc-800 z-50 flex items-center justify-around px-2">
+      {/* ------------------------------------------------------------- */}
+      {/* MOBILE SLIDE-OVER DRAWER                                      */}
+      {/* ------------------------------------------------------------- */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          {/* Drawer Content */}
+          <div className="relative w-72 max-w-[85vw] bg-[#ffffff] dark:bg-[#0a0a0a] h-full shadow-2xl flex flex-col z-10 animate-in slide-in-from-left duration-200">
+            {/* Drawer Header */}
+            <div className="h-14 px-4 flex items-center justify-between border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded bg-[#171717] dark:bg-[#ededed] text-white dark:text-black flex items-center justify-center font-bold text-xs">
+                  ▲
+                </div>
+                <span className="font-semibold text-xs tracking-tight">Financial Manager</span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1 rounded-md text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Drawer Quick Actions */}
+            <div className="p-3 border-b border-[#f5f5f5] dark:border-[#161616] grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => { setVietQrOpen(true); setMobileMenuOpen(false); }}
+                className="flex items-center justify-center gap-1.5 py-2 rounded-md shadow-border text-xs font-medium bg-[#ffffff] dark:bg-[#111111]"
+              >
+                <QrCode className="w-3.5 h-3.5 text-[#0070f3]" />
+                <span>VietQR</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSmsModalOpen(true); setMobileMenuOpen(false); }}
+                className="flex items-center justify-center gap-1.5 py-2 rounded-md shadow-border text-xs font-medium bg-[#ffffff] dark:bg-[#111111]"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#10b981]" />
+                <span>Quét SMS</span>
+              </button>
+            </div>
+
+            {/* Drawer Navigation List */}
+            <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+              {navGroups.map((group) => (
+                <div key={group.label} className="space-y-1">
+                  <div className="px-2 text-[10px] font-semibold tracking-wider uppercase text-[#888888]">
+                    {group.label}
+                  </div>
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`
+                          flex items-center justify-between px-3 py-2 rounded-md text-xs font-medium transition-colors
+                          ${isActive 
+                            ? 'bg-[#f4f4f5] dark:bg-[#18181b] text-[#171717] dark:text-[#ededed] font-semibold' 
+                            : 'text-[#666666] dark:text-[#888888] hover:bg-[#fafafa] dark:hover:bg-[#121212]'}
+                        `}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Icon className="w-4 h-4" />
+                          <span>{item.name}</span>
+                        </div>
+                        {item.badge && (
+                          <span className="text-[9px] font-mono px-1 rounded bg-amber-500/10 text-amber-600 font-semibold">
+                            {item.badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="p-3 border-t border-[#f0f0f0] dark:border-[#1a1a1a] flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => { setClearDataOpen(true); setMobileMenuOpen(false); }}
+                className="flex items-center gap-1.5 text-xs text-[#ff5b4f] px-2 py-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Xóa dữ liệu</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 text-xs text-[#888888] hover:text-[#ff5b4f] px-2 py-1.5"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Đăng xuất</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* MOBILE BOTTOM NAVIGATION BAR (Thumb Friendly)                 */}
+      {/* ------------------------------------------------------------- */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 h-14 bg-[#ffffff]/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md border-t border-[#e5e5e5] dark:border-[#222222] z-40 flex items-center justify-around px-2">
         <Link
           to="/"
-          className={`flex flex-col items-center gap-0.5 text-[10px] font-medium ${location.pathname === '/' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-zinc-500'}`}
+          className={`flex flex-col items-center gap-0.5 text-[10px] ${location.pathname === '/' ? 'text-[#171717] dark:text-[#ededed] font-semibold' : 'text-[#888888]'}`}
         >
           <LayoutDashboard className="w-4 h-4" />
           <span>Tổng quan</span>
@@ -451,7 +553,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, onOpenQuickAddTx
 
         <Link
           to="/transactions"
-          className={`flex flex-col items-center gap-0.5 text-[10px] font-medium ${location.pathname === '/transactions' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-zinc-500'}`}
+          className={`flex flex-col items-center gap-0.5 text-[10px] ${location.pathname === '/transactions' ? 'text-[#171717] dark:text-[#ededed] font-semibold' : 'text-[#888888]'}`}
         >
           <ArrowLeftRight className="w-4 h-4" />
           <span>Giao dịch</span>
@@ -461,25 +563,26 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, onOpenQuickAddTx
         <button
           type="button"
           onClick={onOpenQuickAddTx}
-          className="w-10 h-10 -mt-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition"
+          className="w-10 h-10 -mt-5 rounded-full bg-[#171717] dark:bg-[#ededed] text-white dark:text-black flex items-center justify-center shadow-md active:scale-95 transition-transform"
+          aria-label="Tạo giao dịch"
         >
           <Plus className="w-5 h-5 stroke-[2.5]" />
         </button>
 
         <Link
           to="/calendar"
-          className={`flex flex-col items-center gap-0.5 text-[10px] font-medium ${location.pathname === '/calendar' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-zinc-500'}`}
+          className={`flex flex-col items-center gap-0.5 text-[10px] ${location.pathname === '/calendar' ? 'text-[#171717] dark:text-[#ededed] font-semibold' : 'text-[#888888]'}`}
         >
           <CalendarDays className="w-4 h-4" />
           <span>Lịch</span>
         </Link>
 
         <Link
-          to="/accounts"
-          className={`flex flex-col items-center gap-0.5 text-[10px] font-medium ${location.pathname === '/accounts' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-zinc-500'}`}
+          to="/debts"
+          className={`flex flex-col items-center gap-0.5 text-[10px] ${location.pathname === '/debts' ? 'text-[#171717] dark:text-[#ededed] font-semibold' : 'text-[#888888]'}`}
         >
-          <CreditCard className="w-4 h-4" />
-          <span>Ví & TK</span>
+          <HandCoins className="w-4 h-4" />
+          <span>Sổ nợ</span>
         </Link>
       </div>
 

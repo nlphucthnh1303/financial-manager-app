@@ -3,9 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { VIETNAM_BANKS, generateVietQRUrl, numberToVietnameseWords } from '@/lib/vietnam-banks';
-import { formatCurrency } from '@/lib/utils';
-import { QrCode, Copy, Download, Share2, Check } from 'lucide-react';
+import { QrCode, Copy, Download, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface VietQrModalProps {
@@ -21,7 +21,7 @@ interface VietQrModalProps {
 export const VietQrModal: React.FC<VietQrModalProps> = ({
   open,
   onClose,
-  defaultBankBin = '970436', // Vietcombank default
+  defaultBankBin = '970436',
   defaultAccount = '',
   defaultAccountName = '',
   defaultAmount = 0,
@@ -57,7 +57,7 @@ export const VietQrModal: React.FC<VietQrModalProps> = ({
   const handleCopy = () => {
     navigator.clipboard.writeText(qrUrl);
     setCopied(true);
-    toast.success('Đã sao chép liên kết mã VietQR vào bộ nhớ tạm!');
+    toast.success('Đã sao chép liên kết mã VietQR!');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -69,119 +69,117 @@ export const VietQrModal: React.FC<VietQrModalProps> = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('Đang mở ảnh mã VietQR để lưu...');
+    toast.success('Đang mở mã VietQR để lưu…');
   };
 
   const currentBank = VIETNAM_BANKS.find(b => b.bin === bankBin);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border text-[#0070f3] flex items-center justify-center">
               <QrCode className="w-4 h-4" />
             </div>
             <div>
-              <DialogTitle className="text-base font-semibold">Tạo mã VietQR Napas247</DialogTitle>
-              <DialogDescription className="text-xs">
-                Mã chuyển nhanh 24/7 nhận tiền tức thì từ mọi ngân hàng và ví điện tử Việt Nam.
+              <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">Tạo mã VietQR Napas247</DialogTitle>
+              <DialogDescription className="text-xs text-[#888888]">
+                Mã chuyển nhanh 24/7 nhận tiền tức thì từ mọi ngân hàng VN.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 py-1">
-          {/* Bank selector */}
+        <div className="space-y-3.5 py-1">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block">Ngân hàng thụ hưởng</label>
-              <select
-                value={bankBin}
-                onChange={e => setBankBin(e.target.value)}
-                className="flex h-9 w-full rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1 text-xs shadow-xs text-zinc-900 dark:text-white focus:outline-none"
-              >
-                {VIETNAM_BANKS.filter(b => b.bin).map(b => (
-                  <option key={b.id} value={b.bin}>
-                    {b.shortName} ({b.code})
-                  </option>
-                ))}
-              </select>
+              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Ngân hàng</label>
+              <Select value={bankBin} onValueChange={setBankBin}>
+                <SelectTrigger className="shadow-input text-xs h-9">
+                  <SelectValue placeholder="Chọn ngân hàng..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-64">
+                  {VIETNAM_BANKS.filter(b => b.bin).map(b => (
+                    <SelectItem key={b.id} value={b.bin} className="text-xs">
+                      {b.shortName} ({b.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
-              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block">Số tài khoản nhận *</label>
+              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Số tài khoản *</label>
               <Input
-                placeholder="VD: 0123456789"
+                placeholder="0123456789…"
                 value={accountNumber}
                 onChange={e => setAccountNumber(e.target.value)}
-                className="h-9 text-xs font-mono"
+                className="shadow-input text-xs"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block">Tên chủ tài khoản</label>
+              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Chủ tài khoản</label>
               <Input
-                placeholder="VD: NGUYEN VAN A"
+                placeholder="NGUYEN VAN A…"
                 value={accountName}
                 onChange={e => setAccountName(e.target.value.toUpperCase())}
-                className="h-9 text-xs font-semibold"
+                className="shadow-input text-xs font-medium"
               />
             </div>
 
             <div>
-              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block">Số tiền (VNĐ - tùy chọn)</label>
+              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Số tiền (VNĐ)</label>
               <MoneyInput
-                placeholder="0 (Nhập tự do)"
+                placeholder="0 (Nhập tự do)…"
                 value={amount}
                 onValueChange={setAmount}
-                className="h-9 text-xs font-bold"
+                className="shadow-input text-xs font-semibold"
               />
             </div>
           </div>
 
           {numAmount > 0 && (
-            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium px-2.5 py-1 rounded bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+            <div className="text-[11px] text-[#10b981] font-medium px-2.5 py-1 rounded bg-[#fafafa] dark:bg-[#111111] shadow-border animate-in fade-in duration-150">
               {numberToVietnameseWords(numAmount)}
             </div>
           )}
 
           <div>
-            <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block">Nội dung chuyển khoản</label>
+            <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Nội dung chuyển khoản</label>
             <Input
-              placeholder="VD: Chuyen tien an trua, Tra no..."
+              placeholder="Chuyen tien an trua…"
               value={memo}
               onChange={e => setMemo(e.target.value)}
-              className="h-9 text-xs"
+              className="shadow-input text-xs"
             />
           </div>
 
-          {/* QR Code Display Container */}
-          <div className="flex flex-col items-center justify-center p-4 bg-zinc-50 dark:bg-zinc-800/80 rounded-xl border border-zinc-200 dark:border-zinc-700 text-center">
+          {/* QR Code Container */}
+          <div className="flex flex-col items-center justify-center p-4 bg-[#fafafa] dark:bg-[#111111] rounded-lg shadow-border text-center">
             {accountNumber ? (
-              <div className="relative group">
-                <img
-                  src={qrUrl}
-                  alt="Mã VietQR"
-                  className="w-48 h-auto object-contain rounded-lg shadow-md bg-white p-2 border border-zinc-100 dark:border-zinc-700"
-                />
-              </div>
+              <img
+                src={qrUrl}
+                alt="Mã VietQR"
+                className="w-44 h-auto object-contain rounded-md shadow-sm bg-white p-2 border border-zinc-200/50"
+              />
             ) : (
-              <div className="w-48 h-48 flex items-center justify-center border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg text-xs text-zinc-400">
+              <div className="w-44 h-44 flex items-center justify-center border border-dashed border-zinc-300 dark:border-zinc-700 rounded-md text-xs text-[#888888]">
                 Nhập số tài khoản để tạo mã QR
               </div>
             )}
-            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-2.5">
+            <p className="text-[11px] text-[#888888] mt-2">
               {currentBank?.shortName} • {accountNumber || 'Chưa nhập STK'}
             </p>
           </div>
         </div>
 
         <DialogFooter className="gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={handleCopy} className="text-xs">
-            {copied ? <Check className="w-3.5 h-3.5 mr-1 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
+          <Button type="button" variant="outline" size="sm" onClick={handleCopy} className="text-xs shadow-border">
+            {copied ? <Check className="w-3.5 h-3.5 mr-1 text-[#10b981]" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
             {copied ? 'Đã chép' : 'Sao chép link'}
           </Button>
           <Button
@@ -189,7 +187,7 @@ export const VietQrModal: React.FC<VietQrModalProps> = ({
             onClick={handleDownload}
             disabled={!accountNumber}
             size="sm"
-            className="text-xs bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
+            className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black"
           >
             <Download className="w-3.5 h-3.5 mr-1" />
             Tải mã QR

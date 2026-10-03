@@ -14,6 +14,8 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -84,22 +86,27 @@ const AddBudgetModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: 
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block">Chu kỳ</label>
-              <select value={form.period} onChange={e => setForm(f => ({ ...f, period: e.target.value }))} className="flex h-9 w-full rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1 text-xs shadow-xs text-zinc-900 dark:text-white focus:outline-none">
-                <option value="Monthly">Hàng tháng</option>
-                <option value="Weekly">Hàng tuần</option>
-                <option value="Yearly">Hàng năm</option>
-              </select>
+              <Select value={form.period} onValueChange={v => setForm(f => ({ ...f, period: v }))}>
+                <SelectTrigger className="shadow-input text-xs h-9">
+                  <SelectValue placeholder="Chọn chu kỳ" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Monthly" className="text-xs">Hàng tháng</SelectItem>
+                  <SelectItem value="Weekly" className="text-xs">Hàng tuần</SelectItem>
+                  <SelectItem value="Yearly" className="text-xs">Hàng năm</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block">Từ ngày</label>
-              <Input type="date" value={form.start} onChange={e => setForm(f => ({ ...f, start: e.target.value }))} aria-invalid={!!errors.start} />
+              <DatePicker value={form.start} onChange={v => setForm(f => ({ ...f, start: v }))} aria-invalid={!!errors.start} />
               <FieldError message={errors.start} />
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block">Đến ngày</label>
-              <Input type="date" value={form.end} min={form.start || undefined} onChange={e => setForm(f => ({ ...f, end: e.target.value }))} aria-invalid={!!errors.end} />
+              <DatePicker value={form.end} min={form.start || undefined} onChange={v => setForm(f => ({ ...f, end: v }))} aria-invalid={!!errors.end} />
               <FieldError message={errors.end} />
             </div>
           </div>
@@ -325,13 +332,22 @@ const AddBillModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: ()
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block">Chu kỳ lặp *</label>
-              <select value={form.repeatFrequency} onChange={e => setForm(f => ({ ...f, repeatFrequency: e.target.value }))} className="flex h-9 w-full rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1 text-xs shadow-xs text-zinc-900 dark:text-white focus:outline-none">
-                {Object.entries(FREQUENCY_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
+              <Select value={form.repeatFrequency} onValueChange={v => setForm(f => ({ ...f, repeatFrequency: v }))}>
+                <SelectTrigger className="shadow-input text-xs h-9">
+                  <SelectValue placeholder="Chọn chu kỳ lặp" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(FREQUENCY_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value} className="text-xs">
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block">Ngày đến hạn *</label>
-              <Input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} aria-invalid={!!errors.date} />
+              <DatePicker value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} aria-invalid={!!errors.date} />
               <FieldError message={errors.date} />
             </div>
           </div>

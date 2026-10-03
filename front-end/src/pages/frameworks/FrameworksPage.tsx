@@ -1,48 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { SIX_JARS, RULE_50_30_20, type JarCategory } from '@/lib/financial-frameworks';
+import { SIX_JARS, RULE_50_30_20 } from '@/lib/financial-frameworks';
 import { formatCurrency, currentMonthRange, startOfDayIso, endOfDayIso } from '@/lib/utils';
 import { MoneyInput } from '@/components/ui/money-input';
-import { Button } from '@/components/ui/button';
 import { 
-  Sparkles, 
-  PieChart as PieIcon, 
-  Target, 
-  ShieldCheck, 
-  ArrowRight, 
-  Info,
   Layers,
-  Percent,
-  Check
+  Percent
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 export const FrameworksPage: React.FC = () => {
   const [method, setMethod] = useState<'jars' | '503020'>('jars');
-  const [monthlyIncomeInput, setMonthlyIncomeInput] = useState('20000000'); // default 20M VND
+  const [monthlyIncomeInput, setMonthlyIncomeInput] = useState('20000000');
   const [actualExpense, setActualExpense] = useState<number>(0);
-  const [actualIncome, setActualIncome] = useState<number>(0);
-  const [loading, setLoading] = useState(false);
 
   const { start, end } = currentMonthRange();
 
   useEffect(() => {
     const loadCurrentMonthData = async () => {
       try {
-        setLoading(true);
         const res: any = await api.get(`/statistics/summary?startDate=${startOfDayIso(start)}&endDate=${endOfDayIso(end)}`);
         const kpi = res.data?.kpi;
         if (kpi) {
           if (kpi.totalIncome > 0) {
             setMonthlyIncomeInput(String(kpi.totalIncome));
-            setActualIncome(kpi.totalIncome);
           }
           setActualExpense(kpi.totalExpense || 0);
         }
       } catch {
         // use default
-      } finally {
-        setLoading(false);
       }
     };
     loadCurrentMonthData();
@@ -53,65 +38,60 @@ export const FrameworksPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-white">
-              Phương Pháp Quản Lý Tài Chính
-            </h1>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-              JARS & 50/30/20
-            </span>
-          </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Ứng dụng các quy tắc tài chính kinh điển thế giới được tinh chỉnh tối ưu cho người Việt Nam.
+          <h1 className="text-2xl font-semibold tracking-tight text-[#171717] dark:text-[#ededed]">
+            Phương pháp quản lý tài chính
+          </h1>
+          <p className="text-xs text-[#666666] dark:text-[#888888] mt-0.5">
+            Mô hình phân bổ dòng tiền 6 chiếc hũ (JARS) và quy tắc 50/30/20
           </p>
         </div>
 
         {/* Method Switcher */}
-        <div className="flex items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 self-start sm:self-auto">
+        <div className="flex items-center p-0.5 bg-[#fafafa] dark:bg-[#111111] shadow-border rounded-md self-start sm:self-auto">
           <button
             type="button"
             onClick={() => setMethod('jars')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${method === 'jars' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400'}`}
+            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors flex items-center gap-1.5 ${method === 'jars' ? 'bg-[#ffffff] dark:bg-[#1f1f1f] text-[#171717] dark:text-[#ededed] shadow-xs' : 'text-[#666666] dark:text-[#888888]'}`}
           >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Quy tắc 6 Chiếc Hũ (JARS)</span>
+            <Layers className="w-3.5 h-3.5 text-[#0070f3]" />
+            <span>6 Chiếc Hũ (JARS)</span>
           </button>
           <button
             type="button"
             onClick={() => setMethod('503020')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${method === '503020' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400'}`}
+            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors flex items-center gap-1.5 ${method === '503020' ? 'bg-[#ffffff] dark:bg-[#1f1f1f] text-[#171717] dark:text-[#ededed] shadow-xs' : 'text-[#666666] dark:text-[#888888]'}`}
           >
-            <Percent className="w-3.5 h-3.5" />
+            <Percent className="w-3.5 h-3.5 text-[#10b981]" />
             <span>Quy tắc 50 / 30 / 20</span>
           </button>
         </div>
       </div>
 
       {/* Income Base Input Card */}
-      <div className="p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
+      <div className="p-5 rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500 block mb-1">
-              Thu nhập hàng tháng dùng để phân bổ (VNĐ):
+            <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] block mb-1.5">
+              Thu nhập hàng tháng dùng để tính toán (VNĐ)
             </label>
             <div className="w-full sm:w-80">
               <MoneyInput
                 value={monthlyIncomeInput}
                 onValueChange={setMonthlyIncomeInput}
-                className="text-lg font-bold tabular-nums"
-                placeholder="VD: 20.000.000"
+                className="text-base font-semibold tabular-nums shadow-input"
+                placeholder="20.000.000…"
               />
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 text-xs sm:text-right">
-            <span className="text-[10px] text-zinc-400 uppercase font-medium block">Chi tiêu thực tế tháng này</span>
-            <span className="text-base font-bold text-zinc-900 dark:text-white tabular-nums block mt-0.5">
+          <div className="p-3 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border text-xs sm:text-right">
+            <span className="text-[11px] text-[#888888] block">Chi tiêu thực tế tháng này</span>
+            <span className="text-base font-semibold text-[#171717] dark:text-[#ededed] tabular-nums block mt-0.5">
               {formatCurrency(actualExpense)}
             </span>
-            <span className="text-[11px] text-zinc-500">
+            <span className="text-[11px] text-[#666666] dark:text-[#888888]">
               Chiếm {income > 0 ? ((actualExpense / income) * 100).toFixed(0) : 0}% tổng thu nhập
             </span>
           </div>
@@ -123,12 +103,12 @@ export const FrameworksPage: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                <Layers className="w-4 h-4 text-indigo-600" />
-                Phân bổ ngân sách theo 6 Chiếc Hũ (T. Harv Eker)
+              <h2 className="text-sm font-semibold text-[#171717] dark:text-[#ededed] flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[#0070f3]" />
+                Phân bổ ngân sách 6 chiếc hũ (T. Harv Eker)
               </h2>
-              <p className="text-xs text-zinc-500 mt-0.5">
-                Mỗi khi nhận lương hoặc có thu nhập mới, hãy chia ngay vào 6 hũ này trước khi tiêu xài.
+              <p className="text-xs text-[#666666] dark:text-[#888888] mt-0.5">
+                Chia nhỏ thu nhập ngay khi nhận tiền để kiểm soát toàn diện chi tiêu và đầu tư
               </p>
             </div>
           </div>
@@ -141,49 +121,46 @@ export const FrameworksPage: React.FC = () => {
               return (
                 <div
                   key={jar.id}
-                  className="p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs flex flex-col justify-between hover:border-zinc-300 dark:hover:border-zinc-700 transition"
+                  className="p-5 rounded-lg shadow-card-hover bg-[#ffffff] dark:bg-[#0a0a0a] flex flex-col justify-between"
                 >
                   <div>
-                    {/* Header */}
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2.5">
-                        <span className="w-9 h-9 rounded-lg flex items-center justify-center text-lg bg-zinc-100 dark:bg-zinc-800">
+                        <span className="w-8 h-8 rounded-md flex items-center justify-center text-base bg-[#fafafa] dark:bg-[#111111] shadow-border">
                           {jar.icon}
                         </span>
                         <div>
-                          <h3 className="font-semibold text-xs text-zinc-900 dark:text-white">
+                          <h3 className="font-semibold text-xs text-[#171717] dark:text-[#ededed]">
                             {jar.name}
                           </h3>
-                          <span className="text-[10px] text-zinc-500 font-mono">
+                          <span className="text-[10px] text-[#888888]">
                             Hũ #{jar.code}
                           </span>
                         </div>
                       </div>
 
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${jar.color}20`, color: jar.color }}>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded shadow-border bg-[#fafafa] dark:bg-[#111111] text-[#171717] dark:text-[#ededed]">
                         {jar.percentage}%
                       </span>
                     </div>
 
-                    {/* Allocated Amount */}
-                    <div className="mt-4 p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
-                      <span className="text-[10px] text-zinc-400 font-medium block">NGÂN SÁCH GỢI Ý MỖI THÁNG</span>
-                      <div className="text-lg font-bold tabular-nums text-zinc-900 dark:text-white mt-0.5">
+                    <div className="mt-4 p-3 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
+                      <span className="text-[10px] text-[#888888] block">HẠN MỨC DỰ KIẾN</span>
+                      <div className="text-lg font-semibold tabular-nums text-[#171717] dark:text-[#ededed] mt-0.5">
                         {formatCurrency(allocated)}
                       </div>
                     </div>
 
-                    <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-3 leading-relaxed">
+                    <p className="text-xs text-[#666666] dark:text-[#888888] mt-3 leading-relaxed">
                       {jar.description}
                     </p>
 
-                    {/* Examples */}
-                    <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
-                      <span className="text-[10px] text-zinc-400 font-semibold uppercase block mb-1">Bao gồm:</span>
-                      <ul className="space-y-1 text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-900">
+                      <span className="text-[10px] text-[#888888] uppercase block mb-1">Bao gồm:</span>
+                      <ul className="space-y-1 text-[11px] text-[#666666] dark:text-[#888888]">
                         {jar.examples.map((ex, i) => (
                           <li key={i} className="flex items-center gap-1.5">
-                            <span className="w-1 h-1 rounded-full bg-zinc-400" />
+                            <span className="w-1 h-1 rounded-full bg-[#888888]" />
                             <span>{ex}</span>
                           </li>
                         ))}
@@ -202,37 +179,37 @@ export const FrameworksPage: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                <Percent className="w-4 h-4 text-emerald-600" />
+              <h2 className="text-sm font-semibold text-[#171717] dark:text-[#ededed] flex items-center gap-2">
+                <Percent className="w-4 h-4 text-[#10b981]" />
                 Quy tắc 50 / 30 / 20 (Elizabeth Warren)
               </h2>
-              <p className="text-xs text-zinc-500 mt-0.5">
-                Phương pháp đơn giản nhất để cân bằng giữa sinh hoạt hiện tại và tích lũy tương lai.
+              <p className="text-xs text-[#666666] dark:text-[#888888] mt-0.5">
+                Cân đối giữa nhu cầu thiết yếu, mong muốn cá nhân và tích lũy dài hạn
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Needs 50% */}
-            <div className="p-5 rounded-xl border border-sky-200 dark:border-sky-900/60 bg-sky-50/20 dark:bg-sky-950/10 shadow-xs flex flex-col justify-between">
+            <div className="p-5 rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a] flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl">🏠</span>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-300">
+                  <span className="text-xl">🏠</span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded shadow-border bg-[#fafafa] dark:bg-[#111111] text-[#171717] dark:text-[#ededed]">
                     50% Thu nhập
                   </span>
                 </div>
 
-                <h3 className="font-semibold text-sm text-zinc-900 dark:text-white mt-3">
+                <h3 className="font-semibold text-sm text-[#171717] dark:text-[#ededed] mt-3">
                   {RULE_50_30_20.needs.label}
                 </h3>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
+                <p className="text-xs text-[#666666] dark:text-[#888888] mt-1">
                   {RULE_50_30_20.needs.desc}
                 </p>
 
-                <div className="mt-4 p-3 rounded-lg bg-white dark:bg-zinc-800 border border-sky-100 dark:border-sky-900">
-                  <span className="text-[10px] text-zinc-400 font-medium block">HẠN MỨC TỐI ĐA</span>
-                  <span className="text-xl font-bold text-sky-700 dark:text-sky-300 tabular-nums mt-0.5 block">
+                <div className="mt-4 p-3 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
+                  <span className="text-[10px] text-[#888888] block">HẠN MỨC TỐI ĐA</span>
+                  <span className="text-xl font-semibold text-[#171717] dark:text-[#ededed] tabular-nums mt-0.5 block">
                     {formatCurrency(income * 0.5)}
                   </span>
                 </div>
@@ -240,25 +217,25 @@ export const FrameworksPage: React.FC = () => {
             </div>
 
             {/* Wants 30% */}
-            <div className="p-5 rounded-xl border border-pink-200 dark:border-pink-900/60 bg-pink-50/20 dark:bg-pink-950/10 shadow-xs flex flex-col justify-between">
+            <div className="p-5 rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a] flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl">🍿</span>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-300">
+                  <span className="text-xl">🍿</span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded shadow-border bg-[#fafafa] dark:bg-[#111111] text-[#171717] dark:text-[#ededed]">
                     30% Thu nhập
                   </span>
                 </div>
 
-                <h3 className="font-semibold text-sm text-zinc-900 dark:text-white mt-3">
+                <h3 className="font-semibold text-sm text-[#171717] dark:text-[#ededed] mt-3">
                   {RULE_50_30_20.wants.label}
                 </h3>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
+                <p className="text-xs text-[#666666] dark:text-[#888888] mt-1">
                   {RULE_50_30_20.wants.desc}
                 </p>
 
-                <div className="mt-4 p-3 rounded-lg bg-white dark:bg-zinc-800 border border-pink-100 dark:border-pink-900">
-                  <span className="text-[10px] text-zinc-400 font-medium block">HẠN MỨC TỐI ĐA</span>
-                  <span className="text-xl font-bold text-pink-700 dark:text-pink-300 tabular-nums mt-0.5 block">
+                <div className="mt-4 p-3 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
+                  <span className="text-[10px] text-[#888888] block">HẠN MỨC TỐI ĐA</span>
+                  <span className="text-xl font-semibold text-[#171717] dark:text-[#ededed] tabular-nums mt-0.5 block">
                     {formatCurrency(income * 0.3)}
                   </span>
                 </div>
@@ -266,25 +243,25 @@ export const FrameworksPage: React.FC = () => {
             </div>
 
             {/* Savings 20% */}
-            <div className="p-5 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/20 dark:bg-emerald-950/10 shadow-xs flex flex-col justify-between">
+            <div className="p-5 rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a] flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl">💰</span>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-300">
+                  <span className="text-xl">💰</span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded shadow-border bg-[#fafafa] dark:bg-[#111111] text-[#10b981]">
                     20% Thu nhập
                   </span>
                 </div>
 
-                <h3 className="font-semibold text-sm text-zinc-900 dark:text-white mt-3">
+                <h3 className="font-semibold text-sm text-[#171717] dark:text-[#ededed] mt-3">
                   {RULE_50_30_20.savings.label}
                 </h3>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
+                <p className="text-xs text-[#666666] dark:text-[#888888] mt-1">
                   {RULE_50_30_20.savings.desc}
                 </p>
 
-                <div className="mt-4 p-3 rounded-lg bg-white dark:bg-zinc-800 border border-emerald-100 dark:border-emerald-900">
-                  <span className="text-[10px] text-zinc-400 font-medium block">MỤC TIÊU TÍCH LŨY</span>
-                  <span className="text-xl font-bold text-emerald-700 dark:text-emerald-300 tabular-nums mt-0.5 block">
+                <div className="mt-4 p-3 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
+                  <span className="text-[10px] text-[#888888] block">MỤC TIÊU TÍCH LŨY</span>
+                  <span className="text-xl font-semibold text-[#10b981] tabular-nums mt-0.5 block">
                     {formatCurrency(income * 0.2)}
                   </span>
                 </div>

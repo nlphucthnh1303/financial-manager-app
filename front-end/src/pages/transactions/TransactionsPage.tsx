@@ -3,8 +3,6 @@ import { api } from '@/lib/api';
 import { counterpartyOf, endOfDayIso, formatCurrency, formatDate, startOfDayIso, walletOf, exportToCSV } from '@/lib/utils';
 import { useDateRange } from '@/lib/date-range';
 import { 
-  TrendingUp, 
-  TrendingDown, 
   Receipt, 
   RefreshCw, 
   Plus, 
@@ -16,18 +14,17 @@ import {
   QrCode,
   Sparkles,
   Download,
-  Filter,
   ArrowUpRight,
-  ArrowDownRight,
-  ArrowLeftRight
+  ArrowDownRight
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { CreateTransactionModal } from '@/components/modals/CreateTransactionModal';
 import { SmartSmsImportModal } from '@/components/modals/SmartSmsImportModal';
 import { VietQrModal } from '@/components/modals/VietQrModal';
-import { type ParsedSmsResult } from '@/lib/vietnam-banks';
 
 const PAGE_SIZE = 50;
 
@@ -46,62 +43,59 @@ const TxDetailDialog: React.FC<{
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
         <DialogHeader>
-          <DialogTitle className="text-base font-semibold">Chi tiết giao dịch #{tx.id?.slice(0, 8)}</DialogTitle>
+          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">
+            Chi tiết giao dịch #{tx.id?.slice(0, 8)}
+          </DialogTitle>
+          <DialogDescription className="text-xs text-[#888888]">
+            Thông tin định khoản kế toán kép
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <div className="text-center py-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700">
-            <span className={`text-3xl font-extrabold tabular-nums ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : isExpense ? 'text-rose-600 dark:text-rose-400' : 'text-sky-600 dark:text-sky-400'}`}>
-              {isExpense ? '-' : isIncome ? '+' : ''}{formatCurrency(tx.amount)}
+          <div className="text-center py-4 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
+            <span className={`text-3xl font-semibold tabular-nums ${isIncome ? 'text-[#10b981]' : isExpense ? 'text-[#ff5b4f]' : 'text-[#0070f3]'}`}>
+              {isExpense ? '−' : isIncome ? '+' : ''}{formatCurrency(tx.amount)}
             </span>
-            <p className="text-zinc-700 dark:text-zinc-200 font-semibold text-xs mt-1.5">{tx.description}</p>
+            <p className="text-[#171717] dark:text-[#ededed] font-medium text-xs mt-1">{tx.description}</p>
           </div>
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
-              <span className="text-[10px] text-zinc-400 font-semibold uppercase block">Thời gian</span>
-              <span className="font-semibold text-zinc-800 dark:text-zinc-200 block mt-0.5">{formatDate(tx.date)}</span>
+          <div className="grid grid-cols-2 gap-2.5 text-xs">
+            <div className="p-2.5 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
+              <span className="text-[10px] text-[#888888] block">Thời gian</span>
+              <span className="font-medium text-[#171717] dark:text-[#ededed] block mt-0.5 tabular-nums">{formatDate(tx.date)}</span>
             </div>
-            <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
-              <span className="text-[10px] text-zinc-400 font-semibold uppercase block">Loại giao dịch</span>
-              <span className="font-semibold text-zinc-800 dark:text-zinc-200 block mt-0.5">{isIncome ? 'Thu nhập (+)' : isExpense ? 'Chi tiêu (-)' : 'Chuyển khoản ↔'}</span>
+            <div className="p-2.5 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
+              <span className="text-[10px] text-[#888888] block">Loại giao dịch</span>
+              <span className="font-medium text-[#171717] dark:text-[#ededed] block mt-0.5">{isIncome ? 'Thu nhập (+)' : isExpense ? 'Chi tiêu (−)' : 'Chuyển khoản ↔'}</span>
             </div>
-            <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
-              <span className="text-[10px] text-zinc-400 font-semibold uppercase block">{isIncome ? 'Ví nhận' : 'Ví chi'}</span>
-              <span className="font-semibold text-zinc-800 dark:text-zinc-200 block mt-0.5">{walletOf(tx)?.name || '—'}</span>
+            <div className="p-2.5 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
+              <span className="text-[10px] text-[#888888] block">{isIncome ? 'Ví nhận' : 'Ví chi'}</span>
+              <span className="font-medium text-[#171717] dark:text-[#ededed] block mt-0.5">{walletOf(tx)?.name || '—'}</span>
             </div>
-            <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
-              <span className="text-[10px] text-zinc-400 font-semibold uppercase block">{isIncome ? 'Nguồn thu' : isExpense ? 'Nơi chi tiêu' : 'Ví nhận'}</span>
-              <span className="font-semibold text-zinc-800 dark:text-zinc-200 block mt-0.5">{counterpartyOf(tx)?.name || '—'}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
-              <span className="text-[10px] text-zinc-400 font-semibold uppercase block">Danh mục</span>
-              <span className="font-semibold text-zinc-800 dark:text-zinc-200 block mt-0.5">{tx.category?.name || 'Chưa phân loại'}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
-              <span className="text-[10px] text-zinc-400 font-semibold uppercase block">Thẻ tag</span>
-              <span className="font-semibold text-zinc-800 dark:text-zinc-200 block mt-0.5">{tx.tags?.length ? tx.tags.map((t: string) => `#${t}`).join(' ') : '—'}</span>
+            <div className="p-2.5 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
+              <span className="text-[10px] text-[#888888] block">Danh mục</span>
+              <span className="font-medium text-[#171717] dark:text-[#ededed] block mt-0.5">{tx.category?.name || 'Chưa phân loại'}</span>
             </div>
           </div>
-          {tx.notes && <p className="text-xs text-zinc-600 dark:text-zinc-400 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">{tx.notes}</p>}
+          {tx.notes && <p className="text-xs text-[#666666] dark:text-[#888888] p-2.5 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">{tx.notes}</p>}
         </div>
         <DialogFooter className="gap-2">
           {!confirmDelete ? (
             <>
-              <Button variant="outline" size="sm" onClick={() => onOpenVietQr(tx)} className="text-xs text-sky-600">
-                <QrCode className="w-3.5 h-3.5 mr-1" /> Tạo VietQR
+              <Button variant="outline" size="sm" onClick={() => onOpenVietQr(tx)} className="text-xs shadow-border text-[#0070f3]">
+                <QrCode className="w-3.5 h-3.5 mr-1" /> VietQR
               </Button>
-              <Button variant="outline" size="sm" onClick={onClose} className="text-xs">Đóng</Button>
-              <Button variant="destructive" size="sm" onClick={() => setConfirmDelete(true)} className="text-xs">
+              <Button variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border">Đóng</Button>
+              <Button variant="destructive" size="sm" onClick={() => setConfirmDelete(true)} className="text-xs bg-[#ff5b4f] text-white">
                 <Trash2 className="w-3.5 h-3.5 mr-1" /> Xóa
               </Button>
             </>
           ) : (
             <div className="w-full space-y-2">
-              <p className="text-xs text-rose-600 dark:text-rose-400 font-medium text-center">Xác nhận xóa vĩnh viễn giao dịch này?</p>
+              <p className="text-xs text-[#ff5b4f] font-medium text-center">Xác nhận xóa giao dịch này?</p>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => setConfirmDelete(false)}>Hủy</Button>
-                <Button variant="destructive" size="sm" className="flex-1 text-xs" onClick={() => { onDelete(tx.id); onClose(); }}>Xóa ngay</Button>
+                <Button variant="outline" size="sm" className="flex-1 text-xs shadow-border" onClick={() => setConfirmDelete(false)}>Hủy</Button>
+                <Button variant="destructive" size="sm" className="flex-1 text-xs bg-[#ff5b4f] text-white" onClick={() => { onDelete(tx.id); onClose(); }}>Xóa ngay</Button>
               </div>
             </div>
           )}
@@ -134,7 +128,7 @@ export const TransactionsPage: React.FC = () => {
       setTransactions(res.data || []);
       setKpi(sum.data?.kpi || null);
     } catch {
-      toast.error('Không thể tải danh sách giao dịch từ máy chủ.');
+      toast.error('Không thể tải danh sách giao dịch.');
     } finally {
       setLoading(false);
     }
@@ -146,7 +140,7 @@ export const TransactionsPage: React.FC = () => {
   const handleDelete = async (id: string) => {
     try {
       await api.delete(`/transactions/${id}`);
-      toast.success('Đã xóa giao dịch thành công.');
+      toast.success('Đã xóa giao dịch.');
       loadTransactions();
     } catch (err: any) {
       toast.error(err?.message || 'Không thể xóa giao dịch.');
@@ -158,8 +152,8 @@ export const TransactionsPage: React.FC = () => {
       'Mô tả': t.description,
       'Danh mục': t.category?.name || 'Chưa phân loại',
       'Ví nguồn': walletOf(t)?.name || '',
-      'Đối tác / Nơi chi': counterpartyOf(t)?.name || '',
-      'Loại': t.transactionType === 'Deposit' ? 'Thu nhập (+)' : t.transactionType === 'Withdrawal' ? 'Chi tiêu (-)' : 'Chuyển khoản nội bộ',
+      'Đối tác': counterpartyOf(t)?.name || '',
+      'Loại': t.transactionType === 'Deposit' ? 'Thu nhập (+)' : t.transactionType === 'Withdrawal' ? 'Chi tiêu (-)' : 'Chuyển khoản',
       'Số tiền (VNĐ)': t.transactionType === 'Withdrawal' ? -t.amount : t.amount,
       'Thời gian': formatDate(t.date),
       'Ghi chú': t.notes || ''
@@ -189,14 +183,11 @@ export const TransactionsPage: React.FC = () => {
       {/* Page Header & Action Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-white">Sổ Giao Dịch</h1>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-              Live Feed
-            </span>
-          </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Lịch sử hạch toán kế toán kép theo chuẩn Firefly III kết nối cơ sở dữ liệu
+          <h1 className="text-2xl font-semibold tracking-tight text-[#171717] dark:text-[#ededed]">
+            Sổ giao dịch
+          </h1>
+          <p className="text-xs text-[#666666] dark:text-[#888888] mt-0.5">
+            Nhật ký thu chi và hạch toán kế toán kép
           </p>
         </div>
 
@@ -204,127 +195,128 @@ export const TransactionsPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowSmsModal(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold hover:bg-emerald-100 transition shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-xs font-medium text-[#171717] dark:text-[#ededed]"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Quét SMS Banking</span>
+            <Sparkles className="w-3.5 h-3.5 text-[#10b981]" />
+            <span>Quét SMS</span>
           </button>
 
           <button 
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 text-xs font-medium shadow-xs hover:bg-zinc-50 dark:hover:bg-zinc-750 transition" 
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-xs font-medium text-[#171717] dark:text-[#ededed]" 
             type="button"
           >
-            <Download className="w-3.5 h-3.5 text-zinc-500" />
+            <Download className="w-3.5 h-3.5 text-[#888888]" />
             <span>Xuất CSV</span>
           </button>
 
           <button 
             onClick={loadTransactions}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 text-xs font-medium shadow-xs hover:bg-zinc-50 dark:hover:bg-zinc-750 transition" 
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-xs font-medium text-[#171717] dark:text-[#ededed]" 
             type="button"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-zinc-500 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-[#888888] ${loading ? 'animate-spin' : ''}`} />
             <span>Làm mới</span>
           </button>
 
           <button 
             onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-semibold shadow-xs hover:bg-zinc-800 dark:hover:bg-zinc-200 transition" 
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] text-xs font-medium shadow-sm transition-colors duration-150" 
             type="button"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>Thêm giao dịch</span>
+            <span>Tạo giao dịch</span>
           </button>
         </div>
       </div>
 
       {/* KPI Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">TỔNG THU TRONG KỲ</span>
-            <span className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-              <TrendingUp className="w-4 h-4" />
-            </span>
+        <div className="rounded-lg shadow-card p-4 bg-[#ffffff] dark:bg-[#0a0a0a]">
+          <div className="flex items-center justify-between text-[#666666] dark:text-[#888888]">
+            <span className="text-xs font-medium">Tổng thu trong kỳ</span>
+            <div className="w-6 h-6 rounded-md shadow-border flex items-center justify-center text-[#10b981]">
+              <ArrowDownRight className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="mt-3.5">
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums tracking-tight">
+          <div className="mt-3">
+            <div className="text-2xl font-semibold text-[#10b981] tabular-nums tracking-tight">
               {totalIncome > 0 ? '+' : ''}{formatCurrency(totalIncome)}
             </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">TỔNG CHI TRONG KỲ</span>
-            <span className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex items-center justify-center text-rose-600 dark:text-rose-400">
-              <TrendingDown className="w-4 h-4" />
-            </span>
+        <div className="rounded-lg shadow-card p-4 bg-[#ffffff] dark:bg-[#0a0a0a]">
+          <div className="flex items-center justify-between text-[#666666] dark:text-[#888888]">
+            <span className="text-xs font-medium">Tổng chi trong kỳ</span>
+            <div className="w-6 h-6 rounded-md shadow-border flex items-center justify-center text-[#ff5b4f]">
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="mt-3.5">
-            <div className="text-2xl font-bold text-rose-600 dark:text-rose-400 tabular-nums tracking-tight">
-              {totalExpense > 0 ? '-' : ''}{formatCurrency(totalExpense)}
+          <div className="mt-3">
+            <div className="text-2xl font-semibold text-[#ff5b4f] tabular-nums tracking-tight">
+              {totalExpense > 0 ? '−' : ''}{formatCurrency(totalExpense)}
             </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">DÒNG TIỀN DƯ THỰC TẾ</span>
-            <span className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
-              <Receipt className="w-4 h-4" />
-            </span>
+        <div className="rounded-lg shadow-card p-4 bg-[#ffffff] dark:bg-[#0a0a0a]">
+          <div className="flex items-center justify-between text-[#666666] dark:text-[#888888]">
+            <span className="text-xs font-medium">Dòng tiền dư thực tế</span>
+            <div className="w-6 h-6 rounded-md shadow-border flex items-center justify-center text-[#0070f3]">
+              <Receipt className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="mt-3.5">
-            <div className={`text-2xl font-bold tabular-nums tracking-tight ${totalIncome - totalExpense >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+          <div className="mt-3">
+            <div className={`text-2xl font-semibold tabular-nums tracking-tight ${totalIncome - totalExpense >= 0 ? 'text-[#10b981]' : 'text-[#ff5b4f]'}`}>
               {totalIncome - totalExpense > 0 ? '+' : ''}{formatCurrency(totalIncome - totalExpense)}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Multi-Tier Filter Bar */}
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+      {/* Filter Bar */}
+      <div className="rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a] p-3 space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
           <div className="md:col-span-8 relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <input 
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#888888] pointer-events-none" />
+            <Input 
               type="text" 
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Tìm kiếm theo mô tả, tên danh mục, quán xá hoặc tài khoản..." 
-              className="w-full h-9 pl-9 pr-3 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-zinc-400"
+              placeholder="Tìm kiếm theo mô tả, danh mục hoặc tài khoản…" 
+              className="pl-8 pr-3 shadow-input text-xs"
             />
           </div>
 
           <div className="md:col-span-4">
-            <select 
-              value={typeFilter}
-              onChange={e => setTypeFilter(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white focus:outline-none"
-            >
-              <option value="all">Loại giao dịch: Tất cả</option>
-              <option value="Deposit">Thu nhập (+)</option>
-              <option value="Withdrawal">Chi tiêu (-)</option>
-              <option value="Transfer">Chuyển tiền nội bộ ↔</option>
-            </select>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="shadow-input text-xs h-9">
+                <SelectValue placeholder="Tất cả loại giao dịch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="text-xs">Tất cả loại giao dịch</SelectItem>
+                <SelectItem value="Deposit" className="text-xs text-[#10b981]">Thu nhập (+)</SelectItem>
+                <SelectItem value="Withdrawal" className="text-xs text-[#ff5b4f]">Chi tiêu (−)</SelectItem>
+                <SelectItem value="Transfer" className="text-xs text-[#0070f3]">Chuyển khoản ↔</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
 
       {/* Transactions Table */}
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-xs">
-        <div className="p-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Danh sách giao dịch ({filtered.length})</h2>
-          <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">{formatDate(start)} – {formatDate(end)}</span>
+      <div className="rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a] overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
+          <h2 className="text-xs font-semibold text-[#171717] dark:text-[#ededed]">Danh sách giao dịch ({filtered.length})</h2>
+          <span className="text-[11px] text-[#888888] tabular-nums">{formatDate(start)} – {formatDate(end)}</span>
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-xs text-zinc-500">Đang tải dữ liệu từ máy chủ...</div>
+          <div className="p-8 text-center text-xs text-[#888888]">Đang tải dữ liệu…</div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-xs text-zinc-500 space-y-3">
-            <p>{q || typeFilter !== 'all' ? 'Không có giao dịch nào khớp bộ lọc.' : 'Chưa có giao dịch nào trong khoảng thời gian này.'}</p>
+          <div className="p-12 text-center text-xs text-[#888888] space-y-3">
+            <p>{q || typeFilter !== 'all' ? 'Không có giao dịch nào khớp bộ lọc.' : 'Chưa có giao dịch nào trong khoảng thời gian này…'}</p>
             <Button size="sm" onClick={() => setShowAddModal(true)} className="text-xs">
               <Plus className="w-3.5 h-3.5 mr-1" /> Tạo giao dịch đầu tiên
             </Button>
@@ -332,54 +324,54 @@ export const TransactionsPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-zinc-50/80 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 border-b border-zinc-100 dark:border-zinc-800 text-[10px] uppercase tracking-wider font-semibold">
+              <thead className="bg-[#fafafa] dark:bg-[#111111] text-[#888888] border-b border-zinc-100 dark:border-zinc-900 text-[11px] font-medium">
                 <tr>
-                  <th className="py-3 px-6 font-semibold">NGÀY & GIỜ</th>
-                  <th className="py-3 px-6 font-semibold">MÔ TẢ GIAO DỊCH</th>
-                  <th className="py-3 px-6 font-semibold">DANH MỤC</th>
-                  <th className="py-3 px-6 font-semibold">VÍ / NGUỒN TIỀN</th>
-                  <th className="py-3 px-6 font-semibold">LOẠI</th>
-                  <th className="py-3 px-6 font-semibold text-right">SỐ TIỀN (VNĐ)</th>
-                  <th className="py-3 px-6 font-semibold text-center w-16">HÀNH ĐỘNG</th>
+                  <th className="py-2.5 px-5 font-medium">Ngày</th>
+                  <th className="py-2.5 px-4 font-medium">Mô tả giao dịch</th>
+                  <th className="py-2.5 px-4 font-medium">Danh mục</th>
+                  <th className="py-2.5 px-4 font-medium">Tài khoản</th>
+                  <th className="py-2.5 px-4 font-medium">Loại</th>
+                  <th className="py-2.5 px-5 font-medium text-right">Số tiền</th>
+                  <th className="py-2.5 px-4 font-medium text-center w-12"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800 text-zinc-700 dark:text-zinc-300">
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900 text-[#171717] dark:text-[#ededed]">
                 {filtered.map((tx: any) => {
                   const isIncome = tx.transactionType === 'Deposit';
                   const isExpense = tx.transactionType === 'Withdrawal';
                   return (
-                    <tr key={tx.id} className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer" onClick={() => setSelectedTx(tx)}>
-                      <td className="py-4 px-6 whitespace-nowrap">
-                        <div className="font-medium tabular-nums text-zinc-900 dark:text-white">{formatDate(tx.date)}</div>
+                    <tr key={tx.id} className="hover:bg-[#fafafa] dark:hover:bg-[#111111] transition-colors cursor-pointer" onClick={() => setSelectedTx(tx)}>
+                      <td className="py-3 px-5 whitespace-nowrap">
+                        <div className="tabular-nums text-[#888888] text-[11px]">{formatDate(tx.date)}</div>
                       </td>
-                      <td className="py-4 px-6">
-                        <div className="font-semibold text-zinc-900 dark:text-white">{tx.description}</div>
-                        {tx.notes && <div className="text-zinc-500 text-[11px] mt-0.5">{tx.notes}</div>}
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-[#171717] dark:text-[#ededed]">{tx.description}</div>
+                        {tx.notes && <div className="text-[#888888] text-[11px] mt-0.5">{tx.notes}</div>}
                       </td>
-                      <td className="py-4 px-6 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700">
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] bg-[#f5f5f5] dark:bg-[#1a1a1a] text-[#171717] dark:text-[#ededed] shadow-border">
                           {tx.category?.name || 'Chưa phân loại'}
                         </span>
                       </td>
-                      <td className="py-4 px-6 whitespace-nowrap">
-                        <div className="font-medium text-zinc-900 dark:text-white">{walletOf(tx)?.name}</div>
-                        {counterpartyOf(tx)?.name && <div className="text-[11px] text-zinc-500">{tx.transactionType === 'Deposit' ? 'từ ' : '→ '}{counterpartyOf(tx).name}</div>}
+                      <td className="py-3 px-4 whitespace-nowrap text-[#666666] dark:text-[#888888]">
+                        <div>{walletOf(tx)?.name}</div>
                       </td>
-                      <td className="py-4 px-6 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : isExpense ? 'text-rose-600 dark:text-rose-400' : 'text-sky-600 dark:text-sky-400'}`}>
-                          {isIncome ? 'Thu nhập (+)' : isExpense ? 'Chi tiêu (-)' : 'Chuyển tiền ↔'}
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <span className={`text-[11px] font-medium ${isIncome ? 'text-[#10b981]' : isExpense ? 'text-[#ff5b4f]' : 'text-[#0070f3]'}`}>
+                          {isIncome ? 'Thu nhập' : isExpense ? 'Chi tiêu' : 'Chuyển khoản'}
                         </span>
                       </td>
-                      <td className={`py-4 px-6 text-right whitespace-nowrap font-bold tabular-nums text-sm ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : isExpense ? 'text-rose-600 dark:text-rose-400' : 'text-sky-600 dark:text-sky-400'}`}>
-                        {isExpense ? '-' : isIncome ? '+' : ''}{formatCurrency(tx.amount)}
+                      <td className={`py-3 px-5 text-right whitespace-nowrap font-semibold tabular-nums text-xs ${isIncome ? 'text-[#10b981]' : 'text-[#171717] dark:text-[#ededed]'}`}>
+                        {isExpense ? '−' : isIncome ? '+' : ''}{formatCurrency(tx.amount)}
                       </td>
-                      <td className="py-4 px-6 text-center whitespace-nowrap">
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
                         <button 
                           onClick={(e) => { e.stopPropagation(); setSelectedTx(tx); }}
-                          className="w-7 h-7 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-900 dark:hover:text-white inline-flex items-center justify-center transition"
+                          className="w-6 h-6 rounded hover:bg-[#f0f0f0] dark:hover:bg-[#1a1a1a] text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed] inline-flex items-center justify-center transition-colors"
                           type="button"
+                          aria-label="Chi tiết giao dịch"
                         >
-                          <MoreVertical className="w-4 h-4" />
+                          <MoreVertical className="w-3.5 h-3.5" />
                         </button>
                       </td>
                     </tr>
@@ -391,13 +383,13 @@ export const TransactionsPage: React.FC = () => {
         )}
 
         {(page > 1 || hasNextPage) && (
-          <div className="px-5 py-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
-            <span className="text-zinc-500">Trang {page}</span>
+          <div className="px-5 py-3 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between text-xs text-[#888888]">
+            <span className="tabular-nums">Trang {page}</span>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="h-7 text-xs" disabled={page === 1 || loading} onClick={() => setPage(p => p - 1)}>
+              <Button variant="outline" size="sm" className="h-7 text-xs shadow-border" disabled={page === 1 || loading} onClick={() => setPage(p => p - 1)}>
                 <ChevronLeft className="w-3.5 h-3.5" /> Trước
               </Button>
-              <Button variant="outline" size="sm" className="h-7 text-xs" disabled={!hasNextPage || loading} onClick={() => setPage(p => p + 1)}>
+              <Button variant="outline" size="sm" className="h-7 text-xs shadow-border" disabled={!hasNextPage || loading} onClick={() => setPage(p => p + 1)}>
                 Sau <ChevronRight className="w-3.5 h-3.5" />
               </Button>
             </div>
