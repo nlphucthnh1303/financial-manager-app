@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { localDb, type LocalTransaction } from '@/lib/localDb';
 import { counterpartyOf, endOfDayIso, formatCurrency, formatDate, startOfDayIso, walletOf, exportToCSV } from '@/lib/utils';
 import { useDateRange } from '@/lib/date-range';
 import { 
@@ -116,7 +117,24 @@ export const TransactionsPage: React.FC = () => {
   const [showSmsModal, setShowSmsModal] = useState(false);
   const [vietQrTx, setVietQrTx] = useState<any>(null);
   const [kpi, setKpi] = useState<any>(null);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const { start, end } = useDateRange();
+
+  const mapLocalToTxJournal = (t: LocalTransaction) => ({
+    id: t.id,
+    transactionType: t.transactionType,
+    amount: t.amount,
+    currencyCode: t.currencyCode || 'VND',
+    description: t.description,
+    date: t.date,
+    sourceAccount: { id: t.sourceAccountId, name: t.sourceAccountName || 'Ví tiền mặt' },
+    destinationAccount: { id: t.destinationAccountId, name: t.destinationAccountName || '—' },
+    category: t.categoryName ? { id: t.categoryId, name: t.categoryName } : null,
+    notes: t.notes,
+    isSynced: t.isSynced,
+    syncAction: t.syncAction,
+  });
 
   const loadTransactions = async () => {
     try {
@@ -124,11 +142,42 @@ export const TransactionsPage: React.FC = () => {
       const range = `startDate=${startOfDayIso(start)}&endDate=${endOfDayIso(end)}`;
       let url = `/transactions?page=${page}&pageSize=${PAGE_SIZE}&${range}`;
       if (typeFilter !== 'all') url += `&type=${typeFilter}`;
-      const [res, sum]: any[] = await Promise.all([api.get(url), api.get(`/statistics/summary?${range}`)]);
-      setTransactions(res.data || []);
+
+      const [res, sum]: any[] = await Promise.all([
+        api.get(url),
+        api.get(`/statistics/summary?${range}`)
+      ]);
+      const serverData = res.data || [];
+
+      // Also get any pending local offline transactions
+      const pendingLocals = await localDb.getPendingSyncTransactions();
+      setPendingCount(pendingLocals.length);
+
+      // Merge local pending that aren't on the server yet
+      const mappedLocals = pendingLocals.map(mapLocalToTxJournal);
+      const combined = [...mappedLocals, ...serverData];
+
+      setTransactions(combined);
       setKpi(sum.data?.kpi || null);
+      setIsOfflineMode(false);
     } catch {
-      toast.error('Không thể tải danh sách giao dịch.');
+      // Offline fallback: load from Local DB!
+      setIsOfflineMode(true);
+      const localList = await localDb.getTransactions({
+        startDate: startOfDayIso(start),
+        endDate: endOfDayIso(end),
+        type: typeFilter
+      });
+      const pendingLocals = await localDb.getPendingSyncTransactions();
+      setPendingCount(pendingLocals.length);
+
+      const stats = await localDb.computeOfflineStats(startOfDayIso(start), endOfDayIso(end));
+      setTransactions(localList.map(mapLocalToTxJournal));
+      setKpi({
+        totalIncome: stats.income,
+        totalExpense: stats.expense,
+        netCashflow: stats.net,
+      });
     } finally {
       setLoading(false);
     }
@@ -139,11 +188,20 @@ export const TransactionsPage: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
+      if (id.startsWith('loc-tx-')) {
+        await localDb.deleteTransaction(id);
+        toast.success('Đã xóa giao dịch cục bộ.');
+        loadTransactions();
+        return;
+      }
       await api.delete(`/transactions/${id}`);
+      await localDb.deleteTransaction(id);
       toast.success('Đã xóa giao dịch.');
       loadTransactions();
-    } catch (err: any) {
-      toast.error(err?.message || 'Không thể xóa giao dịch.');
+    } catch {
+      await localDb.deleteTransaction(id);
+      toast.info('Đã đánh dấu xóa ngoại tuyến. Sẽ đồng bộ khi cắm cáp.');
+      loadTransactions();
     }
   };
 
@@ -229,6 +287,21 @@ export const TransactionsPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Offline Status Banner */}
+      {isOfflineMode && (
+        <div className="rounded-lg p-3 bg-amber-500/10 border border-amber-500/20 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-medium">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            <span>Chế độ Ngoại tuyến: Đang sử dụng cơ sở dữ liệu cục bộ trên máy.</span>
+          </div>
+          {pendingCount > 0 && (
+            <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500 text-black">
+              {pendingCount} giao dịch chờ đồng bộ cáp USB
+            </span>
+          )}
+        </div>
+      )}
 
       {/* KPI Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -345,7 +418,14 @@ export const TransactionsPage: React.FC = () => {
                         <div className="tabular-nums text-[#888888] text-[11px]">{formatDate(tx.date)}</div>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="font-medium text-[#171717] dark:text-[#ededed]">{tx.description}</div>
+                        <div className="font-medium text-[#171717] dark:text-[#ededed] flex items-center gap-1.5 flex-wrap">
+                          <span>{tx.description}</span>
+                          {tx.isSynced === false && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 font-normal">
+                              Chờ đồng bộ
+                            </span>
+                          )}
+                        </div>
                         {tx.notes && <div className="text-[#888888] text-[11px] mt-0.5">{tx.notes}</div>}
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap">

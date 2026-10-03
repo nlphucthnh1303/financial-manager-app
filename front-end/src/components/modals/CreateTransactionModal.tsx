@@ -31,6 +31,7 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FieldError } from '@/components/ui/field-error';
 import { api } from '@/lib/api';
+import { localDb } from '@/lib/localDb';
 import { formatCurrency, currentMonthRange, startOfDayIso, endOfDayIso } from '@/lib/utils';
 import { numberToVietnameseWords } from '@/lib/vietnam-banks';
 import { SIX_JARS } from '@/lib/financial-frameworks';
@@ -103,16 +104,44 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
 
     const { start, end } = currentMonthRange();
     Promise.all([
-      api.get('/accounts?type=Asset&active=true').catch(() => ({ data: [] })),
-      api.get('/categories').catch(() => ({ data: [] })),
+      api.get('/accounts?type=Asset&active=true').then(async (res: any) => {
+        const list = res.data || [];
+        if (list.length > 0) {
+          await localDb.saveAccounts(list.map((a: any) => ({
+            id: a.id,
+            name: a.name,
+            accountType: a.accountType || 'Asset',
+            currentBalance: a.currentBalance || 0,
+            currencyCode: a.currencyCode || 'VND',
+            active: true
+          })));
+        }
+        return list;
+      }).catch(async () => {
+        return await localDb.getAccounts();
+      }),
+      api.get('/categories').then(async (res: any) => {
+        const list = res.data || [];
+        if (list.length > 0) {
+          await localDb.saveCategories(list.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            color: c.color,
+            icon: c.icon
+          })));
+        }
+        return list;
+      }).catch(async () => {
+        return await localDb.getCategories();
+      }),
       api.get(`/budgets/status?start=${startOfDayIso(start)}&end=${endOfDayIso(end)}`).catch(() => ({ data: [] })),
-    ]).then(([wRes, cRes, bRes]: any[]) => {
-      const wList = wRes.data || [];
-      setWallets(wList);
-      if (wList.length > 0 && !walletId) {
-        setWalletId(wList[0].id);
+    ]).then(([wList, cList, bRes]: any[]) => {
+      const finalWallets = (wList && wList.length > 0) ? wList : [];
+      setWallets(finalWallets);
+      if (finalWallets.length > 0 && !walletId) {
+        setWalletId(finalWallets[0].id);
       }
-      setCategories(cRes.data || []);
+      setCategories(cList || []);
       setBudgets(bRes.data || []);
     });
   }, [open, defaultType]);
@@ -169,26 +198,52 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
     const isTransfer = transactionType === 'Transfer';
     const finalNotes = selectedJar ? `[Hũ: ${selectedJar}] ${notes.trim()}`.trim() : notes.trim();
 
+    const chosenWallet = wallets.find((w) => w.id === walletId);
+    const chosenDestWallet = isTransfer ? wallets.find((w) => w.id === destinationAccountId) : null;
+    const chosenCategory = categories.find((c) => c.id === categoryId);
+
+    const payload = {
+      transactionType,
+      description: description.trim(),
+      amount: Number(amount),
+      currencyCode: 'VND',
+      date: when.toISOString(),
+      sourceAccountId: walletId,
+      sourceAccountName: chosenWallet?.name || 'Ví tiền mặt',
+      destinationAccountId: isTransfer ? destinationAccountId : null,
+      destinationAccountName: isTransfer ? chosenDestWallet?.name : counterparty.trim() || null,
+      categoryId: !isTransfer && categoryId && categoryId !== 'none' ? categoryId : null,
+      categoryName: chosenCategory?.name || null,
+      budgetId: transactionType === 'Withdrawal' && budgetId && budgetId !== 'none' ? budgetId : null,
+      notes: finalNotes || null,
+    };
+
     try {
       setLoading(true);
-      await api.post('/transactions', {
-        transactionType,
-        description: description.trim(),
-        amount: Number(amount),
-        currencyCode: 'VND',
-        date: when.toISOString(),
-        sourceAccountId: walletId,
-        destinationAccountId: isTransfer ? destinationAccountId : null,
+      // Try to save to server
+      const res: any = await api.post('/transactions', {
+        ...payload,
         destinationAccountName: isTransfer ? null : counterparty.trim() || null,
-        categoryId: !isTransfer && categoryId && categoryId !== 'none' ? categoryId : null,
-        budgetId: transactionType === 'Withdrawal' && budgetId && budgetId !== 'none' ? budgetId : null,
-        notes: finalNotes || null,
       });
+
+      // Also record in local database as synced
+      await localDb.addTransaction({
+        ...payload,
+        serverId: res.data?.id || null,
+      });
+
       toast.success('Thêm giao dịch thành công!');
       onClose();
       onSuccess?.();
-    } catch (err: any) {
-      toast.error(err?.message || 'Không thể tạo giao dịch.');
+    } catch {
+      // Offline fallback: save to Local DB directly!
+      await localDb.addTransaction({
+        ...payload,
+        serverId: null,
+      });
+      toast.success('Đã lưu giao dịch ngoại tuyến vào máy! (Sẽ đồng bộ khi cắm cáp USB)');
+      onClose();
+      onSuccess?.();
     } finally {
       setLoading(false);
     }

@@ -29,6 +29,7 @@ namespace FinancialManager.Application.Interfaces
         DbSet<Recurrence> Recurrences { get; }
         DbSet<PiggyBank> PiggyBanks { get; }
         DbSet<PiggyBankEvent> PiggyBankEvents { get; }
+        DbSet<SyncHistory> SyncHistories { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);

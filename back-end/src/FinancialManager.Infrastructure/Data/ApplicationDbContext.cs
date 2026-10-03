@@ -34,6 +34,7 @@ namespace FinancialManager.Infrastructure.Data
         public DbSet<Recurrence> Recurrences => Set<Recurrence>();
         public DbSet<PiggyBank> PiggyBanks => Set<PiggyBank>();
         public DbSet<PiggyBankEvent> PiggyBankEvents => Set<PiggyBankEvent>();
+        public DbSet<SyncHistory> SyncHistories => Set<SyncHistory>();
 
         public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
         {

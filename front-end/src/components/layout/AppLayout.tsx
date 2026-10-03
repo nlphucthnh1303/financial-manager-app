@@ -11,7 +11,6 @@ import {
   BarChart3, 
   LogOut, 
   Plus,
-  Search, 
   Calendar, 
   Bell,
   Trash2,
@@ -27,7 +26,8 @@ import {
   ChevronDown,
   ShieldCheck,
   TrendingUp,
-  User
+  User,
+  Cable
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -40,6 +40,10 @@ import { ClearDataModal } from '@/components/modals/ClearDataModal';
 import { VietQrModal } from '@/components/modals/VietQrModal';
 import { SmartSmsImportModal } from '@/components/modals/SmartSmsImportModal';
 import { FinancialHealthModal } from '@/components/modals/FinancialHealthModal';
+import { ReceiptShareModal } from '@/components/modals/ReceiptShareModal';
+import { DesktopSyncModal } from '@/components/modals/DesktopSyncModal';
+import { performCableSync } from '@/lib/sync-engine';
+import { parseBankReceiptOcr, type ParsedBankReceipt } from '@/lib/bank-receipt-parser';
 import { AppLogo } from '@/components/brand/AppLogo';
 import { calculateFinancialHealth, type FinancialHealthEvaluation } from '@/lib/financial-frameworks';
 import { useDateRange } from '@/lib/date-range';
@@ -79,8 +83,38 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [smsModalOpen, setSmsModalOpen] = useState(false);
   const [healthModalOpen, setHealthModalOpen] = useState(false);
   const [healthEvaluation, setHealthEvaluation] = useState<FinancialHealthEvaluation | null>(null);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [sharedReceipt, setSharedReceipt] = useState<ParsedBankReceipt | null>(null);
+  const [desktopSyncOpen, setDesktopSyncOpen] = useState(false);
   
   const { start: startDate, end: endDate, setRange } = useDateRange();
+
+  useEffect(() => {
+    const handleReceiptEvent = (e: any) => {
+      const rawText = e.detail?.rawText || (window as any).__pendingSharedReceiptText;
+      if (rawText) {
+        const parsed = parseBankReceiptOcr(rawText);
+        setSharedReceipt(parsed);
+        setReceiptModalOpen(true);
+        (window as any).__pendingSharedReceiptText = null;
+      }
+    };
+
+    if ((window as any).__pendingSharedReceiptText) {
+      handleReceiptEvent({ detail: { rawText: (window as any).__pendingSharedReceiptText } });
+    }
+
+    const handleSyncEvent = () => {
+      performCableSync();
+    };
+
+    window.addEventListener('bankReceiptShared', handleReceiptEvent);
+    window.addEventListener('performCableSync', handleSyncEvent);
+    return () => {
+      window.removeEventListener('bankReceiptShared', handleReceiptEvent);
+      window.removeEventListener('performCableSync', handleSyncEvent);
+    };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -372,6 +406,17 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               <span>Quét SMS</span>
             </button>
 
+            {/* USB Cable Sync Button */}
+            <button
+              type="button"
+              onClick={() => setDesktopSyncOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-[#171717] dark:text-[#ededed] shrink-0 whitespace-nowrap"
+              title="Đồng bộ Cáp USB Thiết bị (Local Cable Sync)"
+            >
+              <Cable className="w-3.5 h-3.5 text-[#0070f3]" />
+              <span className="hidden sm:inline">Đồng bộ Cáp</span>
+            </button>
+
             {/* Mobile Theme Toggle */}
             <div className="lg:hidden shrink-0">
               <ThemeToggle />
@@ -524,49 +569,51 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* MOBILE BOTTOM NAVIGATION BAR (Thumb Friendly)                 */}
+      {/* MOBILE BOTTOM NAVIGATION BAR (Thumb Friendly & Centered)      */}
       {/* ------------------------------------------------------------- */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 h-14 bg-[#ffffff]/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md border-t border-[#e5e5e5] dark:border-[#222222] z-40 flex items-center justify-around px-2">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 h-14 bg-[#ffffff]/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md border-t border-[#e5e5e5] dark:border-[#222222] z-40 grid grid-cols-5 items-center px-1 pb-[env(safe-area-inset-bottom)]">
         <Link
           to="/"
-          className={`flex flex-col items-center gap-0.5 text-[10px] ${location.pathname === '/' ? 'text-[#171717] dark:text-[#ededed] font-semibold' : 'text-[#888888]'}`}
+          className={`h-full flex flex-col items-center justify-center gap-1 text-[10px] ${location.pathname === '/' ? 'text-[#171717] dark:text-[#ededed] font-semibold' : 'text-[#888888]'}`}
         >
-          <LayoutDashboard className="w-4 h-4" />
-          <span>Tổng quan</span>
+          <LayoutDashboard className="w-4 h-4 shrink-0" />
+          <span className="truncate">Tổng quan</span>
         </Link>
 
         <Link
           to="/transactions"
-          className={`flex flex-col items-center gap-0.5 text-[10px] ${location.pathname === '/transactions' ? 'text-[#171717] dark:text-[#ededed] font-semibold' : 'text-[#888888]'}`}
+          className={`h-full flex flex-col items-center justify-center gap-1 text-[10px] ${location.pathname === '/transactions' ? 'text-[#171717] dark:text-[#ededed] font-semibold' : 'text-[#888888]'}`}
         >
-          <ArrowLeftRight className="w-4 h-4" />
-          <span>Giao dịch</span>
+          <ArrowLeftRight className="w-4 h-4 shrink-0" />
+          <span className="truncate">Giao dịch</span>
         </Link>
 
-        {/* Mobile Quick Add Floating Button */}
-        <button
-          type="button"
-          onClick={onOpenQuickAddTx}
-          className="w-10 h-10 -mt-5 rounded-full bg-[#171717] dark:bg-[#ededed] text-white dark:text-black flex items-center justify-center shadow-md active:scale-95 transition-transform"
-          aria-label="Tạo giao dịch"
-        >
-          <Plus className="w-5 h-5 stroke-[2.5]" />
-        </button>
+        {/* Mobile Quick Add Floating Button - Perfectly Centered in Column 3 */}
+        <div className="h-full flex items-center justify-center">
+          <button
+            type="button"
+            onClick={onOpenQuickAddTx}
+            className="w-11 h-11 -mt-4 rounded-full bg-[#171717] dark:bg-[#ededed] text-white dark:text-black flex items-center justify-center shadow-lg active:scale-95 shrink-0"
+            aria-label="Tạo giao dịch"
+          >
+            <Plus className="w-5 h-5 stroke-[2.5]" />
+          </button>
+        </div>
 
         <Link
           to="/calendar"
-          className={`flex flex-col items-center gap-0.5 text-[10px] ${location.pathname === '/calendar' ? 'text-[#171717] dark:text-[#ededed] font-semibold' : 'text-[#888888]'}`}
+          className={`h-full flex flex-col items-center justify-center gap-1 text-[10px] ${location.pathname === '/calendar' ? 'text-[#171717] dark:text-[#ededed] font-semibold' : 'text-[#888888]'}`}
         >
-          <CalendarDays className="w-4 h-4" />
-          <span>Lịch</span>
+          <CalendarDays className="w-4 h-4 shrink-0" />
+          <span className="truncate">Lịch</span>
         </Link>
 
         <Link
           to="/debts"
-          className={`flex flex-col items-center gap-0.5 text-[10px] ${location.pathname === '/debts' ? 'text-[#171717] dark:text-[#ededed] font-semibold' : 'text-[#888888]'}`}
+          className={`h-full flex flex-col items-center justify-center gap-1 text-[10px] ${location.pathname === '/debts' ? 'text-[#171717] dark:text-[#ededed] font-semibold' : 'text-[#888888]'}`}
         >
-          <HandCoins className="w-4 h-4" />
-          <span>Sổ nợ</span>
+          <HandCoins className="w-4 h-4 shrink-0" />
+          <span className="truncate">Sổ nợ</span>
         </Link>
       </div>
 
@@ -578,6 +625,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       <VietQrModal open={vietQrOpen} onClose={() => setVietQrOpen(false)} />
       <SmartSmsImportModal open={smsModalOpen} onClose={() => setSmsModalOpen(false)} onApplyParsed={(res) => { onApplyParsedSms?.(res); onOpenQuickAddTx?.(); }} />
       <FinancialHealthModal open={healthModalOpen} onClose={() => setHealthModalOpen(false)} evaluation={healthEvaluation} />
+      <ReceiptShareModal open={receiptModalOpen} onClose={() => setReceiptModalOpen(false)} parsed={sharedReceipt} onSuccess={() => window.location.reload()} />
+      <DesktopSyncModal open={desktopSyncOpen} onClose={() => setDesktopSyncOpen(false)} onSuccess={() => window.location.reload()} />
     </div>
   );
 };

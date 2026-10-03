@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { localDb } from '@/lib/localDb';
 import { endOfDayIso, formatCurrency, formatDate, exportToCSV, startOfDayIso, toDateInput, walletOf } from '@/lib/utils';
 import { useDateRange } from '@/lib/date-range';
 import { 
@@ -67,10 +68,45 @@ export const DashboardPage: React.FC = () => {
         api.get('/piggy-banks').catch(() => ({ data: [] })),
         api.get('/accounts?type=Asset&active=true').catch(() => ({ data: [] }))
       ]);
-      setSummary(sumRes.data);
-      setRecentTx(txRes.data || []);
+
+      let summaryData = sumRes.data;
+      let txList = txRes.data || [];
+      let accountList = accRes.data || [];
+
+      // If server returned no data (offline mode)
+      if (!summaryData && txList.length === 0) {
+        const offlineStats = await localDb.computeOfflineStats(start, end);
+        const offlineTxs = await localDb.getTransactions({ startDate: start, endDate: end });
+        const offlineAccs = await localDb.getAccounts();
+
+        summaryData = {
+          kpi: {
+            totalIncome: offlineStats.income,
+            totalExpense: offlineStats.expense,
+            netCashflow: offlineStats.net,
+            currentNetWorth: offlineAccs.reduce((sum, a) => sum + (a.currentBalance || 0), 0),
+          },
+          categoryBreakdown: [],
+        };
+        txList = offlineTxs.slice(0, 6).map((t) => ({
+          id: t.id,
+          transactionType: t.transactionType,
+          amount: t.amount,
+          description: t.description,
+          date: t.date,
+          sourceAccount: { id: t.sourceAccountId, name: t.sourceAccountName || 'Ví tiền mặt' },
+          destinationAccount: { id: t.destinationAccountId, name: t.destinationAccountName || '—' },
+          category: t.categoryName ? { id: t.categoryId, name: t.categoryName } : null,
+          notes: t.notes,
+          isSynced: t.isSynced,
+        }));
+        accountList = offlineAccs;
+      }
+
+      setSummary(summaryData);
+      setRecentTx(txList);
       setPiggies(piggyRes.data || []);
-      setAccounts(accRes.data || []);
+      setAccounts(accountList);
       if (manual) toast.success('Đã làm mới dữ liệu!');
     } catch {
       toast.error('Không thể tải dữ liệu từ máy chủ.');

@@ -255,4 +255,17 @@ namespace FinancialManager.Domain.Entities
         public decimal Amount { get; set; }
         public string? Notes { get; set; }
     }
+
+    public class SyncHistory : BaseEntity
+    {
+        public Guid UserId { get; set; }
+        public string DeviceId { get; set; } = string.Empty;
+        public string DeviceName { get; set; } = string.Empty;
+        public DateTime SyncTime { get; set; } = DateTime.UtcNow;
+        public int UploadedCount { get; set; }
+        public int DownloadedCount { get; set; }
+        public string Status { get; set; } = "SUCCESS"; // SUCCESS, FAILED
+        public string? ErrorMessage { get; set; }
+        public long DurationMs { get; set; }
+    }
 }
