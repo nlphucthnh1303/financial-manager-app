@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Button } from '@/components/ui/button';
 import { FieldError } from '@/components/ui/field-error';
 import { toast } from 'sonner';
@@ -44,22 +44,22 @@ export const DateRangePickerModal: React.FC<DateRangePickerProps> = ({ open, onC
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
         <DialogHeader className="pr-8">
-          <DialogTitle className="text-base font-semibold flex items-center gap-2">
-            <CalendarIcon className="w-4 h-4 text-zinc-500" />
+          <DialogTitle className="text-base font-semibold flex items-center gap-2 text-[#171717] dark:text-[#ededed]">
+            <CalendarIcon className="w-4 h-4 text-[#0070f3]" />
             Chọn khoảng thời gian
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {presets.map(p => (
               <button
                 key={p.label}
                 type="button"
                 onClick={() => { const r = p.getRange(new Date()); setStart(toDateInput(r.s)); setEnd(toDateInput(r.e)); setError(undefined); }}
-                className="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-750 transition"
+                className="px-2.5 py-1.5 rounded-md shadow-border text-xs font-medium text-[#171717] dark:text-[#ededed] bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f0f0f0] dark:hover:bg-[#1a1a1a] transition-all duration-150 active:scale-95"
               >
                 {p.label}
               </button>
@@ -68,20 +68,20 @@ export const DateRangePickerModal: React.FC<DateRangePickerProps> = ({ open, onC
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5 block">Từ ngày</label>
-              <Input type="date" value={start} max={end || undefined} onChange={e => setStart(e.target.value)} aria-invalid={!!error} className="h-9 text-xs" />
+              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Từ ngày</label>
+              <DatePicker value={start} max={end || undefined} onChange={setStart} aria-invalid={!!error} className="h-9 text-xs shadow-input" />
             </div>
             <div>
-              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5 block">Đến ngày</label>
-              <Input type="date" value={end} min={start || undefined} onChange={e => setEnd(e.target.value)} aria-invalid={!!error} className="h-9 text-xs" />
+              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Đến ngày</label>
+              <DatePicker value={end} min={start || undefined} onChange={setEnd} aria-invalid={!!error} className="h-9 text-xs shadow-input" />
             </div>
           </div>
           <FieldError message={error} />
         </div>
 
         <DialogFooter className="pt-3 flex flex-row items-center justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onClose} className="h-8 px-3 text-xs">Hủy</Button>
-          <Button size="sm" onClick={handleApply} className="h-8 px-4 text-xs bg-zinc-900 dark:bg-white text-white dark:text-zinc-900">Áp dụng</Button>
+          <Button variant="outline" size="sm" onClick={onClose} className="h-8 px-3 text-xs shadow-border">Hủy</Button>
+          <Button size="sm" onClick={handleApply} className="h-8 px-4 text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black">Áp dụng</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

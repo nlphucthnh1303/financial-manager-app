@@ -40,6 +40,7 @@ import { ClearDataModal } from '@/components/modals/ClearDataModal';
 import { VietQrModal } from '@/components/modals/VietQrModal';
 import { SmartSmsImportModal } from '@/components/modals/SmartSmsImportModal';
 import { FinancialHealthModal } from '@/components/modals/FinancialHealthModal';
+import { AppLogo } from '@/components/brand/AppLogo';
 import { calculateFinancialHealth, type FinancialHealthEvaluation } from '@/lib/financial-frameworks';
 import { useDateRange } from '@/lib/date-range';
 import { type ParsedSmsResult } from '@/lib/vietnam-banks';
@@ -173,9 +174,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         {/* Brand Header */}
         <div className="h-14 px-4 flex items-center justify-between border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-7 h-7 rounded-md bg-[#171717] dark:bg-[#ededed] text-white dark:text-black flex items-center justify-center font-bold text-xs shadow-xs transition-transform duration-150 group-hover:scale-105">
-              ▲
-            </div>
+            <AppLogo className="w-7 h-7 shadow-xs transition-transform duration-150 group-hover:scale-105" />
             <div className="flex flex-col">
               <span className="font-semibold text-xs tracking-tight text-[#171717] dark:text-[#ededed] leading-tight">
                 Financial Manager
@@ -444,9 +443,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             {/* Drawer Header */}
             <div className="h-14 px-4 flex items-center justify-between border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-[#171717] dark:bg-[#ededed] text-white dark:text-black flex items-center justify-center font-bold text-xs">
-                  ▲
-                </div>
+                <AppLogo className="w-6 h-6" />
                 <span className="font-semibold text-xs tracking-tight">Financial Manager</span>
               </div>
               <button 

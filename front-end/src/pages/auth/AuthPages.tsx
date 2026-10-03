@@ -4,6 +4,7 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Sparkles, ArrowRight, Loader2 } from 'lucide-react';
 import { FieldError } from '@/components/ui/field-error';
+import { AppLogo } from '@/components/brand/AppLogo';
 import { check, collectErrors, type FormErrors } from '@/lib/validation';
 
 export const LoginPage: React.FC = () => {
@@ -51,9 +52,7 @@ export const LoginPage: React.FC = () => {
       <div className="w-full max-w-sm space-y-6">
         {/* Brand Icon & Heading */}
         <div className="text-center space-y-2">
-          <div className="w-8 h-8 rounded-lg bg-[#171717] dark:bg-[#ededed] text-white dark:text-black font-bold text-sm flex items-center justify-center mx-auto shadow-sm">
-            ▲
-          </div>
+          <AppLogo className="w-10 h-10 mx-auto shadow-sm" />
           <h1 className="text-xl font-semibold tracking-tight text-[#171717] dark:text-[#ededed]">
             Đăng nhập vào Financial Manager
           </h1>
@@ -187,9 +186,7 @@ export const RegisterPage: React.FC = () => {
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#000000] text-[#171717] dark:text-[#ededed] flex flex-col justify-center items-center p-4 antialiased">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-8 h-8 rounded-lg bg-[#171717] dark:bg-[#ededed] text-white dark:text-black font-bold text-sm flex items-center justify-center mx-auto shadow-sm">
-            ▲
-          </div>
+          <AppLogo className="w-10 h-10 mx-auto shadow-sm" />
           <h1 className="text-xl font-semibold tracking-tight text-[#171717] dark:text-[#ededed]">
             Tạo tài khoản mới
           </h1>

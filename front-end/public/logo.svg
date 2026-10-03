@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <circle cx="50" cy="50" r="48" fill="#171717"/>
+  {/* Upper Star */}
+  <path
+    d="M 49 19
+       C 51 30, 60 41, 80 49
+       C 63 52, 54 58, 56 64
+       C 51 53, 44 43, 40 38
+       C 44 32, 47 25, 49 19 Z"
+    fill="#ffffff"
+  />
+  {/* Lower Star */}
+  <path
+    d="M 51 81
+       C 49 70, 40 59, 20 51
+       C 37 48, 46 42, 44 36
+       C 49 47, 56 57, 60 62
+       C 56 68, 53 75, 51 81 Z"
+    fill="#ffffff"
+  />
+</svg>
