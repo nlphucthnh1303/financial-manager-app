@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "android:sync": "npm run build && npx cap sync android",
+    "android:build": "npm run build && npx cap sync android && cd android && JAVA_HOME=$HOME/.jdk/jdk-21 ANDROID_HOME=$HOME/Android/Sdk ./gradlew assembleDebug",
+    "android:run": "npm run android:build && adb install -r android/app/build/outputs/apk/debug/app-debug.apk && adb reverse tcp:5266 tcp:5266 && adb reverse tcp:8080 tcp:8080 && adb shell am start -n com.financialmanager.app/.MainActivity"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",

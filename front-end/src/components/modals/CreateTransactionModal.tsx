@@ -254,25 +254,24 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
               onValueChange={setAmount}
               aria-invalid={!!errors.amount}
               className="tabular-nums font-semibold text-lg h-10 shadow-input text-[#171717] dark:text-[#ededed]"
-              autoFocus
             />
             <FieldError message={errors.amount} />
 
             {/* Vietnamese Words */}
             {numAmount > 0 && (
-              <div className="mt-1.5 text-[11px] font-medium text-[#10b981] px-2.5 py-1 rounded bg-[#fafafa] dark:bg-[#111111] shadow-border animate-in fade-in duration-150">
+              <div className="mt-1.5 text-[11px] font-medium text-[#10b981] px-2.5 py-1 rounded bg-[#fafafa] dark:bg-[#111111] shadow-border">
                 {numberToVietnameseWords(numAmount)}
               </div>
             )}
 
             {/* Quick Vietnamese Denomination Buttons */}
-            <div className="flex flex-wrap items-center gap-1 mt-2">
+            <div className="flex flex-wrap items-center gap-1.5 mt-2">
               {QUICK_AMOUNTS.slice(2, 9).map(q => (
                 <button
                   key={q.label}
                   type="button"
                   onClick={() => handleQuickAddAmount(q.value)}
-                  className="px-2 py-0.5 text-[10px] font-medium rounded bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f0f0f0] dark:hover:bg-[#1a1a1a] text-[#171717] dark:text-[#ededed] shadow-border transition-all duration-150 active:scale-95 tabular-nums"
+                  className="px-2.5 py-1 text-[11px] font-medium rounded bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f0f0f0] dark:hover:bg-[#1a1a1a] text-[#171717] dark:text-[#ededed] shadow-border active:scale-95 tabular-nums whitespace-nowrap"
                 >
                   {q.label}
                 </button>
@@ -295,7 +294,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
           </div>
 
           {/* Wallets & Counterparty */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>{transactionType === 'Deposit' ? 'Ví nhận tiền *' : 'Ví chi tiền *'}</label>
               <Select value={walletId} onValueChange={setWalletId} disabled={noWallet}>
@@ -348,7 +347,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
 
           {/* Category & 6 Jars Framework */}
           {transactionType !== 'Transfer' && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className={labelCls}>Danh mục</label>
                 <Select value={categoryId} onValueChange={setCategoryId}>
@@ -386,7 +385,7 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
           )}
 
           {/* Budget & Date */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Ngày giao dịch *</label>
               <DatePicker value={date} onChange={setDate} aria-invalid={!!errors.date} className="shadow-input text-xs" />
@@ -418,11 +417,11 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
             )}
           </div>
 
-          <DialogFooter className="pt-2 gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border">
+          <DialogFooter className="pt-3 flex flex-row justify-end items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border whitespace-nowrap min-h-[36px] px-4">
               Hủy
             </Button>
-            <Button type="submit" disabled={loading || noWallet} size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black shadow-xs hover:bg-[#333333] dark:hover:bg-[#ffffff]">
+            <Button type="submit" disabled={loading || noWallet} size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black shadow-xs hover:bg-[#333333] dark:hover:bg-[#ffffff] whitespace-nowrap min-h-[36px] px-4">
               {loading ? 'Đang lưu…' : 'Tạo giao dịch'}
             </Button>
           </DialogFooter>

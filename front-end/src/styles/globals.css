@@ -106,7 +106,7 @@
     text-wrap: balance;
   }
 
-  /* Universal Vercel Form Controls Styling with Animations */
+  /* Universal Form Controls Styling - Instant & Zero Lag */
   input[type="text"],
   input[type="password"],
   input[type="email"],
@@ -123,10 +123,7 @@
     border: none;
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.04);
     border-radius: var(--radius-md);
-    transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), 
-                background-color 150ms ease, 
-                color 150ms ease, 
-                transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: none !important;
   }
 
   /* Date & Datetime-local Specific Fixes for WebKit Calendar Picker */
@@ -152,13 +149,12 @@
     margin-left: auto !important;
     padding: 2px;
     border-radius: 4px;
-    transition: opacity 150ms ease, transform 150ms ease;
+    transition: none !important;
   }
 
   input[type="date"]::-webkit-calendar-picker-indicator:hover,
   input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
     opacity: 1;
-    transform: scale(1.15);
   }
 
   .dark input[type="date"]::-webkit-calendar-picker-indicator,
@@ -173,10 +169,7 @@
     border: none;
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.04);
     border-radius: var(--radius-md);
-    transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), 
-                background-color 150ms ease, 
-                color 150ms ease, 
-                transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: none !important;
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23888888'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-position: right 0.75rem center;
@@ -228,14 +221,12 @@
   textarea:hover:not(:disabled),
   select:hover:not(:disabled) {
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.06);
-    transform: translateY(-0.5px);
   }
 
   .dark input:hover:not(:disabled),
   .dark textarea:hover:not(:disabled),
   .dark select:hover:not(:disabled) {
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.26), 0 2px 8px rgba(0, 0, 0, 0.6);
-    transform: translateY(-0.5px);
   }
 
   input:focus-visible,
@@ -245,7 +236,6 @@
   select:focus-visible,
   select:focus {
     outline: none !important;
-    transform: translateY(0) !important;
     box-shadow: 0 0 0 1px #0070f3, 0 0 0 4px rgba(0, 112, 243, 0.2) !important;
     background-color: #ffffff !important;
   }
@@ -267,7 +257,7 @@
   }
 }
 
-/* Vercel Shadow-as-Border Utilities */
+/* Shadow Utilities without animations */
 .shadow-border {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
@@ -277,7 +267,6 @@
 
 .shadow-border-interactive {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1), background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
 }
 .shadow-border-interactive:hover {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18), 0 2px 4px rgba(0, 0, 0, 0.04);
@@ -298,7 +287,6 @@
 
 .shadow-card-hover {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1), transform 150ms ease;
 }
 .shadow-card-hover:hover {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.06);
@@ -317,21 +305,16 @@
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16), 0 14px 44px rgba(0, 0, 0, 0.85);
 }
 
-/* Standalone Input & Select Classes with Micro-Animations */
+/* Standalone Input & Select Classes - Instant */
 .shadow-input {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1), 
-              background-color 150ms ease, 
-              color 150ms ease, 
-              transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: none !important;
 }
 .shadow-input:hover:not(:disabled) {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.06);
-  transform: translateY(-0.5px);
 }
 .shadow-input:focus-within, .shadow-input:focus {
   outline: none !important;
-  transform: translateY(0) !important;
   box-shadow: 0 0 0 1px #0070f3, 0 0 0 4px rgba(0, 112, 243, 0.2) !important;
 }
 .dark .shadow-input {
@@ -339,13 +322,12 @@
 }
 .dark .shadow-input:hover:not(:disabled) {
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.26), 0 2px 8px rgba(0, 0, 0, 0.6);
-  transform: translateY(-0.5px);
 }
 .dark .shadow-input:focus-within, .dark .shadow-input:focus {
   box-shadow: 0 0 0 1px #0070f3, 0 0 0 4px rgba(0, 112, 243, 0.35) !important;
 }
 
-/* Tabular Nums (Geist sans with tabular numerals, NOT monospace font) */
+/* Tabular Nums */
 .tabular-nums {
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
@@ -353,16 +335,21 @@
   letter-spacing: -0.015em;
 }
 
-/* Keyframes for micro-interactions */
-@keyframes selectMenuIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96) translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+/* Global Zero-Animation & Performance Optimization Rule */
+*, *::before, *::after {
+  transition-property: none !important;
+  transform-style: flat !important;
+  animation-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+}
+
+/* Keep only spin animation for loading spinners */
+.animate-spin {
+  animation: spin 1s linear infinite !important;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Vercel-style subtle scrollbar */

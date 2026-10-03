@@ -318,11 +318,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         <header className="sticky top-0 z-30 h-14 bg-[#ffffff]/90 dark:bg-[#000000]/90 backdrop-blur-md border-b border-[#e5e5e5] dark:border-[#222222] px-4 sm:px-6 flex items-center justify-between gap-3">
           
           {/* Left: Mobile Menu Toggle / Breadcrumb */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <Button 
               variant="outline" 
               size="icon" 
-              className="h-8 w-8 lg:hidden shadow-border bg-transparent border-0" 
+              className="h-8 w-8 shrink-0 lg:hidden shadow-border bg-transparent border-0" 
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Menu điều hướng"
             >
@@ -330,34 +330,20 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             </Button>
 
             {/* Current Page Title on Header */}
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm text-[#171717] dark:text-[#ededed]">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="font-semibold text-sm text-[#171717] dark:text-[#ededed] truncate whitespace-nowrap">
                 {currentItem.name}
               </span>
             </div>
           </div>
 
           {/* Right Action Tools */}
-          <div className="flex items-center gap-2">
-            
-            {/* Search Input Button */}
-            <button
-              type="button"
-              onClick={() => setCommandPaletteOpen(true)}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-[#666666] dark:text-[#888888] shadow-border-interactive bg-[#fafafa] dark:bg-[#111111] hover:text-[#171717] dark:hover:text-[#ededed]"
-            >
-              <Search className="w-3.5 h-3.5 text-[#888888]" />
-              <span className="hidden sm:inline">Tìm kiếm nhanh…</span>
-              <kbd className="h-4 px-1 rounded bg-[#ffffff] dark:bg-[#1a1a1a] shadow-border text-[10px] font-sans">
-                ⌘K
-              </kbd>
-            </button>
-
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Date Range Picker */}
             <button
               type="button"
               onClick={() => setDateRangePickerOpen(true)}
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-[#171717] dark:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a]"
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-[#171717] dark:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] shrink-0 whitespace-nowrap"
             >
               <Calendar className="w-3.5 h-3.5 text-[#888888]" />
               <span className="tabular-nums text-[11px]">{startDate.split('-').reverse().join('/')} – {endDate.split('-').reverse().join('/')}</span>
@@ -368,7 +354,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             <button
               type="button"
               onClick={() => setVietQrOpen(true)}
-              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-[#171717] dark:text-[#ededed]"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-[#171717] dark:text-[#ededed] shrink-0 whitespace-nowrap"
               title="Tạo mã VietQR Napas247"
             >
               <QrCode className="w-3.5 h-3.5 text-[#0070f3]" />
@@ -379,7 +365,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             <button
               type="button"
               onClick={() => setSmsModalOpen(true)}
-              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-[#171717] dark:text-[#ededed]"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-[#171717] dark:text-[#ededed] shrink-0 whitespace-nowrap"
               title="Quét tin nhắn SMS biến động số dư"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#10b981]" />
@@ -387,7 +373,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             </button>
 
             {/* Mobile Theme Toggle */}
-            <div className="lg:hidden">
+            <div className="lg:hidden shrink-0">
               <ThemeToggle />
             </div>
 
@@ -395,7 +381,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             <button
               type="button"
               onClick={() => setNotificationOpen(true)}
-              className="p-1.5 rounded-md text-[#666666] dark:text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a]"
+              className="p-1.5 rounded-md text-[#666666] dark:text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] shrink-0"
               aria-label="Thông báo"
             >
               <Bell className="w-3.5 h-3.5" />
@@ -405,10 +391,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             <button
               type="button"
               onClick={onOpenQuickAddTx}
-              className="lg:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] shadow-xs active:scale-95"
+              className="lg:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] shadow-xs active:scale-95 shrink-0 whitespace-nowrap"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Giao dịch</span>
+              <span className="hidden xs:inline">Giao dịch</span>
             </button>
           </div>
         </header>
@@ -434,24 +420,25 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         <div className="lg:hidden fixed inset-0 z-50 flex">
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/60"
             onClick={() => setMobileMenuOpen(false)}
           />
 
           {/* Drawer Content */}
-          <div className="relative w-72 max-w-[85vw] bg-[#ffffff] dark:bg-[#0a0a0a] h-full shadow-2xl flex flex-col z-10 animate-in slide-in-from-left duration-200">
+          <div className="relative w-72 max-w-[85vw] bg-[#ffffff] dark:bg-[#0a0a0a] h-full shadow-2xl flex flex-col z-10">
             {/* Drawer Header */}
             <div className="h-14 px-4 flex items-center justify-between border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
-              <div className="flex items-center gap-2">
-                <AppLogo className="w-6 h-6" />
-                <span className="font-semibold text-xs tracking-tight">Financial Manager</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <AppLogo className="w-6 h-6 shrink-0" />
+                <span className="font-semibold text-xs tracking-tight truncate">Financial Manager</span>
               </div>
               <button 
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-1 rounded-md text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed]"
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#f5f5f5] hover:bg-[#e5e5e5] dark:bg-[#1a1a1a] dark:hover:bg-[#262626] text-[#666666] dark:text-[#a1a1aa] hover:text-[#171717] dark:hover:text-[#ffffff] transition-colors"
+                aria-label="Đóng menu"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
 

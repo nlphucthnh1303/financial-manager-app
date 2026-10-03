@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-// Production builds call the API on the same origin (/api/v1, proxied by nginx); override with VITE_API_URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5266/api/v1' : '/api/v1');
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5266/api/v1';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

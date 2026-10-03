@@ -403,7 +403,7 @@ export const CategoriesPage: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="space-y-2">{[...Array(3)].map((_, i) => <div key={i} className="h-12 rounded-md shadow-border bg-[#fafafa] dark:bg-[#0a0a0a] animate-pulse" />)}</div>
+          <div className="space-y-2">{[...Array(3)].map((_, i) => <div key={i} className="h-12 rounded-md shadow-border bg-[#fafafa] dark:bg-[#0a0a0a]" />)}</div>
         ) : visibleRoots.length === 0 ? (
           <div className="py-8 text-center text-xs text-[#888888] space-y-3">
             <p>Chưa có danh mục {typeFilter === 'Expense' ? 'chi tiêu' : 'thu nhập'} nào…</p>
@@ -430,13 +430,13 @@ export const CategoriesPage: React.FC = () => {
             <Tag className="w-4 h-4 text-[#888888]" /> Thẻ tag sự kiện / dự án
           </h2>
           <button type="button" onClick={() => setTagModal({ open: true, editing: null })}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] text-xs font-medium shadow-sm transition-colors duration-150">
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] text-xs font-medium shadow-sm">
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" /> Thêm thẻ tag
           </button>
         </div>
 
         {loading ? (
-          <div className="h-12 rounded-md shadow-border bg-[#fafafa] dark:bg-[#0a0a0a] animate-pulse" />
+          <div className="h-12 rounded-md shadow-border bg-[#fafafa] dark:bg-[#0a0a0a]" />
         ) : tags.length === 0 ? (
           <p className="py-8 text-center text-xs text-[#888888]">Chưa có thẻ tag nào…</p>
         ) : (

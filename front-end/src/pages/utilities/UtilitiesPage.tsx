@@ -26,7 +26,8 @@ import {
   Info,
   ShieldAlert,
   ChevronRight,
-  Plus
+  Plus,
+  X
 } from 'lucide-react';
 import { CreateTransactionModal } from '@/components/modals/CreateTransactionModal';
 
@@ -550,7 +551,7 @@ export const UtilitiesPage: React.FC = () => {
 
       {/* Detail Modal for Selected Fund */}
       {selectedFundForDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
           <div className="w-full max-w-lg bg-[#ffffff] dark:bg-[#0a0a0a] rounded-xl shadow-2xl p-6 space-y-4 border border-zinc-200 dark:border-zinc-800">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -570,9 +571,10 @@ export const UtilitiesPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedFundForDetail(null)}
-                className="p-1 rounded text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed]"
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#f5f5f5] hover:bg-[#e5e5e5] dark:bg-[#1a1a1a] dark:hover:bg-[#262626] text-[#666666] dark:text-[#a1a1aa] hover:text-[#171717] dark:hover:text-[#ffffff] transition-colors shrink-0"
+                aria-label="Đóng"
               >
-                ✕
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
 

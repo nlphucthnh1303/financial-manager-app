@@ -138,15 +138,15 @@ export const DashboardPage: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 bg-zinc-100 dark:bg-zinc-900 rounded-md animate-pulse" />
+        <div className="h-8 w-48 bg-zinc-100 dark:bg-zinc-900 rounded-md" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-28 rounded-lg shadow-border bg-[#fafafa] dark:bg-[#0a0a0a] animate-pulse" />
+            <div key={i} className="h-28 rounded-lg shadow-border bg-[#fafafa] dark:bg-[#0a0a0a]" />
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 h-72 rounded-lg shadow-border bg-[#fafafa] dark:bg-[#0a0a0a] animate-pulse" />
-          <div className="h-72 rounded-lg shadow-border bg-[#fafafa] dark:bg-[#0a0a0a] animate-pulse" />
+          <div className="lg:col-span-2 h-72 rounded-lg shadow-border bg-[#fafafa] dark:bg-[#0a0a0a]" />
+          <div className="h-72 rounded-lg shadow-border bg-[#fafafa] dark:bg-[#0a0a0a]" />
         </div>
       </div>
     );
@@ -158,25 +158,25 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Vietnam Market Live Ticker Strip */}
-      <div className="p-3 rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a] flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex flex-wrap items-center gap-4">
-          <span className="inline-flex items-center gap-1.5 font-semibold text-[#171717] dark:text-[#ededed]">
-            <span className="w-2 h-2 rounded-full bg-[#10b981]"></span>
+      <div className="p-3 rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a] flex items-center justify-between gap-3 text-xs overflow-x-auto whitespace-nowrap">
+        <div className="flex items-center gap-4 shrink-0">
+          <span className="inline-flex items-center gap-1.5 font-semibold text-[#171717] dark:text-[#ededed] shrink-0">
+            <span className="w-2 h-2 rounded-full bg-[#10b981] shrink-0"></span>
             Thị trường VN:
           </span>
 
-          <div className="flex items-center gap-1.5 text-[#666666] dark:text-[#888888]">
+          <div className="flex items-center gap-1.5 text-[#666666] dark:text-[#888888] shrink-0">
             <span className="text-[#171717] dark:text-[#ededed] font-medium">SJC Mua vào:</span>
             <span className="tabular-nums font-semibold text-[#171717] dark:text-[#ededed]">{formatCurrency(topGold.buyPrice)}</span>
             <span className="text-[11px]">/ lượng</span>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[#666666] dark:text-[#888888]">
+          <div className="flex items-center gap-1.5 text-[#666666] dark:text-[#888888] shrink-0">
             <span className="text-[#171717] dark:text-[#ededed] font-medium">USD/VND:</span>
             <span className="tabular-nums font-semibold text-[#171717] dark:text-[#ededed]">{topUsd.sell.toLocaleString('vi-VN')} ₫</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-3 text-[#666666] dark:text-[#888888] text-[11px]">
+          <div className="hidden md:flex items-center gap-3 text-[#666666] dark:text-[#888888] text-[11px] shrink-0">
             <span>Lương: <strong className="text-[#171717] dark:text-[#ededed] tabular-nums">{countdowns.daysToSalary} ngày</strong></span>
             <span>•</span>
             <span>Tết: <strong className="text-[#171717] dark:text-[#ededed] tabular-nums">{countdowns.daysToTet} ngày</strong></span>
@@ -185,7 +185,7 @@ export const DashboardPage: React.FC = () => {
 
         <a
           href="/utilities"
-          className="text-xs font-medium text-[#0070f3] hover:underline flex items-center gap-1"
+          className="text-xs font-medium text-[#0070f3] hover:underline flex items-center gap-1 shrink-0 whitespace-nowrap"
         >
           <span>Xem chi tiết tỷ giá & vàng</span>
           <ArrowRight className="w-3.5 h-3.5" />
@@ -207,7 +207,7 @@ export const DashboardPage: React.FC = () => {
           <button 
             type="button"
             onClick={() => setVietQrOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-medium text-[#171717] dark:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] px-3 py-1.5 rounded-md" 
+            className="flex items-center gap-1.5 text-xs font-medium text-[#171717] dark:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] px-3 py-1.5 rounded-md shrink-0 whitespace-nowrap min-h-[34px]" 
           >
             <QrCode className="w-3.5 h-3.5 text-[#0070f3]" />
             <span>VietQR</span>
@@ -216,7 +216,7 @@ export const DashboardPage: React.FC = () => {
           <button 
             type="button"
             onClick={() => setSmsModalOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-medium text-[#171717] dark:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] px-3 py-1.5 rounded-md" 
+            className="flex items-center gap-1.5 text-xs font-medium text-[#171717] dark:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] px-3 py-1.5 rounded-md shrink-0 whitespace-nowrap min-h-[34px]" 
           >
             <Sparkles className="w-3.5 h-3.5 text-[#10b981]" />
             <span>Quét SMS</span>
@@ -224,7 +224,7 @@ export const DashboardPage: React.FC = () => {
 
           <button 
             onClick={() => { loadData(true); loadTrend(timeRange); }}
-            className="flex items-center gap-1.5 text-xs font-medium text-[#171717] dark:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] px-3 py-1.5 rounded-md" 
+            className="flex items-center gap-1.5 text-xs font-medium text-[#171717] dark:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] px-3 py-1.5 rounded-md shrink-0 whitespace-nowrap min-h-[34px]" 
             type="button"
           >
             <RefreshCw className="w-3.5 h-3.5 text-[#888888]" />
@@ -233,7 +233,7 @@ export const DashboardPage: React.FC = () => {
 
           <button 
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 text-xs font-medium text-[#171717] dark:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] px-3 py-1.5 rounded-md" 
+            className="flex items-center gap-1.5 text-xs font-medium text-[#171717] dark:text-[#ededed] shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] px-3 py-1.5 rounded-md shrink-0 whitespace-nowrap min-h-[34px]" 
             type="button"
           >
             <Download className="w-3.5 h-3.5 text-[#888888]" />

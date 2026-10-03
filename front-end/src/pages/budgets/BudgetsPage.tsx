@@ -192,7 +192,7 @@ export const BudgetsPage: React.FC = () => {
 
         <div className="h-2 w-full bg-[#f0f0f0] dark:bg-[#1a1a1a] rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${overallPct >= 100 ? 'bg-[#ff5b4f]' : overallPct >= 80 ? 'bg-amber-500' : 'bg-[#10b981]'}`}
+            className={`h-full rounded-full ${overallPct >= 100 ? 'bg-[#ff5b4f]' : overallPct >= 80 ? 'bg-amber-500' : 'bg-[#10b981]'}`}
             style={{ width: `${overallPct}%` }}
           ></div>
         </div>
@@ -200,7 +200,7 @@ export const BudgetsPage: React.FC = () => {
 
       {/* Budget Items Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{[...Array(3)].map((_, i) => <div key={i} className="h-44 rounded-lg bg-[#f5f5f5] dark:bg-[#111111] animate-pulse" />)}</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{[...Array(3)].map((_, i) => <div key={i} className="h-44 rounded-lg bg-[#f5f5f5] dark:bg-[#111111]" />)}</div>
       ) : budgets.length === 0 ? (
         <div className="rounded-lg shadow-border border-dashed p-10 text-center bg-[#fafafa] dark:bg-[#0c0c0c]">
           <PieChart className="w-6 h-6 text-[#888888] mx-auto mb-2" />
@@ -399,7 +399,7 @@ export const BillsPage: React.FC = () => {
 
       <div className="space-y-3">
         {loading ? (
-          [...Array(3)].map((_, i) => <div key={i} className="h-16 rounded-lg bg-[#f5f5f5] dark:bg-[#111111] animate-pulse" />)
+          [...Array(3)].map((_, i) => <div key={i} className="h-16 rounded-lg bg-[#f5f5f5] dark:bg-[#111111]" />)
         ) : bills.length === 0 ? (
           <div className="rounded-lg shadow-border border-dashed p-10 text-center bg-[#fafafa] dark:bg-[#0c0c0c]">
             <Receipt className="w-6 h-6 text-[#888888] mx-auto mb-2" />

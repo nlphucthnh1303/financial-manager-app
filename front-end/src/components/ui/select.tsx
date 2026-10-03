@@ -73,7 +73,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-lg bg-[#ffffff] dark:bg-[#0a0a0a] text-[#171717] dark:text-[#ededed] shadow-dropdown border-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1 duration-150 ease-out",
+        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-lg bg-[#ffffff] dark:bg-[#0a0a0a] text-[#171717] dark:text-[#ededed] shadow-dropdown border-0",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
         className
@@ -122,7 +122,7 @@ const SelectItem = React.forwardRef<
     {...props}
   >
     <span className="absolute left-2.5 flex h-3.5 w-3.5 items-center justify-center">
-      <SelectPrimitive.ItemIndicator className="animate-in zoom-in-75 duration-100">
+      <SelectPrimitive.ItemIndicator>
         <Check className="h-3.5 w-3.5 text-[#171717] dark:text-[#ededed] stroke-[2.5]" />
       </SelectPrimitive.ItemIndicator>
     </span>

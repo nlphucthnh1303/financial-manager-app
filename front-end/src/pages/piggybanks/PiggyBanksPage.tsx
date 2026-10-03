@@ -263,7 +263,7 @@ export const PiggyBanksPage: React.FC = () => {
 
       {/* Piggy Cards Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{[...Array(3)].map((_, i) => <div key={i} className="h-56 rounded-lg bg-[#f5f5f5] dark:bg-[#111111] animate-pulse" />)}</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{[...Array(3)].map((_, i) => <div key={i} className="h-56 rounded-lg bg-[#f5f5f5] dark:bg-[#111111]" />)}</div>
       ) : piggies.length === 0 ? (
         <div className="rounded-lg shadow-border border-dashed p-10 text-center bg-[#fafafa] dark:bg-[#0c0c0c]">
           <PiggyBank className="w-6 h-6 text-[#888888] mx-auto mb-2" />

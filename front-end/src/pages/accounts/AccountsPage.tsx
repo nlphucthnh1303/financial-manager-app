@@ -142,12 +142,11 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
               aria-invalid={!!errors.name} 
               maxLength={100} 
               className="shadow-input text-xs"
-              autoFocus 
             />
             <FieldError message={errors.name} />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Ngân hàng / Đơn vị</label>
               <Input 
@@ -208,11 +207,11 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
             </label>
           </div>
 
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border">
+          <DialogFooter className="pt-3 flex flex-row justify-end items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border whitespace-nowrap min-h-[36px] px-4">
               Hủy
             </Button>
-            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black">
+            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black whitespace-nowrap min-h-[36px] px-4">
               {loading ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Tạo tài khoản'}
             </Button>
           </DialogFooter>
@@ -335,7 +334,7 @@ export const AccountsPage: React.FC = () => {
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(3)].map((_, i) => <div key={i} className="h-36 rounded-lg shadow-border bg-[#fafafa] dark:bg-[#0a0a0a] animate-pulse" />)}
+            {[...Array(3)].map((_, i) => <div key={i} className="h-36 rounded-lg shadow-border bg-[#fafafa] dark:bg-[#0a0a0a]" />)}
           </div>
         ) : accounts.length === 0 ? (
           <div className="p-12 shadow-card rounded-lg bg-[#ffffff] dark:bg-[#0a0a0a] text-center space-y-3">
@@ -358,11 +357,11 @@ export const AccountsPage: React.FC = () => {
                 >
                   <div>
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <div className="w-8 h-8 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border flex items-center justify-center text-sm shrink-0">
                           {matchedBank?.logo || '💳'}
                         </div>
-                        <div className="truncate">
+                        <div className="min-w-0 flex-1">
                           <h3 className="font-semibold text-xs text-[#171717] dark:text-[#ededed] truncate">{acc.name}</h3>
                           <span className="text-[11px] text-[#888888] block truncate">
                             {bankName}

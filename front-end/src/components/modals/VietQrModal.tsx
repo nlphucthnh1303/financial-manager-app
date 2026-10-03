@@ -92,7 +92,7 @@ export const VietQrModal: React.FC<VietQrModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-3.5 py-1">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Ngân hàng</label>
               <Select value={bankBin} onValueChange={setBankBin}>
@@ -120,7 +120,7 @@ export const VietQrModal: React.FC<VietQrModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Chủ tài khoản</label>
               <Input
@@ -143,7 +143,7 @@ export const VietQrModal: React.FC<VietQrModalProps> = ({
           </div>
 
           {numAmount > 0 && (
-            <div className="text-[11px] text-[#10b981] font-medium px-2.5 py-1 rounded bg-[#fafafa] dark:bg-[#111111] shadow-border animate-in fade-in duration-150">
+            <div className="text-[11px] text-[#10b981] font-medium px-2.5 py-1 rounded bg-[#fafafa] dark:bg-[#111111] shadow-border">
               {numberToVietnameseWords(numAmount)}
             </div>
           )}
@@ -177,8 +177,8 @@ export const VietQrModal: React.FC<VietQrModalProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={handleCopy} className="text-xs shadow-border">
+        <DialogFooter className="pt-2 flex flex-row justify-end items-center gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={handleCopy} className="text-xs shadow-border whitespace-nowrap min-h-[36px] px-3">
             {copied ? <Check className="w-3.5 h-3.5 mr-1 text-[#10b981]" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
             {copied ? 'Đã chép' : 'Sao chép link'}
           </Button>
@@ -187,7 +187,7 @@ export const VietQrModal: React.FC<VietQrModalProps> = ({
             onClick={handleDownload}
             disabled={!accountNumber}
             size="sm"
-            className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black"
+            className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black whitespace-nowrap min-h-[36px] px-3"
           >
             <Download className="w-3.5 h-3.5 mr-1" />
             Tải mã QR
