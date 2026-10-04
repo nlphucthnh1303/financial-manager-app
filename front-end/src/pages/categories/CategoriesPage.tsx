@@ -109,17 +109,17 @@ const CategoryFormModal: React.FC<{
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">
+      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="space-y-1.5 pb-1">
+          <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">
             {editing ? 'Sửa danh mục' : 'Thêm danh mục mới'}
           </DialogTitle>
-          <DialogDescription className="text-xs text-[#888888]">
+          <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
             Chọn biểu tượng vector hiện đại từ ReUI Icons hoặc bộ Emoji.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-2">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-1">
           <div>
             <label className={labelCls}>Tên danh mục *</label>
             <Input 
@@ -128,22 +128,22 @@ const CategoryFormModal: React.FC<{
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))} 
               aria-invalid={!!errors.name} 
               maxLength={100} 
-              className="shadow-input text-xs" 
+              className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" 
               autoFocus 
             />
             <FieldError message={errors.name} />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
               <label className={labelCls}>Loại danh mục</label>
               <Select value={form.type} onValueChange={(val: CategoryType) => setForm(f => ({ ...f, type: val, parentId: '' }))}>
-                <SelectTrigger className="shadow-input text-xs h-9">
+                <SelectTrigger className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Expense">Chi tiêu (−)</SelectItem>
-                  <SelectItem value="Revenue">Thu nhập (+)</SelectItem>
+                  <SelectItem value="Expense" className="text-xs sm:text-sm">Chi tiêu (−)</SelectItem>
+                  <SelectItem value="Revenue" className="text-xs sm:text-sm">Thu nhập (+)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -151,13 +151,13 @@ const CategoryFormModal: React.FC<{
             <div>
               <label className={labelCls}>Danh mục cha (Tùy chọn)</label>
               <Select value={form.parentId || 'root'} onValueChange={val => setForm(f => ({ ...f, parentId: val === 'root' ? '' : val }))}>
-                <SelectTrigger className="shadow-input text-xs h-9">
+                <SelectTrigger className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
                   <SelectValue placeholder="Không có (Cấp gốc)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="root">Không có (Cấp gốc)</SelectItem>
+                  <SelectItem value="root" className="text-xs sm:text-sm">Không có (Cấp gốc)</SelectItem>
                   {parentOptions.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    <SelectItem key={p.id} value={p.id} className="text-xs sm:text-sm">{p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -175,11 +175,20 @@ const CategoryFormModal: React.FC<{
             />
           </div>
 
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border">
+          <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+            >
               Hủy
             </Button>
-            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] dark:bg-[#ededed] text-white dark:text-black hover:bg-[#333333] dark:hover:bg-white shadow-sm cursor-pointer"
+            >
               {loading ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Tạo danh mục'}
             </Button>
           </DialogFooter>
@@ -241,37 +250,50 @@ const TagFormModal: React.FC<{
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">{editing ? 'Sửa thẻ tag' : 'Thêm thẻ tag'}</DialogTitle>
-          <DialogDescription className="text-xs text-[#888888]">Gom nhóm giao dịch theo sự kiện hoặc dự án (VD: #tet-2027, #damcuoi-tuan).</DialogDescription>
+      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="space-y-1.5 pb-1">
+          <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">{editing ? 'Sửa thẻ tag' : 'Thêm thẻ tag'}</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">Gom nhóm giao dịch theo sự kiện hoặc dự án (VD: #tet-2027, #damcuoi-tuan).</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} noValidate className="space-y-3.5 py-2">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-1">
           <div>
             <label className={labelCls}>Tên thẻ tag *</label>
-            <Input placeholder="sam-tet-2027, du-lich-phu-quoc…" value={form.tag} onChange={e => setForm(f => ({ ...f, tag: e.target.value }))} aria-invalid={!!errors.tag} maxLength={50} className="shadow-input text-xs" autoFocus />
+            <Input placeholder="sam-tet-2027, du-lich-phu-quoc…" value={form.tag} onChange={e => setForm(f => ({ ...f, tag: e.target.value }))} aria-invalid={!!errors.tag} maxLength={50} className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" autoFocus />
             <FieldError message={errors.tag} />
           </div>
           <div>
             <label className={labelCls}>Mô tả sự kiện</label>
             <textarea rows={3} maxLength={500} placeholder="Chi tiêu chuẩn bị Tết Nguyên Đán…" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              className="flex w-full rounded-md shadow-input bg-[#fafafa] dark:bg-[#111111] px-3 py-2 text-xs text-[#171717] dark:text-[#ededed] placeholder-[#888888] focus:outline-none" />
+              className="flex w-full rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#111111] p-3 text-xs sm:text-sm text-[#171717] dark:text-[#ededed] placeholder-[#888888] focus:outline-none focus:ring-2 focus:ring-[#0070f3]" />
             <FieldError message={errors.description} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
               <label className={labelCls}>Ngày bắt đầu</label>
-              <Input type="date" value={form.dateFrom} onChange={e => setForm(f => ({ ...f, dateFrom: e.target.value }))} className="shadow-input text-xs" />
+              <Input type="date" value={form.dateFrom} onChange={e => setForm(f => ({ ...f, dateFrom: e.target.value }))} className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
             </div>
             <div>
               <label className={labelCls}>Ngày kết thúc</label>
-              <Input type="date" value={form.dateTo} min={form.dateFrom || undefined} onChange={e => setForm(f => ({ ...f, dateTo: e.target.value }))} aria-invalid={!!errors.dateTo} className="shadow-input text-xs" />
+              <Input type="date" value={form.dateTo} min={form.dateFrom || undefined} onChange={e => setForm(f => ({ ...f, dateTo: e.target.value }))} aria-invalid={!!errors.dateTo} className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
               <FieldError message={errors.dateTo} />
             </div>
           </div>
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border">Hủy</Button>
-            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black">{loading ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Tạo thẻ tag'}</Button>
+          <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] dark:bg-[#ededed] text-white dark:text-black hover:bg-[#333333] dark:hover:bg-white shadow-sm cursor-pointer"
+            >
+              {loading ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Tạo thẻ tag'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -598,16 +620,29 @@ export const CategoriesPage: React.FC = () => {
 
       {/* Delete Confirmation */}
       <Dialog open={!!pendingDelete} onOpenChange={() => setPendingDelete(null)}>
-        <DialogContent className="sm:max-w-sm bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-          <DialogHeader>
-            <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">Xác nhận xóa</DialogTitle>
-            <DialogDescription className="text-xs text-[#888888]">
+        <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+          <DialogHeader className="space-y-1.5 pb-1">
+            <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">Xác nhận xóa</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
               Bạn có chắc chắn muốn xóa {pendingDelete?.kind === 'category' ? `danh mục "${pendingDelete?.item.name}"` : `thẻ tag "#${pendingDelete?.item.tag}"`}?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" size="sm" className="text-xs shadow-border" onClick={() => setPendingDelete(null)}>Hủy</Button>
-            <Button size="sm" className="text-xs bg-[#ff5b4f] text-white" onClick={handleDelete}>Xóa ngay</Button>
+          <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPendingDelete(null)}
+              className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDelete}
+              className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-rose-600 hover:bg-rose-700 text-white shadow-sm cursor-pointer"
+            >
+              Xác nhận xóa
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

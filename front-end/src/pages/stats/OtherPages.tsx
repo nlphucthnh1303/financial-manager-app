@@ -12,6 +12,8 @@ import {
 } from 'recharts';
 import { RefreshCw } from 'lucide-react';
 
+import { localDb } from '@/lib/localDb';
+
 const COLORS = ['#0070f3', '#10b981', '#f59e0b', '#ff5b4f', '#7928ca', '#06b6d4', '#de1d8d'];
 const SERIES_LABELS: Record<string, string> = { income: 'Thu nhập', expense: 'Chi tiêu' };
 
@@ -40,7 +42,24 @@ export const StatisticsPage: React.FC = () => {
       setTrend(trendRes.data || []);
       setBreakdown(breakRes.data || []);
     } catch {
-      toast.error('Không thể tải dữ liệu thống kê.');
+      const s = startOfDayIso(start);
+      const e = endOfDayIso(end);
+      const [stats, offlineTrend, offlineBreakdown, accounts] = await Promise.all([
+        localDb.computeOfflineStats(s, e),
+        localDb.computeCashflowTrend(s, e),
+        localDb.computeCategoryBreakdown(s, e),
+        localDb.getAccounts()
+      ]);
+      setSummary({
+        kpi: {
+          totalIncome: stats.income,
+          totalExpense: stats.expense,
+          netCashflow: stats.net,
+          currentNetWorth: accounts.reduce((sum, a) => sum + (a.currentBalance || 0), 0)
+        }
+      });
+      setTrend(offlineTrend);
+      setBreakdown(offlineBreakdown);
     } finally {
       setLoading(false);
     }
@@ -166,7 +185,12 @@ export const CurrenciesPage: React.FC = () => {
   const [currencies, setCurrencies] = useState<any[]>([]);
 
   useEffect(() => {
-    api.get('/currencies').then((res: any) => setCurrencies(res.data || [])).catch(() => toast.error('Không thể tải danh sách tiền tệ.'));
+    api.get('/currencies')
+      .then((res: any) => setCurrencies(res.data || []))
+      .catch(async () => {
+        const list = await localDb.getCurrencies();
+        setCurrencies(list);
+      });
   }, []);
 
   return (

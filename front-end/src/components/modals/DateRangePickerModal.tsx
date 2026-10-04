@@ -44,44 +44,64 @@ export const DateRangePickerModal: React.FC<DateRangePickerProps> = ({ open, onC
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-        <DialogHeader className="pr-8">
-          <DialogTitle className="text-base font-semibold flex items-center gap-2 text-[#171717] dark:text-[#ededed]">
-            <CalendarIcon className="w-4 h-4 text-[#0070f3]" />
-            Chọn khoảng thời gian
+      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="pr-8 space-y-1">
+          <DialogTitle className="text-base sm:text-lg font-semibold flex items-center gap-2 text-[#171717] dark:text-[#ededed]">
+            <div className="w-8 h-8 rounded-lg bg-[#0070f3]/10 text-[#0070f3] flex items-center justify-center shrink-0">
+              <CalendarIcon className="w-4 h-4" />
+            </div>
+            <span>Chọn khoảng thời gian</span>
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="flex flex-wrap gap-1.5">
-            {presets.map(p => (
-              <button
-                key={p.label}
-                type="button"
-                onClick={() => { const r = p.getRange(new Date()); setStart(toDateInput(r.s)); setEnd(toDateInput(r.e)); setError(undefined); }}
-                className="px-2.5 py-1.5 rounded-md shadow-border text-xs font-medium text-[#171717] dark:text-[#ededed] bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f0f0f0] dark:hover:bg-[#1a1a1a] transition-all duration-150 active:scale-95"
-              >
-                {p.label}
-              </button>
-            ))}
+          <div>
+            <label className="text-xs font-medium text-[#666666] dark:text-[#a1a1a1] mb-2 block">
+              Mốc thời gian nhanh:
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {presets.map(p => (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => { const r = p.getRange(new Date()); setStart(toDateInput(r.s)); setEnd(toDateInput(r.e)); setError(undefined); }}
+                  className="px-3 py-1.5 rounded-lg border border-[#e5e5e5] dark:border-[#262626] text-xs font-medium text-[#171717] dark:text-[#ededed] bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f0f0f0] dark:hover:bg-[#1a1a1a] transition-all cursor-pointer active:scale-95"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Từ ngày</label>
-              <DatePicker value={start} max={end || undefined} onChange={setStart} aria-invalid={!!error} className="h-9 text-xs shadow-input" />
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Từ ngày</label>
+              <DatePicker value={start} max={end || undefined} onChange={setStart} aria-invalid={!!error} className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
             </div>
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Đến ngày</label>
-              <DatePicker value={end} min={start || undefined} onChange={setEnd} aria-invalid={!!error} className="h-9 text-xs shadow-input" />
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Đến ngày</label>
+              <DatePicker value={end} min={start || undefined} onChange={setEnd} aria-invalid={!!error} className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
             </div>
           </div>
           <FieldError message={error} />
         </div>
 
-        <DialogFooter className="pt-3 flex flex-row items-center justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onClose} className="h-8 px-3 text-xs shadow-border">Hủy</Button>
-          <Button size="sm" onClick={handleApply} className="h-8 px-4 text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black">Áp dụng</Button>
+        <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+          >
+            Hủy
+          </Button>
+          <Button
+            type="button"
+            onClick={handleApply}
+            className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] text-white hover:bg-[#333333] dark:bg-[#ededed] dark:text-black dark:hover:bg-[#ffffff] shadow-sm cursor-pointer"
+          >
+            Áp dụng
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

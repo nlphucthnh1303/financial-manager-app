@@ -58,24 +58,24 @@ export const SmartSmsImportModal: React.FC<SmartSmsImportModalProps> = ({ open, 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border text-[#10b981] flex items-center justify-center">
+      <DialogContent className="sm:max-w-lg bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="space-y-1.5 pb-1">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">Phân tích SMS biến động số dư</DialogTitle>
-              <DialogDescription className="text-xs text-[#888888]">
+              <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">Phân tích SMS biến động số dư</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
                 Dán tin nhắn từ VCB, TCB, MB, MoMo… để tự động trích xuất thông tin.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="space-y-3.5 py-1">
+        <div className="space-y-4 py-2">
           <div>
-            <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">
+            <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">
               Nội dung tin nhắn SMS / Thông báo ngân hàng:
             </label>
             <textarea
@@ -83,20 +83,20 @@ export const SmartSmsImportModal: React.FC<SmartSmsImportModalProps> = ({ open, 
               value={inputText}
               onChange={e => handleParse(e.target.value)}
               placeholder="SD TK 0071… +5,000,000VND luc 15:30. Ref: Cong ty tra luong…"
-              className="w-full text-xs p-3 rounded-md shadow-input bg-[#fafafa] dark:bg-[#111111] text-[#171717] dark:text-[#ededed] placeholder-[#888888] focus:outline-none font-mono"
+              className="w-full text-xs sm:text-sm p-3.5 rounded-xl bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626] text-[#171717] dark:text-[#ededed] placeholder-[#888888] focus:outline-none focus:ring-2 focus:ring-[#0070f3] font-mono leading-relaxed transition-all"
               autoFocus
             />
           </div>
 
           <div>
-            <span className="text-[11px] text-[#888888] font-medium block mb-1.5">Mẫu tin nhắn thử nghiệm:</span>
-            <div className="flex flex-wrap gap-1.5">
+            <span className="text-xs font-medium text-[#666666] dark:text-[#a1a1a1] block mb-2">Mẫu tin nhắn thử nghiệm:</span>
+            <div className="flex flex-wrap gap-2">
               {SAMPLE_SMS.map((sample, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => loadSample(sample.text)}
-                  className="px-2.5 py-1 text-[11px] font-medium rounded shadow-border bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f0f0f0] dark:hover:bg-[#1a1a1a] text-[#171717] dark:text-[#ededed] transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f0f0f0] dark:hover:bg-[#1a1a1a] text-[#171717] dark:text-[#ededed] transition-all cursor-pointer active:scale-95"
                 >
                   {sample.bank}
                 </button>
@@ -106,33 +106,33 @@ export const SmartSmsImportModal: React.FC<SmartSmsImportModalProps> = ({ open, 
 
           {/* Parsed Result Preview */}
           {parsed ? (
-            <div className="p-3.5 rounded-md shadow-border bg-[#fafafa] dark:bg-[#111111] space-y-2.5">
+            <div className="p-4 rounded-xl border border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#111111] space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-[#10b981] flex items-center gap-1.5">
-                  <Check className="w-3.5 h-3.5" /> Nhận diện thành công
+                <span className="text-xs font-semibold text-[#10b981] flex items-center gap-1.5">
+                  <Check className="w-4 h-4" /> Nhận diện thành công
                 </span>
-                <span className="text-[10px] text-[#888888] tabular-nums">
+                <span className="text-xs text-[#888888] tabular-nums">
                   Độ chính xác: {(parsed.confidence * 100).toFixed(0)}%
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="p-2 rounded shadow-border bg-[#ffffff] dark:bg-[#0a0a0a]">
-                  <span className="text-[10px] text-[#888888] block">LOẠI GIAO DỊCH</span>
+              <div className="grid grid-cols-2 gap-2.5 text-xs">
+                <div className="p-2.5 rounded-lg border border-[#e5e5e5] dark:border-[#222222] bg-[#ffffff] dark:bg-[#0a0a0a]">
+                  <span className="text-[10px] text-[#888888] font-medium uppercase block">LOẠI GIAO DỊCH</span>
                   <span className={`font-semibold mt-0.5 block ${parsed.type === 'Deposit' ? 'text-[#10b981]' : 'text-[#ff5b4f]'}`}>
                     {parsed.type === 'Deposit' ? 'Thu nhập (+)' : 'Chi tiêu (−)'}
                   </span>
                 </div>
 
-                <div className="p-2 rounded shadow-border bg-[#ffffff] dark:bg-[#0a0a0a]">
-                  <span className="text-[10px] text-[#888888] block">SỐ TIỀN NHẬN DIỆN</span>
+                <div className="p-2.5 rounded-lg border border-[#e5e5e5] dark:border-[#222222] bg-[#ffffff] dark:bg-[#0a0a0a]">
+                  <span className="text-[10px] text-[#888888] font-medium uppercase block">SỐ TIỀN NHẬN DIỆN</span>
                   <span className="font-semibold text-[#171717] dark:text-[#ededed] tabular-nums mt-0.5 block">
                     {formatCurrency(parsed.amount)}
                   </span>
                 </div>
 
-                <div className="p-2 rounded shadow-border bg-[#ffffff] dark:bg-[#0a0a0a] col-span-2">
-                  <span className="text-[10px] text-[#888888] block">MÔ TẢ GIAO DỊCH</span>
+                <div className="p-2.5 rounded-lg border border-[#e5e5e5] dark:border-[#222222] bg-[#ffffff] dark:bg-[#0a0a0a] col-span-2">
+                  <span className="text-[10px] text-[#888888] font-medium uppercase block">MÔ TẢ GIAO DỊCH</span>
                   <span className="font-medium text-[#171717] dark:text-[#ededed] mt-0.5 block truncate">
                     {parsed.description}
                   </span>
@@ -140,26 +140,30 @@ export const SmartSmsImportModal: React.FC<SmartSmsImportModalProps> = ({ open, 
               </div>
             </div>
           ) : inputText.trim() ? (
-            <div className="p-3 rounded-md shadow-border bg-[#fafafa] dark:bg-[#111111] flex items-center gap-2 text-xs text-[#ff5b4f]">
+            <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 flex items-center gap-2.5 text-xs text-rose-600 dark:text-rose-400">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>Chưa nhận diện được số tiền hoặc định dạng tin nhắn.</span>
             </div>
           ) : null}
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border">
+        <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+          >
             Hủy
           </Button>
           <Button
             type="button"
             disabled={!parsed}
             onClick={handleApply}
-            size="sm"
-            className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black"
+            className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] dark:bg-[#ededed] text-white dark:text-black hover:bg-[#333333] dark:hover:bg-white shadow-sm cursor-pointer inline-flex items-center"
           >
             <span>Điền vào biểu mẫu</span>
-            <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            <ArrowRight className="w-4 h-4 ml-1.5" />
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -11,6 +11,8 @@ import { CreateTransactionModal } from '@/components/modals/CreateTransactionMod
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
+import { localDb } from '@/lib/localDb';
+
 interface DaySummary {
   dateStr: string;
   dayNum: number;
@@ -42,7 +44,20 @@ export const FinancialCalendarPage: React.FC = () => {
       const res: any = await api.get(`/transactions?page=1&pageSize=500&startDate=${start}&endDate=${end}`);
       setTransactions(res.data || []);
     } catch {
-      toast.error('Không thể tải dữ liệu lịch thu chi.');
+      const start = startOfDayIso(toDateInput(firstDayOfMonth));
+      const end = endOfDayIso(toDateInput(lastDayOfMonth));
+      const offlineList = await localDb.getTransactions({ startDate: start, endDate: end });
+      setTransactions(offlineList.map(t => ({
+        id: t.id,
+        transactionType: t.transactionType,
+        amount: t.amount,
+        description: t.description,
+        date: t.date,
+        sourceAccount: { id: t.sourceAccountId, name: t.sourceAccountName || 'Ví tiền mặt' },
+        destinationAccount: { id: t.destinationAccountId, name: t.destinationAccountName || '—' },
+        category: t.categoryName ? { id: t.categoryId, name: t.categoryName } : null,
+        notes: t.notes
+      })));
     } finally {
       setLoading(false);
     }
@@ -288,14 +303,14 @@ export const FinancialCalendarPage: React.FC = () => {
       {/* Day Details Modal */}
       {selectedDay && (
         <Dialog open={!!selectedDay} onOpenChange={() => setSelectedDay(null)}>
-          <DialogContent className="sm:max-w-lg bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-            <DialogHeader>
-              <div className="flex items-center justify-between">
+          <DialogContent className="sm:max-w-lg bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+            <DialogHeader className="space-y-1.5 pb-1">
+              <div className="flex items-center justify-between gap-3">
                 <div>
-                  <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">
+                  <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">
                     Chi tiết giao dịch {formatDate(selectedDay.dateStr)}
                   </DialogTitle>
-                  <DialogDescription className="text-xs text-[#888888]">
+                  <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
                     {selectedDay.transactions.length} giao dịch được ghi nhận
                   </DialogDescription>
                 </div>
@@ -303,25 +318,25 @@ export const FinancialCalendarPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(true)}
-                  className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-md bg-[#171717] dark:bg-[#ededed] text-white dark:text-black shadow-xs"
+                  className="flex items-center gap-1.5 text-xs sm:text-sm font-medium h-9 px-3.5 rounded-lg bg-[#171717] dark:bg-[#ededed] text-white dark:text-black hover:bg-[#333333] dark:hover:bg-white transition-all shadow-xs cursor-pointer shrink-0"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Thêm giao dịch</span>
+                  <Plus className="w-4 h-4" />
+                  <span>Thêm</span>
                 </button>
               </div>
             </DialogHeader>
 
-            <div className="space-y-3 py-2">
-              <div className="grid grid-cols-2 gap-3 p-3 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border text-xs">
+            <div className="space-y-3.5 py-1">
+              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626] text-xs">
                 <div>
-                  <span className="text-[11px] text-[#888888] block">TỔNG THU NHẬP</span>
-                  <span className="font-semibold text-[#10b981] text-sm tabular-nums">
+                  <span className="text-[10px] text-[#888888] font-medium uppercase block">TỔNG THU NHẬP</span>
+                  <span className="font-bold text-[#10b981] text-sm sm:text-base tabular-nums mt-0.5 block">
                     +{formatCurrency(selectedDay.income)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[11px] text-[#888888] block">TỔNG CHI TIÊU</span>
-                  <span className="font-semibold text-[#ff5b4f] text-sm tabular-nums">
+                  <span className="text-[10px] text-[#888888] font-medium uppercase block">TỔNG CHI TIÊU</span>
+                  <span className="font-bold text-[#ff5b4f] text-sm sm:text-base tabular-nums mt-0.5 block">
                     −{formatCurrency(selectedDay.expense)}
                   </span>
                 </div>
@@ -338,17 +353,17 @@ export const FinancialCalendarPage: React.FC = () => {
                     return (
                       <div
                         key={t.id}
-                        className="p-3 rounded-md shadow-border bg-[#ffffff] dark:bg-[#0a0a0a] flex items-center justify-between gap-3 text-xs"
+                        className="p-3.5 rounded-xl border border-[#e5e5e5] dark:border-[#262626] bg-[#ffffff] dark:bg-[#0a0a0a] flex items-center justify-between gap-3 text-xs"
                       >
-                        <div>
-                          <span className="font-medium text-[#171717] dark:text-[#ededed] block">
+                        <div className="min-w-0 flex-1">
+                          <span className="font-semibold text-xs sm:text-sm text-[#171717] dark:text-[#ededed] block truncate">
                             {t.description}
                           </span>
-                          <span className="text-[11px] text-[#888888]">
+                          <span className="text-[11px] text-[#888888] mt-0.5 block truncate">
                             {t.category?.name || 'Chưa phân loại'} • {walletOf(t)?.name}
                           </span>
                         </div>
-                        <span className={`font-semibold tabular-nums text-xs ${isIncome ? 'text-[#10b981]' : 'text-[#ff5b4f]'}`}>
+                        <span className={`font-bold tabular-nums text-xs sm:text-sm shrink-0 ${isIncome ? 'text-[#10b981]' : 'text-[#ff5b4f]'}`}>
                           {isIncome ? '+' : '−'}{formatCurrency(t.amount)}
                         </span>
                       </div>

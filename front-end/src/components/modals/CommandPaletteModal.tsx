@@ -34,23 +34,27 @@ export const CommandPaletteModal: React.FC<CommandPaletteProps> = ({ open, onClo
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl">
-        <div className="flex items-center px-4 pr-12 border-b border-zinc-200 dark:border-zinc-800">
-          <Search className="w-4 h-4 text-zinc-400 mr-2 shrink-0" />
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden rounded-2xl border border-[#e5e5e5] dark:border-[#222222] bg-[#ffffff] dark:bg-[#0a0a0a] shadow-2xl">
+        <div className="flex items-center px-4 pr-12 border-b border-[#f0f0f0] dark:border-[#1f1f1f] bg-[#fafafa]/50 dark:bg-[#111111]/50">
+          <Search className="w-4 h-4 text-[#888888] mr-2.5 shrink-0" />
           <input
             type="text"
             placeholder="Gõ lệnh hoặc tìm kiếm trang..."
             value={query}
             onChange={e => setQuery(e.target.value)}
-            className="w-full h-12 text-xs bg-transparent text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none"
+            className="w-full h-12 text-xs sm:text-sm bg-transparent text-[#171717] dark:text-[#ededed] placeholder-[#888888] focus:outline-none"
             autoFocus
           />
-          <kbd className="text-[10px] text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 shrink-0">ESC</kbd>
+          <kbd className="text-[10px] font-mono text-[#888888] bg-[#f5f5f5] dark:bg-[#1a1a1a] px-2 py-0.5 rounded-md border border-[#e5e5e5] dark:border-[#262626] shrink-0">
+            ESC
+          </kbd>
         </div>
 
-        <div className="max-h-72 overflow-y-auto p-2 space-y-1">
+        <div className="max-h-80 overflow-y-auto p-2 space-y-1">
           {filtered.length === 0 ? (
-            <div className="p-4 text-center text-xs text-zinc-500">Không tìm thấy kết quả phù hợp.</div>
+            <div className="p-6 text-center text-xs text-[#888888]">
+              Không tìm thấy lệnh hoặc trang phù hợp với "{query}".
+            </div>
           ) : (
             filtered.map((item, idx) => {
               const Icon = item.icon;
@@ -58,10 +62,12 @@ export const CommandPaletteModal: React.FC<CommandPaletteProps> = ({ open, onClo
                 <button
                   key={idx}
                   onClick={item.action}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition text-left"
+                  className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-[#444444] dark:text-[#a1a1a1] hover:bg-[#f5f5f5] dark:hover:bg-[#141414] hover:text-[#171717] dark:hover:text-[#ededed] transition-all text-left cursor-pointer group"
                 >
-                  <Icon className="w-4 h-4 text-zinc-400" />
-                  <span>{item.label}</span>
+                  <div className="w-7 h-7 rounded-lg bg-[#f0f0f0] dark:bg-[#1a1a1a] flex items-center justify-center text-[#888888] group-hover:text-[#171717] dark:group-hover:text-[#ededed] transition-colors shrink-0">
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span className="flex-1">{item.label}</span>
                 </button>
               );
             })

@@ -262,19 +262,15 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[92vh] overflow-y-auto bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
+      <DialogContent className="sm:max-w-lg max-h-[92vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">Tạo giao dịch mới</DialogTitle>
-              <DialogDescription className="text-xs text-[#888888]">Ghi nhận khoản thu, chi hoặc chuyển tiền nội bộ.</DialogDescription>
-            </div>
-          </div>
+          <DialogTitle>Tạo giao dịch mới</DialogTitle>
+          <DialogDescription>Ghi nhận khoản thu, chi hoặc chuyển tiền nội bộ nhanh chóng.</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-3.5 py-1">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-1">
           {/* Transaction Type Segmented Control */}
-          <div role="tablist" className="grid grid-cols-3 gap-1 p-0.5 bg-[#fafafa] dark:bg-[#111111] shadow-border rounded-md">
+          <div role="tablist" className="grid grid-cols-3 gap-1.5 p-1 bg-[#f5f5f5] dark:bg-[#141414] border border-[#e5e5e5] dark:border-[#262626] rounded-xl">
             {TYPE_TABS.map(({ value, label, icon: Icon }) => (
               <button
                 key={value}
@@ -282,22 +278,27 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
                 role="tab"
                 aria-selected={transactionType === value}
                 onClick={() => switchType(value)}
-                className={`py-1.5 rounded text-xs font-medium transition-all duration-150 flex items-center justify-center gap-1.5 active:scale-95 ${transactionType === value ? 'bg-[#ffffff] dark:bg-[#1f1f1f] text-[#171717] dark:text-[#ededed] shadow-xs font-semibold' : 'text-[#666666] dark:text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed]'}`}
+                className={`py-2 px-2 rounded-lg text-xs font-medium transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 ${
+                  transactionType === value 
+                    ? 'bg-[#ffffff] dark:bg-[#222222] text-[#171717] dark:text-[#ededed] shadow-sm font-semibold' 
+                    : 'text-[#666666] dark:text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed]'
+                }`}
               >
-                <Icon className="w-3.5 h-3.5" /> {label}
+                <Icon className="w-4 h-4 shrink-0" /> 
+                <span className="truncate">{label}</span>
               </button>
             ))}
           </div>
 
           {/* Money Input */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className={labelCls}>Số tiền (VNĐ) *</label>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1]">Số tiền (VNĐ) *</label>
               {numAmount > 0 && (
                 <button
                   type="button"
                   onClick={() => setAmount('')}
-                  className="text-[11px] text-[#888888] hover:text-[#ff5b4f] transition-colors"
+                  className="text-[11px] font-medium text-[#888888] hover:text-[#ef4444] transition-colors cursor-pointer"
                 >
                   Xóa số
                 </button>
@@ -308,25 +309,25 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
               value={amount}
               onValueChange={setAmount}
               aria-invalid={!!errors.amount}
-              className="tabular-nums font-semibold text-lg h-10 shadow-input text-[#171717] dark:text-[#ededed]"
+              className="tabular-nums font-semibold text-lg sm:text-xl h-11 bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626] rounded-xl text-[#171717] dark:text-[#ededed] focus-visible:ring-2 focus-visible:ring-[#0070f3]"
             />
             <FieldError message={errors.amount} />
 
             {/* Vietnamese Words */}
             {numAmount > 0 && (
-              <div className="mt-1.5 text-[11px] font-medium text-[#10b981] px-2.5 py-1 rounded bg-[#fafafa] dark:bg-[#111111] shadow-border">
+              <div className="text-[11px] font-medium text-[#10b981] px-3 py-1.5 rounded-lg bg-[#10b981]/10 border border-[#10b981]/20">
                 {numberToVietnameseWords(numAmount)}
               </div>
             )}
 
             {/* Quick Vietnamese Denomination Buttons */}
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+            <div className="flex flex-wrap items-center gap-2 pt-1">
               {QUICK_AMOUNTS.slice(2, 9).map(q => (
                 <button
                   key={q.label}
                   type="button"
                   onClick={() => handleQuickAddAmount(q.value)}
-                  className="px-2.5 py-1 text-[11px] font-medium rounded bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f0f0f0] dark:hover:bg-[#1a1a1a] text-[#171717] dark:text-[#ededed] shadow-border active:scale-95 tabular-nums whitespace-nowrap"
+                  className="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-[#fafafa] dark:bg-[#141414] hover:bg-[#f0f0f0] dark:hover:bg-[#1f1f1f] text-[#171717] dark:text-[#ededed] border border-[#e5e5e5] dark:border-[#262626] shadow-xs active:scale-95 tabular-nums whitespace-nowrap cursor-pointer transition-colors"
                 >
                   {q.label}
                 </button>
@@ -335,25 +336,25 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
           </div>
 
           {/* Description */}
-          <div>
-            <label className={labelCls}>Mô tả giao dịch *</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1]">Mô tả giao dịch *</label>
             <Input
               placeholder="Ăn tối gia đình, Tiền điện EVN…"
               value={description}
               onChange={e => setDescription(e.target.value)}
               aria-invalid={!!errors.description}
               maxLength={255}
-              className="shadow-input text-xs"
+              className="text-sm h-10 rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
             />
             <FieldError message={errors.description} />
           </div>
 
           {/* Wallets & Counterparty */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className={labelCls}>{transactionType === 'Deposit' ? 'Ví nhận tiền *' : 'Ví chi tiền *'}</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1]">{transactionType === 'Deposit' ? 'Ví nhận tiền *' : 'Ví chi tiền *'}</label>
               <Select value={walletId} onValueChange={setWalletId} disabled={noWallet}>
-                <SelectTrigger className={`shadow-input text-xs h-9 ${errors.walletId ? 'ring-1 ring-[#ff5b4f]' : ''}`}>
+                <SelectTrigger className={`text-sm h-10 rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626] ${errors.walletId ? 'ring-1 ring-[#ef4444]' : ''}`}>
                   <SelectValue placeholder="Chọn ví..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -368,10 +369,10 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
             </div>
 
             {transactionType === 'Transfer' ? (
-              <div>
-                <label className={labelCls}>Chuyển đến ví *</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1]">Chuyển đến ví *</label>
                 <Select value={destinationAccountId} onValueChange={setDestinationAccountId}>
-                  <SelectTrigger className={`shadow-input text-xs h-9 ${errors.destinationAccountId ? 'ring-1 ring-[#ff5b4f]' : ''}`}>
+                  <SelectTrigger className={`text-sm h-10 rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626] ${errors.destinationAccountId ? 'ring-1 ring-[#ef4444]' : ''}`}>
                     <SelectValue placeholder="Chọn ví nhận..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -385,15 +386,15 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
                 <FieldError message={errors.destinationAccountId} />
               </div>
             ) : (
-              <div>
-                <label className={labelCls}>{transactionType === 'Deposit' ? 'Nguồn thu (Công ty / Khách)' : 'Nơi chi (Highlands, Circle K)'}</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1]">{transactionType === 'Deposit' ? 'Nguồn thu (Công ty / Khách)' : 'Nơi chi (Highlands, Circle K)'}</label>
                 <Input
                   placeholder={transactionType === 'Deposit' ? 'Công ty TNHH ABC…' : 'Highlands Coffee…'}
                   value={counterparty}
                   onChange={e => setCounterparty(e.target.value)}
                   aria-invalid={!!errors.counterparty}
                   maxLength={100}
-                  className="shadow-input text-xs"
+                  className="text-sm h-10 rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
                 />
                 <FieldError message={errors.counterparty} />
               </div>
@@ -402,11 +403,11 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
 
           {/* Category & 6 Jars Framework */}
           {transactionType !== 'Transfer' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className={labelCls}>Danh mục</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1]">Danh mục chi tiêu / thu nhập</label>
                 <Select value={categoryId} onValueChange={setCategoryId}>
-                  <SelectTrigger className="shadow-input text-xs h-9">
+                  <SelectTrigger className="text-sm h-10 rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
                     <SelectValue placeholder="-- Chọn danh mục --" />
                   </SelectTrigger>
                   <SelectContent>
@@ -420,10 +421,10 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
                 </Select>
               </div>
 
-              <div>
-                <label className={labelCls}>Quy tắc 6 Hũ (JARS)</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1]">Quy tắc 6 Hũ (JARS)</label>
                 <Select value={selectedJar} onValueChange={setSelectedJar}>
-                  <SelectTrigger className="shadow-input text-xs h-9">
+                  <SelectTrigger className="text-sm h-10 rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
                     <SelectValue placeholder="-- Phân bổ tự do --" />
                   </SelectTrigger>
                   <SelectContent>
@@ -440,18 +441,18 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
           )}
 
           {/* Budget & Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className={labelCls}>Ngày giao dịch *</label>
-              <DatePicker value={date} onChange={setDate} aria-invalid={!!errors.date} className="shadow-input text-xs" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1]">Ngày giao dịch *</label>
+              <DatePicker value={date} onChange={setDate} aria-invalid={!!errors.date} className="h-10 text-sm rounded-lg" />
               <FieldError message={errors.date} />
             </div>
 
             {transactionType === 'Withdrawal' ? (
-              <div>
-                <label className={labelCls}>Tính vào Ngân sách</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1]">Tính vào Ngân sách</label>
                 <Select value={budgetId} onValueChange={setBudgetId}>
-                  <SelectTrigger className="shadow-input text-xs h-9">
+                  <SelectTrigger className="text-sm h-10 rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
                     <SelectValue placeholder="-- Không tính --" />
                   </SelectTrigger>
                   <SelectContent>
@@ -465,18 +466,27 @@ export const CreateTransactionModal: React.FC<CreateTransactionModalProps> = ({ 
                 </Select>
               </div>
             ) : (
-              <div>
-                <label className={labelCls}>Ghi chú chi tiết</label>
-                <Input placeholder="Ghi chú thêm…" value={notes} onChange={e => setNotes(e.target.value)} maxLength={500} className="shadow-input text-xs" />
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1]">Ghi chú chi tiết</label>
+                <Input placeholder="Ghi chú thêm…" value={notes} onChange={e => setNotes(e.target.value)} maxLength={500} className="text-sm h-10 rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
               </div>
             )}
           </div>
 
-          <DialogFooter className="pt-3 flex flex-row justify-end items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border whitespace-nowrap min-h-[36px] px-4">
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose} 
+              className="h-10 px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] cursor-pointer"
+            >
               Hủy
             </Button>
-            <Button type="submit" disabled={loading || noWallet} size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black shadow-xs hover:bg-[#333333] dark:hover:bg-[#ffffff] whitespace-nowrap min-h-[36px] px-4">
+            <Button 
+              type="submit" 
+              disabled={loading || noWallet} 
+              className="h-10 px-6 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] text-white hover:bg-[#333333] dark:bg-[#ededed] dark:text-black dark:hover:bg-[#ffffff] shadow-sm cursor-pointer"
+            >
               {loading ? 'Đang lưu…' : 'Tạo giao dịch'}
             </Button>
           </DialogFooter>

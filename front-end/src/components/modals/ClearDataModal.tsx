@@ -66,42 +66,84 @@ export const ClearDataModal: React.FC<ClearDataModalProps> = ({ open, onClose, o
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-rose-600" /> Xoá dữ liệu
+      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="space-y-1.5 pb-1">
+          <DialogTitle className="text-base sm:text-lg font-semibold flex items-center gap-2 text-[#171717] dark:text-[#ededed]">
+            <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <span>Xoá dữ liệu hệ thống</span>
           </DialogTitle>
-          <DialogDescription className="text-xs">Thao tác này không thể hoàn tác.</DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
+            Hành động này sẽ xóa dữ liệu theo phạm vi bạn chọn và không thể hoàn tác.
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-3.5 py-2">
-          <div role="radiogroup" className="space-y-2">
-            {SCOPES.map(s => (
-              <label
-                key={s.value}
-                className={`flex gap-2.5 p-3 rounded-lg border cursor-pointer transition ${scope === s.value
-                  ? 'border-rose-400 bg-rose-50 dark:bg-rose-950/30 dark:border-rose-700'
-                  : 'border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
-              >
-                <input type="radio" name="scope" value={s.value} checked={scope === s.value} onChange={() => setScope(s.value)} className="mt-0.5 accent-rose-600" />
-                <div>
-                  <p className="text-xs font-semibold text-zinc-900 dark:text-white">{s.title}</p>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">{s.detail}</p>
-                </div>
-              </label>
-            ))}
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-2">
+          <div role="radiogroup" className="space-y-2.5">
+            {SCOPES.map(s => {
+              const isSelected = scope === s.value;
+              return (
+                <label
+                  key={s.value}
+                  className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all duration-150 ${
+                    isSelected
+                      ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/30 dark:border-rose-700 ring-1 ring-rose-500/30'
+                      : 'border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f5f5f5] dark:hover:bg-[#161616]'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="scope"
+                    value={s.value}
+                    checked={isSelected}
+                    onChange={() => setScope(s.value)}
+                    className="mt-1 w-4 h-4 accent-rose-600 shrink-0 cursor-pointer"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs sm:text-sm font-semibold ${isSelected ? 'text-rose-700 dark:text-rose-300' : 'text-[#171717] dark:text-[#ededed]'}`}>
+                      {s.title}
+                    </p>
+                    <p className="text-xs text-[#666666] dark:text-[#a1a1a1] mt-0.5 leading-relaxed">
+                      {s.detail}
+                    </p>
+                  </div>
+                </label>
+              );
+            })}
           </div>
 
           <div>
-            <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1 block">Nhập mật khẩu để xác nhận *</label>
-            <Input type="password" autoComplete="current-password" placeholder="Mật khẩu của bạn" value={password} onChange={e => setPassword(e.target.value)} aria-invalid={!!errors.password} />
+            <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">
+              Nhập mật khẩu để xác nhận <span className="text-rose-500">*</span>
+            </label>
+            <Input
+              type="password"
+              autoComplete="current-password"
+              placeholder="Mật khẩu tài khoản của bạn"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              aria-invalid={!!errors.password}
+              className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
+            />
             <FieldError message={errors.password} />
           </div>
 
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs">Hủy</Button>
-            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-rose-600 hover:bg-rose-700 text-white">
-              {loading ? 'Đang xoá...' : scope === 'all' ? 'Xoá toàn bộ' : 'Xoá giao dịch'}
+          <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-rose-600 hover:bg-rose-700 text-white shadow-sm cursor-pointer"
+            >
+              {loading ? 'Đang xoá...' : scope === 'all' ? 'Xác nhận xoá toàn bộ' : 'Xác nhận xoá giao dịch'}
             </Button>
           </DialogFooter>
         </form>

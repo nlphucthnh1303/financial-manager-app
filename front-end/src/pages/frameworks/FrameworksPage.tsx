@@ -8,6 +8,8 @@ import {
   Percent
 } from 'lucide-react';
 
+import { localDb } from '@/lib/localDb';
+
 export const FrameworksPage: React.FC = () => {
   const [method, setMethod] = useState<'jars' | '503020'>('jars');
   const [monthlyIncomeInput, setMonthlyIncomeInput] = useState('20000000');
@@ -27,7 +29,11 @@ export const FrameworksPage: React.FC = () => {
           setActualExpense(kpi.totalExpense || 0);
         }
       } catch {
-        // use default
+        const offlineStats = await localDb.computeOfflineStats(startOfDayIso(start), endOfDayIso(end));
+        if (offlineStats.income > 0) {
+          setMonthlyIncomeInput(String(offlineStats.income));
+        }
+        setActualExpense(offlineStats.expense || 0);
       }
     };
     loadCurrentMonthData();

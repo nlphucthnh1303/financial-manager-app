@@ -234,34 +234,36 @@ export const IconPicker: React.FC<IconPickerProps> = ({
 
       {/* Modal Selection */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-          <DialogHeader className="pb-2">
-            <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed] flex items-center justify-between">
+        <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+          <DialogHeader className="space-y-1.5 pb-1">
+            <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed] flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#0070f3]" />
-                Chọn biểu tượng & Màu sắc
+                <div className="w-8 h-8 rounded-lg bg-[#0070f3]/10 text-[#0070f3] flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <span>Chọn biểu tượng & Màu sắc</span>
               </span>
               <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center shadow-inner"
-                style={{ backgroundColor: `${selectedColor}25`, color: selectedColor }}
+                className="w-9 h-9 rounded-xl flex items-center justify-center shadow-inner border border-[#e5e5e5] dark:border-[#262626]"
+                style={{ backgroundColor: `${selectedColor}20`, color: selectedColor }}
               >
-                <IconRenderer name={selectedIcon} color={selectedColor} size={18} className="w-5 h-5" />
+                <IconRenderer name={selectedIcon} color={selectedColor} size={20} className="w-5 h-5" />
               </div>
             </DialogTitle>
-            <DialogDescription className="text-xs text-[#888888]">
+            <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
               Hơn 100+ biểu tượng vector hiện đại theo chuẩn ReUI / Lucide
             </DialogDescription>
           </DialogHeader>
 
           {/* Tabs: Vector Icons vs Emojis */}
-          <div className="flex items-center gap-1 p-1 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
             <button
               type="button"
               onClick={() => setActiveTab('icons')}
-              className={`flex-1 py-1.5 rounded text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeTab === 'icons'
-                  ? 'bg-[#ffffff] dark:bg-[#222222] text-[#171717] dark:text-[#ededed] shadow-sm'
-                  : 'text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed]'
+                  ? 'bg-[#ffffff] dark:bg-[#222222] text-[#171717] dark:text-[#ededed] shadow-xs'
+                  : 'text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed]'
               }`}
             >
               <Layers className="w-3.5 h-3.5" /> Vector Icons (ReUI)
@@ -269,10 +271,10 @@ export const IconPicker: React.FC<IconPickerProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('emojis')}
-              className={`flex-1 py-1.5 rounded text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeTab === 'emojis'
-                  ? 'bg-[#ffffff] dark:bg-[#222222] text-[#171717] dark:text-[#ededed] shadow-sm'
-                  : 'text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed]'
+                  ? 'bg-[#ffffff] dark:bg-[#222222] text-[#171717] dark:text-[#ededed] shadow-xs'
+                  : 'text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed]'
               }`}
             >
               <Smile className="w-3.5 h-3.5" /> Bộ Emoji
@@ -281,8 +283,8 @@ export const IconPicker: React.FC<IconPickerProps> = ({
 
           {/* Color Palette Selector */}
           {showColorPicker && (
-            <div className="py-2">
-              <span className="text-[11px] font-medium text-[#888888] block mb-1.5">
+            <div className="py-1">
+              <span className="text-xs font-medium text-[#666666] dark:text-[#a1a1a1] block mb-1.5">
                 Bảng màu nhận diện:
               </span>
               <div className="flex flex-wrap gap-2 items-center">
@@ -291,7 +293,7 @@ export const IconPicker: React.FC<IconPickerProps> = ({
                     key={c}
                     type="button"
                     onClick={() => handleSelectColor(c)}
-                    className={`w-6 h-6 rounded-full transition-all flex items-center justify-center ${
+                    className={`w-6 h-6 rounded-full transition-all flex items-center justify-center cursor-pointer ${
                       selectedColor === c ? 'ring-2 ring-offset-2 ring-[#0070f3] scale-110' : 'hover:scale-105'
                     }`}
                     style={{ backgroundColor: c }}
@@ -307,26 +309,26 @@ export const IconPicker: React.FC<IconPickerProps> = ({
             <div className="flex-1 overflow-hidden flex flex-col space-y-2.5">
               {/* Search input */}
               <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#888888]" />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#888888]" />
                 <Input
                   placeholder="Tìm icon (VD: vi, xang, ca phe, the, tien, nha)…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8 text-xs shadow-input"
+                  className="pl-9 h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
                 />
               </div>
 
               {/* Category Pills */}
-              <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none text-[11px]">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
                 {categories.map((cat) => (
                   <button
                     key={cat}
                     type="button"
                     onClick={() => setSelectedCategory(cat)}
-                    className={`px-2.5 py-1 rounded-full whitespace-nowrap transition-colors ${
+                    className={`px-3 py-1 rounded-lg whitespace-nowrap transition-all cursor-pointer font-medium ${
                       selectedCategory === cat
-                        ? 'bg-[#171717] dark:bg-[#ededed] text-white dark:text-black font-medium'
-                        : 'bg-[#fafafa] dark:bg-[#111111] text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed] shadow-border'
+                        ? 'bg-[#171717] dark:bg-[#ededed] text-white dark:text-black shadow-xs'
+                        : 'bg-[#fafafa] dark:bg-[#111111] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] border border-[#e5e5e5] dark:border-[#262626]'
                     }`}
                   >
                     {cat}
@@ -344,10 +346,10 @@ export const IconPicker: React.FC<IconPickerProps> = ({
                       type="button"
                       onClick={() => handleSelectIcon(item.name)}
                       title={item.label}
-                      className={`p-2 rounded-lg flex flex-col items-center justify-center gap-1 transition-all ${
+                      className={`p-2.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         isSelected
                           ? 'bg-[#0070f3] text-white shadow-sm ring-2 ring-[#0070f3] ring-offset-1'
-                          : 'bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f0f0f0] dark:hover:bg-[#1a1a1a] text-[#171717] dark:text-[#ededed] shadow-border'
+                          : 'bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f0f0f0] dark:hover:bg-[#161616] text-[#171717] dark:text-[#ededed] border border-[#e5e5e5] dark:border-[#262626]'
                       }`}
                     >
                       <IconRenderer
@@ -373,10 +375,10 @@ export const IconPicker: React.FC<IconPickerProps> = ({
                     key={emoji}
                     type="button"
                     onClick={() => handleSelectIcon(emoji)}
-                    className={`h-12 rounded-lg text-2xl flex items-center justify-center transition-transform ${
+                    className={`h-12 rounded-xl text-2xl flex items-center justify-center transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-[#0070f3]/20 ring-2 ring-[#0070f3] scale-105'
-                        : 'bg-[#fafafa] dark:bg-[#111111] hover:scale-105 shadow-border'
+                        ? 'bg-[#0070f3]/20 border-2 border-[#0070f3] scale-105'
+                        : 'bg-[#fafafa] dark:bg-[#111111] hover:scale-105 border border-[#e5e5e5] dark:border-[#262626]'
                     }`}
                   >
                     {emoji}
@@ -386,21 +388,19 @@ export const IconPicker: React.FC<IconPickerProps> = ({
             </div>
           )}
 
-          <DialogFooter className="pt-2 flex flex-row justify-end items-center gap-2">
+          <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
             <Button
               type="button"
               variant="outline"
-              size="sm"
               onClick={() => setOpen(false)}
-              className="text-xs shadow-border"
+              className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
             >
               Hủy
             </Button>
             <Button
               type="button"
-              size="sm"
               onClick={handleConfirm}
-              className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black font-medium"
+              className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] dark:bg-[#ededed] text-white dark:text-black hover:bg-[#333333] dark:hover:bg-white shadow-sm cursor-pointer"
             >
               Áp dụng biểu tượng
             </Button>

@@ -385,21 +385,21 @@ export const DebtsPage: React.FC = () => {
 
       {/* Modal: Thêm khoản nợ mới */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-          <DialogHeader>
-            <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">
+        <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+          <DialogHeader className="space-y-1.5 pb-1">
+            <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">
               {tab === 'lend' ? 'Ghi nhận khoản cho vay' : 'Ghi nhận khoản đi vay'}
             </DialogTitle>
-            <DialogDescription className="text-xs text-[#888888]">
+            <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
               {tab === 'lend'
                 ? 'Theo dõi tiền bạn cho bạn bè, người thân hoặc đối tác vay mượn.'
                 : 'Theo dõi các khoản tiền bạn đang vay mượn người khác hoặc ngân hàng.'}
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleCreateDebt} className="space-y-3 py-2">
+          <form onSubmit={handleCreateDebt} className="space-y-4 py-1">
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1 block">
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">
                 {tab === 'lend' ? 'Tên người vay (Bạn bè / Đối tác) *' : 'Tên chủ nợ (Người cho vay) *'}
               </label>
               <Input
@@ -407,26 +407,26 @@ export const DebtsPage: React.FC = () => {
                 value={personName}
                 onChange={e => setPersonName(e.target.value)}
                 maxLength={100}
-                className="shadow-input text-xs"
+                className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
                 autoFocus
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1 block">
+                <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">
                   Số tiền (VNĐ) *
                 </label>
                 <MoneyInput
                   placeholder="5.000.000…"
                   value={originalAmount}
                   onValueChange={setOriginalAmount}
-                  className="font-medium text-xs shadow-input"
+                  className="h-10 font-semibold text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1 block">
+                <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">
                   Số điện thoại
                 </label>
                 <Input
@@ -434,31 +434,31 @@ export const DebtsPage: React.FC = () => {
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   maxLength={15}
-                  className="shadow-input text-xs"
+                  className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
                 />
               </div>
             </div>
 
             {Number(originalAmount) > 0 && (
-              <div className="text-[11px] text-[#10b981] font-medium px-2.5 py-1 rounded bg-[#fafafa] dark:bg-[#111111] shadow-border">
+              <div className="text-xs text-[#10b981] font-medium px-3 py-1.5 rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
                 {numberToVietnameseWords(Number(originalAmount))}
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1 block">
+                <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">
                   Ngày ghi nhận *
                 </label>
                 <DatePicker
                   value={startDate}
                   onChange={setStartDate}
-                  className="shadow-input text-xs"
+                  className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1 block">
+                <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">
                   Hạn thanh toán
                 </label>
                 <DatePicker
@@ -466,13 +466,13 @@ export const DebtsPage: React.FC = () => {
                   min={startDate}
                   onChange={setDueDate}
                   placeholder="Chọn hạn trả…"
-                  className="shadow-input text-xs"
+                  className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1 block">
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">
                 Lý do & Ghi chú
               </label>
               <Input
@@ -480,15 +480,23 @@ export const DebtsPage: React.FC = () => {
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 maxLength={255}
-                className="shadow-input text-xs"
+                className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
               />
             </div>
 
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setShowAddModal(false)} className="text-xs shadow-border">
+            <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAddModal(false)}
+                className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+              >
                 Hủy
               </Button>
-              <Button type="submit" size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black">
+              <Button
+                type="submit"
+                className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] dark:bg-[#ededed] text-white dark:text-black hover:bg-[#333333] dark:hover:bg-white shadow-sm cursor-pointer"
+              >
                 Lưu vào sổ nợ
               </Button>
             </DialogFooter>
@@ -499,43 +507,43 @@ export const DebtsPage: React.FC = () => {
       {/* Modal: Ghi nhận trả nợ */}
       {selectedDebtForPayment && (
         <Dialog open={!!selectedDebtForPayment} onOpenChange={() => setSelectedDebtForPayment(null)}>
-          <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-            <DialogHeader>
-              <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">
+          <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+            <DialogHeader className="space-y-1.5 pb-1">
+              <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">
                 Ghi nhận thanh toán trả nợ
               </DialogTitle>
-              <DialogDescription className="text-xs text-[#888888]">
+              <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
                 {selectedDebtForPayment.personName} • Còn nợ: {formatCurrency(selectedDebtForPayment.originalAmount - selectedDebtForPayment.paidAmount)}
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleAddPayment} className="space-y-3 py-2">
+            <form onSubmit={handleAddPayment} className="space-y-4 py-1">
               <div>
-                <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1 block">
+                <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">
                   Số tiền thanh toán (VNĐ) *
                 </label>
                 <MoneyInput
                   placeholder="0…"
                   value={payAmount}
                   onValueChange={setPayAmount}
-                  className="font-medium text-xs shadow-input"
+                  className="h-10 font-semibold text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
                   autoFocus
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1 block">
+                <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">
                   Ngày thanh toán
                 </label>
                 <DatePicker
                   value={payDate}
                   onChange={setPayDate}
-                  className="shadow-input text-xs"
+                  className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1 block">
+                <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">
                   Ghi chú đợt trả
                 </label>
                 <Input
@@ -543,15 +551,23 @@ export const DebtsPage: React.FC = () => {
                   value={payNotes}
                   onChange={e => setPayNotes(e.target.value)}
                   maxLength={255}
-                  className="shadow-input text-xs"
+                  className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
                 />
               </div>
 
-              <DialogFooter className="pt-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedDebtForPayment(null)} className="text-xs shadow-border">
+              <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSelectedDebtForPayment(null)}
+                  className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+                >
                   Hủy
                 </Button>
-                <Button type="submit" size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black">
+                <Button
+                  type="submit"
+                  className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] dark:bg-[#ededed] text-white dark:text-black hover:bg-[#333333] dark:hover:bg-white shadow-sm cursor-pointer"
+                >
                   Xác nhận thanh toán
                 </Button>
               </DialogFooter>

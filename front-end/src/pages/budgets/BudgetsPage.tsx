@@ -19,6 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
+import { localDb } from '@/lib/localDb';
+
 const BudgetStatusBadge: React.FC<{ status: string }> = ({ status }) => {
   if (status === 'Overspent') return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-[#ff5b4f]/10 text-[#ff5b4f]">
@@ -58,61 +60,85 @@ const AddBudgetModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: 
     if (Object.keys(found).length) return;
     try {
       setLoading(true);
-      await api.post('/budgets', { ...form, name: form.name.trim(), limitAmount: Number(form.limitAmount) });
+      const payload = { ...form, name: form.name.trim(), limitAmount: Number(form.limitAmount) };
+      try {
+        await api.post('/budgets', payload);
+      } catch {
+        await localDb.addBudget({
+          name: payload.name,
+          amount: payload.limitAmount,
+          period: (payload.period as any) || 'Monthly'
+        });
+      }
       toast.success('Đã tạo ngân sách mới!');
       onClose(); onSuccess();
-    } catch (err: any) { toast.error(err?.message || 'Tạo ngân sách thất bại.'); }
+    } catch (err: any) { 
+      toast.error(err?.message || 'Tạo ngân sách thất bại.'); 
+    }
     finally { setLoading(false); }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">Tạo ngân sách mới</DialogTitle>
-          <DialogDescription className="text-xs text-[#666666] dark:text-[#888888]">Thiết lập hạn mức chi tiêu theo chu kỳ mong muốn.</DialogDescription>
+      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="space-y-1.5 pb-1">
+          <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">Tạo ngân sách mới</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">Thiết lập hạn mức chi tiêu theo chu kỳ mong muốn.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} noValidate className="space-y-3 py-2">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-1">
           <div>
-            <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Tên ngân sách *</label>
-            <Input placeholder="VD: Ăn uống tháng 9, Mua sắm quần áo…" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} aria-invalid={!!errors.name} maxLength={100} className="shadow-input text-xs" />
+            <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Tên ngân sách *</label>
+            <Input placeholder="VD: Ăn uống tháng 9, Mua sắm quần áo…" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} aria-invalid={!!errors.name} maxLength={100} className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
             <FieldError message={errors.name} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Hạn mức (VND) *</label>
-              <MoneyInput placeholder="5.000.000" value={form.limitAmount} onValueChange={v => setForm(f => ({ ...f, limitAmount: v }))} aria-invalid={!!errors.limitAmount} className="shadow-input text-xs font-semibold" />
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Hạn mức (VND) *</label>
+              <MoneyInput placeholder="5.000.000" value={form.limitAmount} onValueChange={v => setForm(f => ({ ...f, limitAmount: v }))} aria-invalid={!!errors.limitAmount} className="h-10 text-xs sm:text-sm font-semibold rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
               <FieldError message={errors.limitAmount} />
             </div>
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Chu kỳ</label>
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Chu kỳ</label>
               <Select value={form.period} onValueChange={v => setForm(f => ({ ...f, period: v }))}>
-                <SelectTrigger className="shadow-input text-xs h-9">
+                <SelectTrigger className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
                   <SelectValue placeholder="Chọn chu kỳ" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Monthly" className="text-xs">Hàng tháng</SelectItem>
-                  <SelectItem value="Weekly" className="text-xs">Hàng tuần</SelectItem>
-                  <SelectItem value="Yearly" className="text-xs">Hàng năm</SelectItem>
+                  <SelectItem value="Monthly" className="text-xs sm:text-sm">Hàng tháng</SelectItem>
+                  <SelectItem value="Weekly" className="text-xs sm:text-sm">Hàng tuần</SelectItem>
+                  <SelectItem value="Yearly" className="text-xs sm:text-sm">Hàng năm</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Từ ngày</label>
-              <DatePicker value={form.start} onChange={v => setForm(f => ({ ...f, start: v }))} aria-invalid={!!errors.start} />
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Từ ngày</label>
+              <DatePicker value={form.start} onChange={v => setForm(f => ({ ...f, start: v }))} aria-invalid={!!errors.start} className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
               <FieldError message={errors.start} />
             </div>
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Đến ngày</label>
-              <DatePicker value={form.end} min={form.start || undefined} onChange={v => setForm(f => ({ ...f, end: v }))} aria-invalid={!!errors.end} />
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Đến ngày</label>
+              <DatePicker value={form.end} min={form.start || undefined} onChange={v => setForm(f => ({ ...f, end: v }))} aria-invalid={!!errors.end} className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
               <FieldError message={errors.end} />
             </div>
           </div>
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border bg-transparent">Hủy</Button>
-            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000]">{loading ? 'Đang tạo…' : 'Tạo ngân sách'}</Button>
+          <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] shadow-sm cursor-pointer"
+            >
+              {loading ? 'Đang tạo…' : 'Tạo ngân sách'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -135,7 +161,8 @@ export const BudgetsPage: React.FC = () => {
       const res: any = await api.get(`/budgets/status?start=${start}&end=${end}`);
       setBudgets(res.data || []);
     } catch {
-      toast.error('Không thể tải danh sách ngân sách.');
+      const offlineBudgets = await localDb.getBudgetStatuses(start, end);
+      setBudgets(offlineBudgets);
     } finally { setLoading(false); }
   };
 
@@ -295,48 +322,55 @@ const AddBillModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: ()
     if (Object.keys(found).length) return;
     try {
       setLoading(true);
-      await api.post('/bills', { name, amountMin: min, amountMax: max, repeatFrequency: form.repeatFrequency, date: form.date, active: form.active });
+      const payload = { name, amountMin: min, amountMax: max, repeatFrequency: form.repeatFrequency, date: form.date, active: form.active };
+      try {
+        await api.post('/bills', payload);
+      } catch {
+        await localDb.addBill(payload);
+      }
       toast.success('Đã thêm hóa đơn mới!');
       onClose(); onSuccess();
-    } catch (err: any) { toast.error(err?.message || 'Thêm hóa đơn thất bại.'); }
+    } catch (err: any) { 
+      toast.error(err?.message || 'Thêm hóa đơn thất bại.'); 
+    }
     finally { setLoading(false); }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">Thêm hóa đơn định kỳ</DialogTitle>
-          <DialogDescription className="text-xs text-[#666666] dark:text-[#888888]">Theo dõi các khoản phải trả cố định như điện, nước, internet.</DialogDescription>
+      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="space-y-1.5 pb-1">
+          <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">Thêm hóa đơn định kỳ</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">Theo dõi các khoản phải trả cố định như điện, nước, internet.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} noValidate className="space-y-3 py-2">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-1">
           <div>
-            <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Tên hóa đơn *</label>
-            <Input placeholder="VD: Tiền điện EVN, Internet VNPT…" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} aria-invalid={!!errors.name} maxLength={100} className="shadow-input text-xs" />
+            <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Tên hóa đơn *</label>
+            <Input placeholder="VD: Tiền điện EVN, Internet VNPT…" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} aria-invalid={!!errors.name} maxLength={100} className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
             <FieldError message={errors.name} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Số tiền tối thiểu *</label>
-              <MoneyInput placeholder="1.000.000" value={form.amountMin} onValueChange={v => setForm(f => ({ ...f, amountMin: v }))} aria-invalid={!!errors.amountMin} className="shadow-input text-xs font-semibold" />
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Số tiền tối thiểu *</label>
+              <MoneyInput placeholder="1.000.000" value={form.amountMin} onValueChange={v => setForm(f => ({ ...f, amountMin: v }))} aria-invalid={!!errors.amountMin} className="h-10 text-xs sm:text-sm font-semibold rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
               <FieldError message={errors.amountMin} />
             </div>
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Số tiền tối đa</label>
-              <MoneyInput placeholder="Bằng tối thiểu" value={form.amountMax} onValueChange={v => setForm(f => ({ ...f, amountMax: v }))} aria-invalid={!!errors.amountMax} className="shadow-input text-xs font-semibold" />
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Số tiền tối đa</label>
+              <MoneyInput placeholder="Bằng tối thiểu" value={form.amountMax} onValueChange={v => setForm(f => ({ ...f, amountMax: v }))} aria-invalid={!!errors.amountMax} className="h-10 text-xs sm:text-sm font-semibold rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
               <FieldError message={errors.amountMax} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Chu kỳ lặp *</label>
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Chu kỳ lặp *</label>
               <Select value={form.repeatFrequency} onValueChange={v => setForm(f => ({ ...f, repeatFrequency: v }))}>
-                <SelectTrigger className="shadow-input text-xs h-9">
+                <SelectTrigger className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
                   <SelectValue placeholder="Chọn chu kỳ lặp" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(FREQUENCY_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value} className="text-xs">
+                    <SelectItem key={value} value={value} className="text-xs sm:text-sm">
                       {label}
                     </SelectItem>
                   ))}
@@ -344,18 +378,31 @@ const AddBillModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: ()
               </Select>
             </div>
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Ngày đến hạn *</label>
-              <DatePicker value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} aria-invalid={!!errors.date} />
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Ngày đến hạn *</label>
+              <DatePicker value={form.date} onChange={v => setForm(f => ({ ...f, date: v }))} aria-invalid={!!errors.date} className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
               <FieldError message={errors.date} />
             </div>
           </div>
-          <label className="flex items-center gap-2 text-xs text-[#171717] dark:text-[#ededed] cursor-pointer">
-            <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} className="rounded" />
+          <label className="flex items-center gap-2.5 text-xs text-[#171717] dark:text-[#ededed] cursor-pointer font-medium pt-1">
+            <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} className="w-4 h-4 rounded border-[#e5e5e5] dark:border-[#262626] text-black focus:ring-0 cursor-pointer" />
             Đang theo dõi (kích hoạt)
           </label>
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border bg-transparent">Hủy</Button>
-            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000]">{loading ? 'Đang lưu…' : 'Thêm hóa đơn'}</Button>
+          <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] shadow-sm cursor-pointer"
+            >
+              {loading ? 'Đang lưu…' : 'Thêm hóa đơn'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -374,7 +421,8 @@ export const BillsPage: React.FC = () => {
       const res: any = await api.get('/bills');
       setBills(res.data || []);
     } catch {
-      toast.error('Không thể tải danh sách hóa đơn.');
+      const offlineBills = await localDb.getBills();
+      setBills(offlineBills);
     } finally { setLoading(false); }
   };
 

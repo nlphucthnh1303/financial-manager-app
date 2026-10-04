@@ -92,33 +92,35 @@ export const BankSelector: React.FC<BankSelectorProps> = ({
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-          <DialogHeader className="pb-2">
-            <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed] flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-[#0070f3]" />
-              Chọn Ngân hàng hoặc Ví điện tử Việt Nam
+        <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+          <DialogHeader className="space-y-1.5 pb-1">
+            <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed] flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-[#0070f3]/10 text-[#0070f3] flex items-center justify-center shrink-0">
+                <Building2 className="w-4 h-4" />
+              </div>
+              <span>Chọn Ngân hàng hoặc Ví điện tử</span>
             </DialogTitle>
-            <DialogDescription className="text-xs text-[#888888]">
+            <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
               Bao gồm đầy đủ Big 4, Ngân hàng TMCP, Ngân hàng số và Ví điện tử (MoMo, ZaloPay, Viettel Money…)
             </DialogDescription>
           </DialogHeader>
 
           {/* Search Box */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#888888]" />
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#888888]" />
             <Input
               placeholder="Tìm theo tên ngân hàng, mã (VCB, TCB, MB, MoMo…)"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 text-xs shadow-input"
+              className="pl-9 h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
               autoFocus
             />
           </div>
 
           {/* Filter Categories */}
-          <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none text-[11px]">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
             {[
-              { id: 'popular', label: '⭐ Phổ biến nhất', icon: Sparkles },
+              { id: 'popular', label: '⭐ Phổ biến', icon: Sparkles },
               { id: 'all', label: 'Tất cả (35+)', icon: Building2 },
               { id: 'bank', label: 'Ngân hàng', icon: Building2 },
               { id: 'wallet', label: 'Ví điện tử', icon: Wallet },
@@ -128,10 +130,10 @@ export const BankSelector: React.FC<BankSelectorProps> = ({
                 key={tab.id}
                 type="button"
                 onClick={() => setFilterType(tab.id as any)}
-                className={`px-3 py-1.5 rounded-md font-medium whitespace-nowrap transition-colors flex items-center gap-1 ${
+                className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                   filterType === tab.id
-                    ? 'bg-[#171717] dark:bg-[#ededed] text-white dark:text-black shadow-sm'
-                    : 'bg-[#fafafa] dark:bg-[#111111] text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed] shadow-border'
+                    ? 'bg-[#171717] dark:bg-[#ededed] text-white dark:text-black shadow-xs'
+                    : 'bg-[#fafafa] dark:bg-[#111111] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] border border-[#e5e5e5] dark:border-[#262626]'
                 }`}
               >
                 <span>{tab.label}</span>
@@ -140,7 +142,7 @@ export const BankSelector: React.FC<BankSelectorProps> = ({
           </div>
 
           {/* Banks Grid / List */}
-          <div className="flex-1 overflow-y-auto max-h-72 grid grid-cols-1 sm:grid-cols-2 gap-2 pr-1 py-1">
+          <div className="flex-1 overflow-y-auto max-h-72 grid grid-cols-1 sm:grid-cols-2 gap-2.5 pr-1 py-1">
             {filteredBanks.map((bank) => {
               const isSelected = selectedCode === bank.code || selectedCode === bank.shortName;
               return (
@@ -148,17 +150,17 @@ export const BankSelector: React.FC<BankSelectorProps> = ({
                   key={bank.id}
                   type="button"
                   onClick={() => handleChoose(bank)}
-                  className={`p-2.5 rounded-lg text-left flex items-center gap-3 transition-all ${
+                  className={`p-3 rounded-xl text-left flex items-center gap-3 transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[#0070f3]/10 ring-2 ring-[#0070f3] shadow-sm'
-                      : 'bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f0f0f0] dark:hover:bg-[#1a1a1a] shadow-border'
+                      ? 'bg-[#0070f3]/10 border-2 border-[#0070f3] shadow-xs'
+                      : 'bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f0f0f0] dark:hover:bg-[#161616] border border-[#e5e5e5] dark:border-[#262626]'
                   }`}
                 >
                   <BankLogoView bank={bank} size="md" />
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-1">
-                      <span className="text-xs font-semibold text-[#171717] dark:text-[#ededed] truncate">
+                      <span className="text-xs sm:text-sm font-semibold text-[#171717] dark:text-[#ededed] truncate">
                         {bank.shortName}
                       </span>
                       {bank.code && (
@@ -167,7 +169,7 @@ export const BankSelector: React.FC<BankSelectorProps> = ({
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] text-[#888888] block truncate mt-0.5">
+                    <span className="text-[11px] text-[#888888] block truncate mt-0.5">
                       {bank.name}
                     </span>
                   </div>
@@ -186,13 +188,12 @@ export const BankSelector: React.FC<BankSelectorProps> = ({
             )}
           </div>
 
-          <DialogFooter className="pt-2">
+          <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f]">
             <Button
               type="button"
               variant="outline"
-              size="sm"
               onClick={() => setOpen(false)}
-              className="text-xs shadow-border"
+              className="w-full sm:w-auto h-10 px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
             >
               Đóng
             </Button>

@@ -44,59 +44,94 @@ const TxDetailDialog: React.FC<{
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">
+      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="space-y-1.5 pb-1">
+          <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">
             Chi tiết giao dịch #{tx.id?.slice(0, 8)}
           </DialogTitle>
-          <DialogDescription className="text-xs text-[#888888]">
+          <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
             Thông tin định khoản kế toán kép
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <div className="text-center py-4 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
-            <span className={`text-3xl font-semibold tabular-nums ${isIncome ? 'text-[#10b981]' : isExpense ? 'text-[#ff5b4f]' : 'text-[#0070f3]'}`}>
+          <div className="text-center py-4 rounded-xl bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
+            <span className={`text-2xl sm:text-3xl font-bold tabular-nums tracking-tight ${isIncome ? 'text-[#10b981]' : isExpense ? 'text-[#ff5b4f]' : 'text-[#0070f3]'}`}>
               {isExpense ? '−' : isIncome ? '+' : ''}{formatCurrency(tx.amount)}
             </span>
-            <p className="text-[#171717] dark:text-[#ededed] font-medium text-xs mt-1">{tx.description}</p>
+            <p className="text-[#171717] dark:text-[#ededed] font-medium text-xs sm:text-sm mt-1.5">{tx.description}</p>
           </div>
           <div className="grid grid-cols-2 gap-2.5 text-xs">
-            <div className="p-2.5 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
-              <span className="text-[10px] text-[#888888] block">Thời gian</span>
-              <span className="font-medium text-[#171717] dark:text-[#ededed] block mt-0.5 tabular-nums">{formatDate(tx.date)}</span>
+            <div className="p-3 rounded-xl bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
+              <span className="text-[10px] text-[#888888] font-medium uppercase block">Thời gian</span>
+              <span className="font-semibold text-[#171717] dark:text-[#ededed] block mt-1 tabular-nums">{formatDate(tx.date)}</span>
             </div>
-            <div className="p-2.5 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
-              <span className="text-[10px] text-[#888888] block">Loại giao dịch</span>
-              <span className="font-medium text-[#171717] dark:text-[#ededed] block mt-0.5">{isIncome ? 'Thu nhập (+)' : isExpense ? 'Chi tiêu (−)' : 'Chuyển khoản ↔'}</span>
+            <div className="p-3 rounded-xl bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
+              <span className="text-[10px] text-[#888888] font-medium uppercase block">Loại giao dịch</span>
+              <span className="font-semibold text-[#171717] dark:text-[#ededed] block mt-1">{isIncome ? 'Thu nhập (+)' : isExpense ? 'Chi tiêu (−)' : 'Chuyển khoản ↔'}</span>
             </div>
-            <div className="p-2.5 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
-              <span className="text-[10px] text-[#888888] block">{isIncome ? 'Ví nhận' : 'Ví chi'}</span>
-              <span className="font-medium text-[#171717] dark:text-[#ededed] block mt-0.5">{walletOf(tx)?.name || '—'}</span>
+            <div className="p-3 rounded-xl bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
+              <span className="text-[10px] text-[#888888] font-medium uppercase block">{isIncome ? 'Ví nhận' : 'Ví chi'}</span>
+              <span className="font-semibold text-[#171717] dark:text-[#ededed] block mt-1 truncate">{walletOf(tx)?.name || '—'}</span>
             </div>
-            <div className="p-2.5 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">
-              <span className="text-[10px] text-[#888888] block">Danh mục</span>
-              <span className="font-medium text-[#171717] dark:text-[#ededed] block mt-0.5">{tx.category?.name || 'Chưa phân loại'}</span>
+            <div className="p-3 rounded-xl bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
+              <span className="text-[10px] text-[#888888] font-medium uppercase block">Danh mục</span>
+              <span className="font-semibold text-[#171717] dark:text-[#ededed] block mt-1 truncate">{tx.category?.name || 'Chưa phân loại'}</span>
             </div>
           </div>
-          {tx.notes && <p className="text-xs text-[#666666] dark:text-[#888888] p-2.5 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border">{tx.notes}</p>}
+          {tx.notes && (
+            <p className="text-xs text-[#666666] dark:text-[#a1a1a1] p-3 rounded-xl bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626] leading-relaxed">
+              {tx.notes}
+            </p>
+          )}
         </div>
-        <DialogFooter className="gap-2">
+        <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f]">
           {!confirmDelete ? (
-            <>
-              <Button variant="outline" size="sm" onClick={() => onOpenVietQr(tx)} className="text-xs shadow-border text-[#0070f3]">
-                <QrCode className="w-3.5 h-3.5 mr-1" /> VietQR
+            <div className="w-full flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenVietQr(tx)}
+                className="h-10 px-4 text-xs sm:text-sm font-medium rounded-lg border border-[#0070f3]/30 text-[#0070f3] bg-[#0070f3]/5 hover:bg-[#0070f3]/10 cursor-pointer"
+              >
+                <QrCode className="w-4 h-4 mr-1.5" /> VietQR
               </Button>
-              <Button variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border">Đóng</Button>
-              <Button variant="destructive" size="sm" onClick={() => setConfirmDelete(true)} className="text-xs bg-[#ff5b4f] text-white">
-                <Trash2 className="w-3.5 h-3.5 mr-1" /> Xóa
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+              >
+                Đóng
               </Button>
-            </>
+              <Button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="h-10 px-4 text-xs sm:text-sm font-medium rounded-lg bg-rose-600 hover:bg-rose-700 text-white shadow-sm cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4 mr-1.5" /> Xóa
+              </Button>
+            </div>
           ) : (
-            <div className="w-full space-y-2">
-              <p className="text-xs text-[#ff5b4f] font-medium text-center">Xác nhận xóa giao dịch này?</p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1 text-xs shadow-border" onClick={() => setConfirmDelete(false)}>Hủy</Button>
-                <Button variant="destructive" size="sm" className="flex-1 text-xs bg-[#ff5b4f] text-white" onClick={() => { onDelete(tx.id); onClose(); }}>Xóa ngay</Button>
+            <div className="w-full space-y-3">
+              <p className="text-xs sm:text-sm text-rose-600 dark:text-rose-400 font-medium text-center">
+                Bạn có chắc chắn muốn xóa giao dịch này?
+              </p>
+              <div className="flex gap-2.5 sm:gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 h-10 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] cursor-pointer"
+                  onClick={() => setConfirmDelete(false)}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  type="button"
+                  className="flex-1 h-10 text-xs sm:text-sm font-medium rounded-lg bg-rose-600 hover:bg-rose-700 text-white shadow-sm cursor-pointer"
+                  onClick={() => { onDelete(tx.id); onClose(); }}
+                >
+                  Xác nhận xóa
+                </Button>
               </div>
             </div>
           )}

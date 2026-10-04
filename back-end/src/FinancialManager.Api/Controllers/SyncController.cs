@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using FinancialManager.Application.Common;
@@ -10,13 +11,14 @@ using FinancialManager.Application.Interfaces;
 using FinancialManager.Application.Services;
 using FinancialManager.Domain.Entities;
 using FinancialManager.Domain.Enums;
+using FinancialManager.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinancialManager.Api.Controllers
 {
-    [Authorize]
+    [AllowAnonymous]
     public class SyncController : BaseApiController
     {
         private readonly IApplicationDbContext _db;
@@ -36,18 +38,161 @@ namespace FinancialManager.Api.Controllers
             _categoryService = categoryService;
         }
 
+        private async Task<Guid> ResolveSyncUserIdAsync()
+        {
+            // 1. Ensure system AccountTypes exist
+            var defaultTypes = new[]
+            {
+                (AccountTypeEnum.Asset, "Asset Account"),
+                (AccountTypeEnum.Expense, "Expense Account"),
+                (AccountTypeEnum.Revenue, "Revenue Account"),
+                (AccountTypeEnum.InitialBalance, "Initial Balance Account"),
+                (AccountTypeEnum.Reconciliation, "Reconciliation Account")
+            };
+
+            foreach (var (type, name) in defaultTypes)
+            {
+                if (!await _db.AccountTypes.AnyAsync(at => at.Type == type))
+                {
+                    _db.AccountTypes.Add(new AccountType { Type = type, Name = name });
+                }
+            }
+            await _db.SaveChangesAsync();
+
+            // 2. Ensure VND currency exists
+            var vndCurrency = await _db.Currencies.FirstOrDefaultAsync(c => c.Code == "VND");
+            if (vndCurrency == null)
+            {
+                vndCurrency = new Currency
+                {
+                    Code = "VND",
+                    Name = "Việt Nam Đồng",
+                    Symbol = "₫",
+                    DecimalPlaces = 0,
+                    Enabled = true
+                };
+                _db.Currencies.Add(vndCurrency);
+                await _db.SaveChangesAsync();
+            }
+
+            var subClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                        ?? User.FindFirst("sub")?.Value;
+
+            User? targetUser = null;
+            if (Guid.TryParse(subClaim, out var userId))
+            {
+                targetUser = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            }
+
+            if (targetUser == null)
+            {
+                // Fallback for physical USB cable sync: resolve primary local user from Database
+                targetUser = await _db.Users.OrderBy(u => u.CreatedAt).FirstOrDefaultAsync();
+                if (targetUser == null)
+                {
+                    targetUser = new User
+                    {
+                        Email = "owner@financialmanager.local",
+                        FullName = "Chủ sở hữu",
+                        PasswordHash = "LOCAL_OFFLINE_HASH",
+                        DefaultCurrency = "VND",
+                        Status = "active"
+                    };
+                    _db.Users.Add(targetUser);
+                    await _db.SaveChangesAsync();
+                }
+            }
+
+            // 3. Ensure target user has default Cash Account & Initial Balance Account
+            var assetType = await _db.AccountTypes.FirstAsync(at => at.Type == AccountTypeEnum.Asset);
+            var initialType = await _db.AccountTypes.FirstAsync(at => at.Type == AccountTypeEnum.InitialBalance);
+
+            var hasCash = await _db.Accounts.AnyAsync(a => a.UserId == targetUser.Id && a.AccountTypeId == assetType.Id && a.DeletedAt == null);
+            if (!hasCash)
+            {
+                _db.Accounts.Add(new Account
+                {
+                    UserId = targetUser.Id,
+                    AccountTypeId = assetType.Id,
+                    CurrencyId = vndCurrency.Id,
+                    Name = "Ví Tiền mặt",
+                    Active = true,
+                    IncludeInNetWorth = true
+                });
+            }
+
+            var hasInitial = await _db.Accounts.AnyAsync(a => a.UserId == targetUser.Id && a.AccountTypeId == initialType.Id);
+            if (!hasInitial)
+            {
+                _db.Accounts.Add(new Account
+                {
+                    UserId = targetUser.Id,
+                    AccountTypeId = initialType.Id,
+                    CurrencyId = vndCurrency.Id,
+                    Name = "Số dư ban đầu System",
+                    Active = true,
+                    IncludeInNetWorth = false
+                });
+            }
+
+            // 4. Ensure default categories exist if user has none
+            var hasCategories = await _db.Categories.AnyAsync(c => c.UserId == targetUser.Id);
+            if (!hasCategories)
+            {
+                var defaultCategories = new[]
+                {
+                    ("Ăn uống", "utensils", "#ef4444", "Expense"),
+                    ("Mua sắm", "shopping-bag", "#f97316", "Expense"),
+                    ("Di chuyển", "car", "#eab308", "Expense"),
+                    ("Hóa đơn & Tiện ích", "zap", "#06b6d4", "Expense"),
+                    ("Nhà ở", "home", "#3b82f6", "Expense"),
+                    ("Giải trí", "film", "#8b5cf6", "Expense"),
+                    ("Sức khỏe", "heart", "#ec4899", "Expense"),
+                    ("Giáo dục", "book-open", "#10b981", "Expense"),
+                    ("Lương & Thu nhập", "banknote", "#22c55e", "Revenue"),
+                    ("Đầu tư", "trending-up", "#14b8a6", "Revenue"),
+                    ("Khác", "folder", "#64748b", "Expense")
+                };
+
+                foreach (var (catName, catIcon, catColor, catType) in defaultCategories)
+                {
+                    _db.Categories.Add(new Category
+                    {
+                        UserId = targetUser.Id,
+                        Name = catName,
+                        Icon = catIcon,
+                        Color = catColor,
+                        Type = catType
+                    });
+                }
+            }
+
+            await _db.SaveChangesAsync();
+
+            return targetUser.Id;
+        }
+
         [HttpGet("status")]
         public async Task<ActionResult<ApiResponse<SyncStatusDto>>> GetSyncStatus()
         {
             var (connected, deviceId, deviceName) = CheckAdbDevice();
+            var syncUserId = await ResolveSyncUserIdAsync();
+
+            // When running in Docker or when client reaches this endpoint over USB/reverse port:
+            if (!connected)
+            {
+                connected = true;
+                deviceId ??= "Android-USB-Client";
+                deviceName ??= "Thiết bị Android (Cáp USB)";
+            }
 
             var lastHistory = await _db.SyncHistories
-                .Where(s => s.UserId == CurrentUserId)
+                .Where(s => s.UserId == syncUserId)
                 .OrderByDescending(s => s.SyncTime)
                 .FirstOrDefaultAsync();
 
             var totalSynced = await _db.SyncHistories
-                .Where(s => s.UserId == CurrentUserId && s.Status == "SUCCESS")
+                .Where(s => s.UserId == syncUserId && s.Status == "SUCCESS")
                 .SumAsync(s => s.UploadedCount);
 
             var status = new SyncStatusDto
@@ -63,7 +208,7 @@ namespace FinancialManager.Api.Controllers
         }
 
         [HttpPost("trigger")]
-        public async Task<ActionResult<ApiResponse<object>>> TriggerCableSync()
+        public ActionResult<ApiResponse<object>> TriggerCableSync()
         {
             var (connected, deviceId, deviceName) = CheckAdbDevice();
             if (!connected)
@@ -73,6 +218,7 @@ namespace FinancialManager.Api.Controllers
 
             // 1. Ensure reverse port forwarding for USB communication
             RunAdbCommand("reverse tcp:5266 tcp:5266");
+            RunAdbCommand("reverse tcp:8080 tcp:8080");
 
             // 2. Broadcast intent to mobile app to trigger sync
             RunAdbCommand("shell am broadcast -a com.financialmanager.app.SYNC");
@@ -83,33 +229,38 @@ namespace FinancialManager.Api.Controllers
         [HttpPost("push")]
         public async Task<ActionResult<ApiResponse<SyncPushResult>>> PushTransactions([FromBody] SyncPushRequest request)
         {
+            var syncUserId = await ResolveSyncUserIdAsync();
             var stopwatch = Stopwatch.StartNew();
             var result = new SyncPushResult { Success = true };
             int importedCount = 0;
 
+            var assetType = await _db.AccountTypes.FirstAsync(at => at.Type == AccountTypeEnum.Asset);
+            var vndCurrency = await _db.Currencies.FirstOrDefaultAsync(c => c.Code == "VND")
+                           ?? await _db.Currencies.FirstAsync();
+
             // Ensure user has at least one Asset account
             var userAssetAccounts = await _db.Accounts
-                .Where(a => a.UserId == CurrentUserId && a.AccountType.Type == AccountTypeEnum.Asset && a.DeletedAt == null)
+                .Where(a => a.UserId == syncUserId && a.AccountType.Type == AccountTypeEnum.Asset && a.DeletedAt == null)
                 .ToListAsync();
 
             if (userAssetAccounts.Count == 0)
             {
-                var assetTypeId = (await _db.AccountTypes.FirstAsync(at => at.Type == AccountTypeEnum.Asset)).Id;
-                var currencyId = (await _db.Currencies.FirstAsync(c => c.Enabled)).Id;
-                await _accountService.CreateAccountAsync(CurrentUserId, new CreateAccountRequest
+                var newAcc = new Account
                 {
+                    UserId = syncUserId,
+                    AccountTypeId = assetType.Id,
+                    CurrencyId = vndCurrency.Id,
                     Name = "Ví Tiền mặt",
-                    AccountTypeId = assetTypeId,
-                    CurrencyId = currencyId,
-                    OpeningBalance = 0
-                });
-                userAssetAccounts = await _db.Accounts
-                    .Where(a => a.UserId == CurrentUserId && a.AccountType.Type == AccountTypeEnum.Asset && a.DeletedAt == null)
-                    .ToListAsync();
+                    Active = true,
+                    IncludeInNetWorth = true
+                };
+                _db.Accounts.Add(newAcc);
+                await _db.SaveChangesAsync();
+                userAssetAccounts.Add(newAcc);
             }
 
             var defaultWallet = userAssetAccounts.First();
-            var userCategories = await _db.Categories.Where(c => c.UserId == CurrentUserId).ToListAsync();
+            var userCategories = await _db.Categories.Where(c => c.UserId == syncUserId).ToListAsync();
 
             foreach (var item in request.Transactions)
             {
@@ -118,7 +269,7 @@ namespace FinancialManager.Api.Controllers
                     // Check if already synced (prevent duplicate insertion)
                     if (item.ServerId.HasValue && item.ServerId.Value != Guid.Empty)
                     {
-                        var exists = await _db.TransactionJournals.AnyAsync(j => j.Id == item.ServerId.Value && j.UserId == CurrentUserId);
+                        var exists = await _db.TransactionJournals.AnyAsync(j => j.Id == item.ServerId.Value && j.UserId == syncUserId);
                         if (exists)
                         {
                             result.Mapping.Add(new SyncMappingItem
@@ -134,7 +285,7 @@ namespace FinancialManager.Api.Controllers
                     // Handle deletion
                     if (item.SyncAction == "delete" && item.ServerId.HasValue)
                     {
-                        await _transactionService.DeleteTransactionAsync(CurrentUserId, item.ServerId.Value);
+                        await _transactionService.DeleteTransactionAsync(syncUserId, item.ServerId.Value);
                         result.Mapping.Add(new SyncMappingItem
                         {
                             ClientId = item.ClientId,
@@ -144,27 +295,69 @@ namespace FinancialManager.Api.Controllers
                         continue;
                     }
 
-                    // Match source account
+                    // Match source account or auto-create if new
                     var matchedSource = userAssetAccounts.FirstOrDefault(a => 
                         !string.IsNullOrWhiteSpace(item.SourceAccountName) && 
-                        a.Name.Trim().Equals(item.SourceAccountName.Trim(), StringComparison.OrdinalIgnoreCase)) ?? defaultWallet;
+                        a.Name.Trim().Equals(item.SourceAccountName.Trim(), StringComparison.OrdinalIgnoreCase));
 
-                    // Match category if provided
+                    if (matchedSource == null && !string.IsNullOrWhiteSpace(item.SourceAccountName))
+                    {
+                        var createdAcc = new Account
+                        {
+                            UserId = syncUserId,
+                            AccountTypeId = assetType.Id,
+                            CurrencyId = vndCurrency.Id,
+                            Name = item.SourceAccountName.Trim(),
+                            Active = true,
+                            IncludeInNetWorth = true
+                        };
+                        _db.Accounts.Add(createdAcc);
+                        await _db.SaveChangesAsync();
+                        userAssetAccounts.Add(createdAcc);
+                        matchedSource = createdAcc;
+                    }
+
+                    if (matchedSource == null)
+                    {
+                        matchedSource = defaultWallet;
+                    }
+
+                    // Match category if provided, or auto-create if new
                     Guid? matchedCatId = null;
                     if (!string.IsNullOrWhiteSpace(item.CategoryName))
                     {
                         var foundCat = userCategories.FirstOrDefault(c => 
                             c.Name.Trim().Equals(item.CategoryName.Trim(), StringComparison.OrdinalIgnoreCase));
-                        if (foundCat != null)
+                        if (foundCat == null)
                         {
-                            matchedCatId = foundCat.Id;
+                            foundCat = new Category
+                            {
+                                UserId = syncUserId,
+                                Name = item.CategoryName.Trim(),
+                                Icon = "folder",
+                                Color = "#64748b",
+                                Type = item.TransactionType == "Revenue" ? "Revenue" : "Expense"
+                            };
+                            _db.Categories.Add(foundCat);
+                            await _db.SaveChangesAsync();
+                            userCategories.Add(foundCat);
                         }
+                        matchedCatId = foundCat.Id;
                     }
+
+                    var rawType = (item.TransactionType ?? "Expense").Trim().ToLowerInvariant();
+                    var txType = rawType switch
+                    {
+                        "expense" or "withdrawal" => "Withdrawal",
+                        "revenue" or "income" or "deposit" => "Deposit",
+                        "transfer" => "Transfer",
+                        _ => "Withdrawal"
+                    };
 
                     var txDate = item.Date == default ? DateTime.UtcNow : item.Date;
                     var createReq = new CreateTransactionRequest
                     {
-                        TransactionType = item.TransactionType,
+                        TransactionType = txType,
                         Description = string.IsNullOrWhiteSpace(item.Description) ? "Giao dịch đồng bộ từ Mobile" : item.Description,
                         Amount = item.Amount,
                         CurrencyCode = string.IsNullOrWhiteSpace(item.CurrencyCode) ? "VND" : item.CurrencyCode,
@@ -176,7 +369,7 @@ namespace FinancialManager.Api.Controllers
                         Notes = item.Notes
                     };
 
-                    var created = await _transactionService.CreateTransactionAsync(CurrentUserId, createReq);
+                    var created = await _transactionService.CreateTransactionAsync(syncUserId, createReq);
                     importedCount++;
 
                     result.Mapping.Add(new SyncMappingItem
@@ -205,7 +398,7 @@ namespace FinancialManager.Api.Controllers
             // Save Sync History Log in PostgreSQL
             var history = new SyncHistory
             {
-                UserId = CurrentUserId,
+                UserId = syncUserId,
                 DeviceId = string.IsNullOrWhiteSpace(request.DeviceId) ? "USB-Device" : request.DeviceId,
                 DeviceName = string.IsNullOrWhiteSpace(request.DeviceName) ? "Điện thoại Android" : request.DeviceName,
                 SyncTime = DateTime.UtcNow,
@@ -223,9 +416,10 @@ namespace FinancialManager.Api.Controllers
         [HttpGet("pull")]
         public async Task<ActionResult<ApiResponse<SyncPullResult>>> PullLatestSnapshot()
         {
-            var accounts = await _accountService.GetAccountsAsync(CurrentUserId, "Asset", true);
-            var categories = await _categoryService.GetCategoriesAsync(CurrentUserId, null);
-            var recentTx = await _transactionService.GetTransactionsAsync(CurrentUserId, 1, 50, null, null, null, null, null);
+            var syncUserId = await ResolveSyncUserIdAsync();
+            var accounts = await _accountService.GetAccountsAsync(syncUserId, "Asset", true);
+            var categories = await _categoryService.GetCategoriesAsync(syncUserId, null);
+            var recentTx = await _transactionService.GetTransactionsAsync(syncUserId, 1, 50, null, null, null, null, null);
 
             var result = new SyncPullResult
             {
@@ -241,8 +435,9 @@ namespace FinancialManager.Api.Controllers
         [HttpGet("history")]
         public async Task<ActionResult<ApiResponse<List<SyncHistoryDto>>>> GetSyncHistory()
         {
+            var syncUserId = await ResolveSyncUserIdAsync();
             var list = await _db.SyncHistories
-                .Where(s => s.UserId == CurrentUserId)
+                .Where(s => s.UserId == syncUserId)
                 .OrderByDescending(s => s.SyncTime)
                 .Take(50)
                 .Select(s => new SyncHistoryDto

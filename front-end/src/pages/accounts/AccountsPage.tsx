@@ -183,13 +183,15 @@ const AccountFormModal: React.FC<{
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed] flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-[#0070f3]" />
-            {editing ? 'Sửa thông tin tài khoản' : 'Thêm tài khoản / Ví ngân hàng'}
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="space-y-1.5 pb-1">
+          <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed] flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-[#0070f3]/10 text-[#0070f3] flex items-center justify-center shrink-0">
+              <Building2 className="w-4 h-4" />
+            </div>
+            <span>{editing ? 'Sửa thông tin tài khoản' : 'Thêm tài khoản / Ví ngân hàng'}</span>
           </DialogTitle>
-          <DialogDescription className="text-xs text-[#888888]">
+          <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
             {editing ? 'Cập nhật logo, ngân hàng và thông tin hiển thị.' : 'Chọn ngân hàng hoặc ví điện tử Việt Nam để tạo nhanh.'}
           </DialogDescription>
         </DialogHeader>
@@ -203,7 +205,7 @@ const AccountFormModal: React.FC<{
           />
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-3.5 py-1">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-1">
           <div>
             <label className={labelCls}>Tên ví / Tài khoản hiển thị *</label>
             <Input 
@@ -212,12 +214,12 @@ const AccountFormModal: React.FC<{
               onChange={e => set('name', e.target.value)} 
               aria-invalid={!!errors.name} 
               maxLength={100} 
-              className="shadow-input text-xs"
+              className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
             />
             <FieldError message={errors.name} />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
               <label className={labelCls}>Ngân hàng / Đơn vị</label>
               <Input 
@@ -226,7 +228,7 @@ const AccountFormModal: React.FC<{
                 onChange={e => set('bankName', e.target.value)} 
                 aria-invalid={!!errors.bankName} 
                 maxLength={100} 
-                className="shadow-input text-xs"
+                className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
               />
               <FieldError message={errors.bankName} />
             </div>
@@ -240,7 +242,7 @@ const AccountFormModal: React.FC<{
                 onChange={e => set('accountNumber', e.target.value)} 
                 aria-invalid={!!errors.accountNumber} 
                 maxLength={30} 
-                className="shadow-input text-xs"
+                className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
               />
               <FieldError message={errors.accountNumber} />
             </div>
@@ -267,35 +269,44 @@ const AccountFormModal: React.FC<{
                 value={form.openingBalance} 
                 onValueChange={v => set('openingBalance', v)} 
                 aria-invalid={!!errors.openingBalance} 
-                className="font-semibold text-sm shadow-input"
+                className="h-10 font-semibold text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]"
               />
               <FieldError message={errors.openingBalance} />
               {numOpening > 0 && (
-                <div className="mt-1 text-[11px] font-medium text-[#10b981]">
+                <div className="mt-1 text-xs font-medium text-[#10b981]">
                   {numberToVietnameseWords(numOpening)}
                 </div>
               )}
             </div>
           )}
 
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex items-center gap-2.5 pt-1">
             <input
               type="checkbox"
               id="netWorth"
               checked={form.includeInNetWorth}
               onChange={e => set('includeInNetWorth', e.target.checked)}
-              className="w-4 h-4 rounded border-zinc-300 text-black focus:ring-0"
+              className="w-4 h-4 rounded border-[#e5e5e5] dark:border-[#262626] text-black focus:ring-0 cursor-pointer"
             />
-            <label htmlFor="netWorth" className="text-xs text-[#171717] dark:text-[#ededed] cursor-pointer">
+            <label htmlFor="netWorth" className="text-xs text-[#171717] dark:text-[#ededed] cursor-pointer font-medium">
               Tính vào Tổng tài sản ròng (Net Worth)
             </label>
           </div>
 
-          <DialogFooter className="pt-3 flex flex-row justify-end items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border whitespace-nowrap min-h-[36px] px-4">
+          <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+            >
               Hủy
             </Button>
-            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black whitespace-nowrap min-h-[36px] px-4 font-medium">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] dark:bg-[#ededed] text-white dark:text-black hover:bg-[#333333] dark:hover:bg-white shadow-sm cursor-pointer"
+            >
               {loading ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Tạo tài khoản'}
             </Button>
           </DialogFooter>
@@ -563,16 +574,29 @@ export const AccountsPage: React.FC = () => {
       
       {/* Delete confirmation */}
       <Dialog open={!!pendingDelete} onOpenChange={() => setPendingDelete(null)}>
-        <DialogContent className="sm:max-w-sm bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-          <DialogHeader>
-            <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">Xóa tài khoản</DialogTitle>
-            <DialogDescription className="text-xs text-[#888888]">
-              Xóa "{pendingDelete?.name}"? Tài khoản sẽ bị xóa khỏi danh sách, các giao dịch cũ vẫn được lưu.
+        <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+          <DialogHeader className="space-y-1.5 pb-1">
+            <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">Xóa tài khoản</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
+              Bạn có chắc chắn muốn xóa "{pendingDelete?.name}"? Tài khoản sẽ bị xóa khỏi danh sách, các giao dịch cũ vẫn được lưu.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" size="sm" className="text-xs shadow-border" onClick={() => setPendingDelete(null)}>Hủy</Button>
-            <Button size="sm" className="text-xs bg-[#ff5b4f] text-white" onClick={handleDelete}>Xóa</Button>
+          <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPendingDelete(null)}
+              className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDelete}
+              className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-rose-600 hover:bg-rose-700 text-white shadow-sm cursor-pointer"
+            >
+              Xác nhận xóa
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

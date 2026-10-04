@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
@@ -44,7 +45,8 @@ export const DesktopSyncModal: React.FC<DesktopSyncModalProps> = ({ open, onClos
   const loadStatus = async () => {
     try {
       const res: any = await api.get('/sync/status').catch(() => null);
-      setStatus(res?.data || null);
+      const data = res?.data || (res?.success ? res : null);
+      setStatus(data);
 
       const pending = await localDb.getPendingCount();
       setPendingCount(pending);
@@ -69,9 +71,8 @@ export const DesktopSyncModal: React.FC<DesktopSyncModalProps> = ({ open, onClos
       setSyncResult(null);
       setSyncStep(1); // Check connection
 
-      // Trigger ADB reverse & intent
-      await api.post('/sync/trigger').catch(() => null);
-      setSyncStep(2); // Push transactions to Central DB
+      // 1. Check & push transactions to Central DB
+      setSyncStep(2);
 
       const result = await performCableSync({ silent: true });
       setSyncStep(3); // Pull latest snapshot
@@ -80,7 +81,7 @@ export const DesktopSyncModal: React.FC<DesktopSyncModalProps> = ({ open, onClos
         setSyncStep(4); // Complete
         setSyncResult(result.message);
         toast.success(result.message);
-        loadStatus();
+        await loadStatus();
         onSuccess?.();
       } else {
         toast.error(result.message);
@@ -93,7 +94,7 @@ export const DesktopSyncModal: React.FC<DesktopSyncModalProps> = ({ open, onClos
     }
   };
 
-  const isConnected = status?.deviceConnected ?? false;
+  const isConnected = Boolean(status?.deviceConnected || (status && Object.keys(status).length > 0));
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -224,68 +225,73 @@ export const DesktopSyncModal: React.FC<DesktopSyncModalProps> = ({ open, onClos
 
             {/* Result Message */}
             {syncResult && (
-              <div className="p-3 rounded-lg bg-[#10b981]/10 border border-[#10b981]/20 text-xs text-[#10b981] flex items-center gap-2 font-medium">
+              <div className="p-3.5 rounded-xl bg-[#10b981]/10 border border-[#10b981]/20 text-xs text-[#10b981] flex items-center gap-2.5 font-medium">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span>{syncResult}</span>
               </div>
             )}
 
-            {/* Action Button */}
-            <div className="pt-2 flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border">
+            {/* Action Footer */}
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose} 
+                className="h-10 px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] cursor-pointer"
+              >
                 Đóng
               </Button>
               <Button
-                size="sm"
+                type="button"
                 onClick={handleStartSync}
                 disabled={syncing}
-                className="text-xs bg-[#171717] text-white hover:bg-[#333333] dark:bg-[#ededed] dark:text-black dark:hover:bg-white"
+                className="h-10 px-6 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] text-white hover:bg-[#333333] dark:bg-[#ededed] dark:text-black dark:hover:bg-[#ffffff] shadow-sm cursor-pointer"
               >
-                <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
                 <span>{syncing ? 'Đang đồng bộ qua cáp…' : 'Bắt đầu đồng bộ ngay'}</span>
               </Button>
-            </div>
+            </DialogFooter>
           </div>
         ) : (
-          <div className="space-y-3 py-2">
+          <div className="space-y-4 py-2">
             <div className="text-xs text-[#888888]">
               Nhật ký toàn bộ các phiên đồng bộ dữ liệu giữa điện thoại và máy tính.
             </div>
 
             {history.length === 0 ? (
-              <div className="p-8 text-center text-xs text-[#888888] bg-[#fafafa] dark:bg-[#111111] rounded-lg border border-[#e5e5e5] dark:border-[#222222]">
+              <div className="p-8 text-center text-xs text-[#888888] bg-[#fafafa] dark:bg-[#111111] rounded-xl border border-[#e5e5e5] dark:border-[#222222]">
                 Chưa có lịch sử đồng bộ nào được ghi nhận.
               </div>
             ) : (
-              <div className="border border-[#e5e5e5] dark:border-[#222222] rounded-lg overflow-hidden max-h-72 overflow-y-auto">
+              <div className="border border-[#e5e5e5] dark:border-[#222222] rounded-xl overflow-hidden max-h-72 overflow-y-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-[#fafafa] dark:bg-[#111111] text-[#888888] border-b border-[#e5e5e5] dark:border-[#222222] text-[11px]">
                     <tr>
-                      <th className="py-2 px-3 font-medium">Thời gian</th>
-                      <th className="py-2 px-3 font-medium">Thiết bị</th>
-                      <th className="py-2 px-3 font-medium text-center">Giao dịch nạp</th>
-                      <th className="py-2 px-3 font-medium text-right">Trạng thái</th>
+                      <th className="py-2.5 px-3.5 font-medium">Thời gian</th>
+                      <th className="py-2.5 px-3.5 font-medium">Thiết bị</th>
+                      <th className="py-2.5 px-3.5 font-medium text-center">Giao dịch nạp</th>
+                      <th className="py-2.5 px-3.5 font-medium text-right">Trạng thái</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e5e5e5] dark:divide-[#222222] text-[#171717] dark:text-[#ededed]">
                     {history.map((h: any) => (
-                      <tr key={h.id} className="hover:bg-[#fafafa] dark:hover:bg-[#111111]">
-                        <td className="py-2.5 px-3 tabular-nums text-[11px]">
+                      <tr key={h.id} className="hover:bg-[#fafafa] dark:hover:bg-[#111111] transition-colors">
+                        <td className="py-2.5 px-3.5 tabular-nums text-[11px]">
                           {formatDate(h.syncTime)} {new Date(h.syncTime).toLocaleTimeString('vi-VN')}
                         </td>
-                        <td className="py-2.5 px-3">
+                        <td className="py-2.5 px-3.5">
                           <span className="font-medium">{h.deviceName}</span>
                         </td>
-                        <td className="py-2.5 px-3 text-center tabular-nums">
-                          <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold text-[11px]">
+                        <td className="py-2.5 px-3.5 text-center tabular-nums">
+                          <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold text-[11px]">
                             +{h.uploadedCount}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-right">
-                          <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${
+                        <td className="py-2.5 px-3.5 text-right">
+                          <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${
                             h.status === 'SUCCESS' ? 'text-[#10b981]' : 'text-[#ff5b4f]'
                           }`}>
-                            {h.status === 'SUCCESS' ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                            {h.status === 'SUCCESS' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
                             {h.status === 'SUCCESS' ? 'Thành công' : 'Thất bại'}
                           </span>
                         </td>
@@ -296,11 +302,16 @@ export const DesktopSyncModal: React.FC<DesktopSyncModalProps> = ({ open, onClos
               </div>
             )}
 
-            <div className="pt-2 flex justify-end">
-              <Button variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border">
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose} 
+                className="h-10 px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] cursor-pointer"
+              >
                 Đóng
               </Button>
-            </div>
+            </DialogFooter>
           </div>
         )}
       </DialogContent>

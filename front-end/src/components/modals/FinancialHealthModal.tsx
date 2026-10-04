@@ -17,15 +17,15 @@ export const FinancialHealthModal: React.FC<FinancialHealthModalProps> = ({ open
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border text-[#10b981] flex items-center justify-center">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="space-y-1.5 pb-1">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
               <HeartPulse className="w-4 h-4" />
             </div>
             <div>
-              <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">Báo cáo sức khỏe tài chính</DialogTitle>
-              <DialogDescription className="text-xs text-[#888888]">
+              <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">Báo cáo sức khỏe tài chính</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
                 Đánh giá tổng quan dòng tiền, quỹ an toàn, tỷ lệ nợ và kỷ luật ngân sách.
               </DialogDescription>
             </div>
@@ -34,17 +34,17 @@ export const FinancialHealthModal: React.FC<FinancialHealthModalProps> = ({ open
 
         <div className="space-y-4 py-2">
           {/* Main Score Card */}
-          <div className="p-5 rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a]">
+          <div className="p-5 rounded-xl border border-[#e5e5e5] dark:border-[#222222] bg-[#fafafa] dark:bg-[#111111]">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-xs font-medium text-[#888888] uppercase tracking-wider">Điểm sức khỏe tổng thể</span>
+                <span className="text-[11px] font-medium text-[#888888] uppercase tracking-wider">Điểm sức khỏe tổng thể</span>
                 <div className="flex items-baseline gap-2 mt-1">
                   <span className="text-4xl font-semibold tabular-nums tracking-tight" style={{ color }}>
                     {score}
                   </span>
                   <span className="text-xs text-[#888888]">/ 100 điểm</span>
                 </div>
-                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded shadow-border text-[11px] font-medium mt-2 bg-[#fafafa] dark:bg-[#111111] text-[#171717] dark:text-[#ededed]">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-[#e5e5e5] dark:border-[#262626] text-xs font-medium mt-2.5 bg-[#ffffff] dark:bg-[#161616] text-[#171717] dark:text-[#ededed]">
                   <ShieldCheck className="w-3.5 h-3.5" style={{ color }} />
                   <span>Xếp loại: {rating}</span>
                 </div>
@@ -73,40 +73,40 @@ export const FinancialHealthModal: React.FC<FinancialHealthModalProps> = ({ open
               </div>
             </div>
 
-            <p className="text-xs text-[#666666] dark:text-[#888888] mt-4 leading-relaxed border-t border-zinc-100 dark:border-zinc-900 pt-3">
+            <p className="text-xs text-[#666666] dark:text-[#a1a1a1] mt-4 leading-relaxed border-t border-[#e5e5e5] dark:border-[#222222] pt-3">
               {summary}
             </p>
           </div>
 
           {/* Key 4 Metrics Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            <div className="p-2.5 rounded-md shadow-border bg-[#fafafa] dark:bg-[#111111]">
-              <span className="text-[10px] text-[#888888] block">TỶ LỆ TIẾT KIỆM</span>
-              <span className="text-sm font-semibold text-[#171717] dark:text-[#ededed] tabular-nums mt-0.5 block">
+            <div className="p-3 rounded-xl border border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#111111]">
+              <span className="text-[10px] text-[#888888] font-medium uppercase block">TỶ LỆ TIẾT KIỆM</span>
+              <span className="text-sm font-semibold text-[#171717] dark:text-[#ededed] tabular-nums mt-1 block">
                 {metrics.savingsRate.toFixed(1)}%
               </span>
               <span className="text-[10px] text-[#888888]">Chuẩn: &gt;20%</span>
             </div>
 
-            <div className="p-2.5 rounded-md shadow-border bg-[#fafafa] dark:bg-[#111111]">
-              <span className="text-[10px] text-[#888888] block">QUỸ DỰ PHÒNG</span>
-              <span className="text-sm font-semibold text-[#171717] dark:text-[#ededed] tabular-nums mt-0.5 block">
+            <div className="p-3 rounded-xl border border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#111111]">
+              <span className="text-[10px] text-[#888888] font-medium uppercase block">QUỸ DỰ PHÒNG</span>
+              <span className="text-sm font-semibold text-[#171717] dark:text-[#ededed] tabular-nums mt-1 block">
                 {metrics.emergencyFundMonths.toFixed(1)} tháng
               </span>
               <span className="text-[10px] text-[#888888]">Chuẩn: 3–6 tháng</span>
             </div>
 
-            <div className="p-2.5 rounded-md shadow-border bg-[#fafafa] dark:bg-[#111111]">
-              <span className="text-[10px] text-[#888888] block">TỶ LỆ NỢ / THU</span>
-              <span className="text-sm font-semibold text-[#171717] dark:text-[#ededed] tabular-nums mt-0.5 block">
+            <div className="p-3 rounded-xl border border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#111111]">
+              <span className="text-[10px] text-[#888888] font-medium uppercase block">TỶ LỆ NỢ / THU</span>
+              <span className="text-sm font-semibold text-[#171717] dark:text-[#ededed] tabular-nums mt-1 block">
                 {metrics.debtRatio.toFixed(1)}%
               </span>
               <span className="text-[10px] text-[#888888]">Chuẩn: &lt;30%</span>
             </div>
 
-            <div className="p-2.5 rounded-md shadow-border bg-[#fafafa] dark:bg-[#111111]">
-              <span className="text-[10px] text-[#888888] block">TUÂN THỦ HẠN MỨC</span>
-              <span className="text-sm font-semibold text-[#171717] dark:text-[#ededed] tabular-nums mt-0.5 block">
+            <div className="p-3 rounded-xl border border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#111111]">
+              <span className="text-[10px] text-[#888888] font-medium uppercase block">TUÂN THỦ HẠN MỨC</span>
+              <span className="text-sm font-semibold text-[#171717] dark:text-[#ededed] tabular-nums mt-1 block">
                 {metrics.budgetAdherence.toFixed(0)}%
               </span>
               <span className="text-[10px] text-[#888888]">Chuẩn: 100%</span>
@@ -115,14 +115,14 @@ export const FinancialHealthModal: React.FC<FinancialHealthModalProps> = ({ open
 
           {/* Actionable Insights List */}
           <div>
-            <h3 className="text-xs font-semibold text-[#171717] dark:text-[#ededed] uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-semibold text-[#171717] dark:text-[#ededed] uppercase tracking-wider mb-2.5">
               Khuyến nghị cá nhân hóa:
             </h3>
             <div className="space-y-2">
               {insights.map((ins, i) => (
                 <div
                   key={i}
-                  className="p-3 rounded-md shadow-border bg-[#fafafa] dark:bg-[#111111] text-xs flex items-start gap-2.5 transition-colors"
+                  className="p-3.5 rounded-xl border border-[#e5e5e5] dark:border-[#262626] bg-[#fafafa] dark:bg-[#111111] text-xs flex items-start gap-3 transition-colors"
                 >
                   <div className="shrink-0 mt-0.5">
                     {ins.type === 'success' && <ShieldCheck className="w-4 h-4 text-[#10b981]" />}
@@ -140,8 +140,12 @@ export const FinancialHealthModal: React.FC<FinancialHealthModalProps> = ({ open
           </div>
         </div>
 
-        <DialogFooter>
-          <Button type="button" onClick={onClose} size="sm" className="w-full text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black">
+        <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f]">
+          <Button
+            type="button"
+            onClick={onClose}
+            className="w-full h-10 px-5 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] dark:bg-[#ededed] text-white dark:text-black hover:bg-[#333333] dark:hover:bg-white shadow-sm cursor-pointer"
+          >
             Đã hiểu
           </Button>
         </DialogFooter>

@@ -56,41 +56,54 @@ const PiggyEventModal: React.FC<{ piggy: any; initialAction: PiggyAction; open: 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">{piggy?.name}</DialogTitle>
-          <DialogDescription className="text-xs text-[#666666] dark:text-[#888888]">Hiện tích lũy: <span className="text-[#171717] dark:text-[#ededed] font-semibold tabular-nums">{formatCurrency(piggy?.currentAmount)}</span></DialogDescription>
+      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="space-y-1.5 pb-1">
+          <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">{piggy?.name}</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">
+            Hiện tích lũy: <span className="text-[#171717] dark:text-[#ededed] font-semibold tabular-nums">{formatCurrency(piggy?.currentAmount)}</span>
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} noValidate className="space-y-3.5 py-2">
-          <div className="grid grid-cols-2 gap-2">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-1">
+          <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]">
             <button
               type="button"
               onClick={() => { setAction('Deposit'); setErrors({}); }}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition flex items-center justify-center gap-1.5 ${action === 'Deposit' ? 'bg-[#171717] dark:bg-[#ededed] text-[#ffffff] dark:text-[#000000] shadow-sm' : 'shadow-border bg-transparent text-[#666666] dark:text-[#888888]'}`}
+              className={`h-9 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer ${action === 'Deposit' ? 'bg-[#171717] dark:bg-[#ededed] text-[#ffffff] dark:text-[#000000] shadow-xs' : 'text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed]'}`}
             >
-              <ArrowUpRight className="w-3.5 h-3.5" /> Nạp tiền
+              <ArrowUpRight className="w-3.5 h-3.5" /> Nạp tiền vào hũ
             </button>
             <button
               type="button"
               onClick={() => { setAction('Withdraw'); setErrors({}); }}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition flex items-center justify-center gap-1.5 ${action === 'Withdraw' ? 'bg-[#ff5b4f] text-white shadow-sm' : 'shadow-border bg-transparent text-[#666666] dark:text-[#888888]'}`}
+              className={`h-9 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer ${action === 'Withdraw' ? 'bg-rose-600 text-white shadow-xs' : 'text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed]'}`}
             >
-              <ArrowDownRight className="w-3.5 h-3.5" /> Rút tiền
+              <ArrowDownRight className="w-3.5 h-3.5" /> Rút tiền ra
             </button>
           </div>
           <div>
-            <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Số tiền (VNĐ)</label>
-            <MoneyInput placeholder="0" value={amount} onValueChange={setAmount} aria-invalid={!!errors.amount} className="shadow-input text-xs font-semibold" />
+            <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Số tiền (VNĐ) *</label>
+            <MoneyInput placeholder="0" value={amount} onValueChange={setAmount} aria-invalid={!!errors.amount} className="h-10 text-xs sm:text-sm font-semibold rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
             <FieldError message={errors.amount} />
           </div>
           <div>
-            <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Ghi chú</label>
-            <Input placeholder="Lý do nạp/rút…" value={notes} onChange={e => setNotes(e.target.value)} aria-invalid={!!errors.notes} maxLength={500} className="shadow-input text-xs" />
+            <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Ghi chú</label>
+            <Input placeholder="Lý do nạp/rút…" value={notes} onChange={e => setNotes(e.target.value)} aria-invalid={!!errors.notes} maxLength={500} className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
             <FieldError message={errors.notes} />
           </div>
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border bg-transparent">Hủy</Button>
-            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000]">
+          <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className={`h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg shadow-sm cursor-pointer ${action === 'Deposit' ? 'bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000]' : 'bg-rose-600 hover:bg-rose-700 text-white'}`}
+            >
               {loading ? 'Đang xử lý…' : action === 'Deposit' ? 'Xác nhận Nạp' : 'Xác nhận Rút'}
             </Button>
           </DialogFooter>
@@ -151,27 +164,27 @@ const AddPiggyModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: (
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">Tạo hũ tiết kiệm mới</DialogTitle>
-          <DialogDescription className="text-xs text-[#666666] dark:text-[#888888]">Đặt mục tiêu tài chính cá nhân và tích lũy từng bước.</DialogDescription>
+      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#222222] shadow-2xl rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="space-y-1.5 pb-1">
+          <DialogTitle className="text-base sm:text-lg font-semibold text-[#171717] dark:text-[#ededed]">Tạo hũ tiết kiệm mới</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm text-[#666666] dark:text-[#a1a1a1]">Đặt mục tiêu tài chính cá nhân và tích lũy từng bước.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} noValidate className="space-y-3 py-2">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-1">
           <div>
-            <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Tên mục tiêu *</label>
-            <Input placeholder="VD: Mua Laptop, Quỹ Du lịch…" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} aria-invalid={!!errors.name} maxLength={100} className="shadow-input text-xs" autoFocus />
+            <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Tên mục tiêu *</label>
+            <Input placeholder="VD: Mua Laptop, Quỹ Du lịch…" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} aria-invalid={!!errors.name} maxLength={100} className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" autoFocus />
             <FieldError message={errors.name} />
           </div>
           <div>
-            <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Liên kết với Ví *</label>
+            <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Liên kết với Ví *</label>
             <Select value={form.accountId} onValueChange={v => setForm(f => ({ ...f, accountId: v }))}>
-              <SelectTrigger className={`shadow-input text-xs h-9 ${errors.accountId ? 'ring-1 ring-[#ff5b4f]' : ''}`}>
+              <SelectTrigger className={`h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626] ${errors.accountId ? 'ring-1 ring-rose-500' : ''}`}>
                 <SelectValue placeholder="Chọn ví liên kết…" />
               </SelectTrigger>
               <SelectContent>
-                {accounts.length === 0 && <SelectItem value="none" disabled className="text-xs">Chưa có ví nào</SelectItem>}
+                {accounts.length === 0 && <SelectItem value="none" disabled className="text-xs sm:text-sm">Chưa có ví nào</SelectItem>}
                 {accounts.map(a => (
-                  <SelectItem key={a.id} value={a.id} className="text-xs">
+                  <SelectItem key={a.id} value={a.id} className="text-xs sm:text-sm">
                     {a.name}
                   </SelectItem>
                 ))}
@@ -179,26 +192,39 @@ const AddPiggyModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: (
             </Select>
             <FieldError message={errors.accountId} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Mục tiêu (VND) *</label>
-              <MoneyInput placeholder="30.000.000" value={form.targetAmount} onValueChange={v => setForm(f => ({ ...f, targetAmount: v }))} aria-invalid={!!errors.targetAmount} className="shadow-input text-xs font-semibold" />
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Mục tiêu (VND) *</label>
+              <MoneyInput placeholder="30.000.000" value={form.targetAmount} onValueChange={v => setForm(f => ({ ...f, targetAmount: v }))} aria-invalid={!!errors.targetAmount} className="h-10 text-xs sm:text-sm font-semibold rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
               <FieldError message={errors.targetAmount} />
             </div>
             <div>
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Số tiền hiện có</label>
-              <MoneyInput placeholder="0" value={form.currentAmount} onValueChange={v => setForm(f => ({ ...f, currentAmount: v }))} aria-invalid={!!errors.currentAmount} className="shadow-input text-xs font-semibold" />
+              <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Số tiền hiện có</label>
+              <MoneyInput placeholder="0" value={form.currentAmount} onValueChange={v => setForm(f => ({ ...f, currentAmount: v }))} aria-invalid={!!errors.currentAmount} className="h-10 text-xs sm:text-sm font-semibold rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
               <FieldError message={errors.currentAmount} />
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Ngày hoàn thành dự kiến</label>
-            <DatePicker value={form.targetDate} min={toDateInput(new Date(Date.now() + 86400000))} onChange={v => setForm(f => ({ ...f, targetDate: v }))} aria-invalid={!!errors.targetDate} />
+            <label className="text-xs font-medium text-[#444444] dark:text-[#a1a1a1] mb-1.5 block">Ngày hoàn thành dự kiến</label>
+            <DatePicker value={form.targetDate} min={toDateInput(new Date(Date.now() + 86400000))} onChange={v => setForm(f => ({ ...f, targetDate: v }))} aria-invalid={!!errors.targetDate} className="h-10 text-xs sm:text-sm rounded-lg bg-[#fafafa] dark:bg-[#111111] border border-[#e5e5e5] dark:border-[#262626]" />
             <FieldError message={errors.targetDate} />
           </div>
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border bg-transparent">Hủy</Button>
-            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000]">{loading ? 'Đang tạo…' : 'Tạo hũ tiết kiệm'}</Button>
+          <DialogFooter className="pt-4 mt-2 border-t border-[#f0f0f0] dark:border-[#1f1f1f] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="h-10 px-4 sm:px-5 text-xs sm:text-sm font-medium rounded-lg border border-[#e5e5e5] dark:border-[#262626] bg-transparent hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] text-[#666666] dark:text-[#a1a1a1] hover:text-[#171717] dark:hover:text-[#ededed] shadow-xs cursor-pointer"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-10 px-5 sm:px-6 text-xs sm:text-sm font-medium rounded-lg bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] shadow-sm cursor-pointer"
+            >
+              {loading ? 'Đang tạo…' : 'Tạo hũ tiết kiệm'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -48,6 +48,7 @@ import { AppLogo } from '@/components/brand/AppLogo';
 import { calculateFinancialHealth, type FinancialHealthEvaluation } from '@/lib/financial-frameworks';
 import { useDateRange } from '@/lib/date-range';
 import { type ParsedSmsResult } from '@/lib/vietnam-banks';
+import { localDb } from '@/lib/localDb';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -142,7 +143,20 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           setHealthEvaluation(evalResult);
         }
       })
-      .catch(() => {});
+      .catch(async () => {
+        const [stats, accs] = await Promise.all([
+          localDb.computeOfflineStats(`${startDate}T00:00:00Z`, `${endDate}T23:59:59Z`),
+          localDb.getAccounts()
+        ]);
+        const evalResult = calculateFinancialHealth({
+          monthlyIncome: stats.income || 0,
+          monthlyExpense: stats.expense || 0,
+          totalNetWorth: accs.reduce((sum, a) => sum + (a.currentBalance || 0), 0),
+          totalDebts: 0,
+          budgetStatusCount: { within: 3, warning: 0, overspent: 0 }
+        });
+        setHealthEvaluation(evalResult);
+      });
   }, [startDate, endDate]);
 
   const storedUser = localStorage.getItem('user');

@@ -80,6 +80,27 @@ export interface LocalBudget {
   active: boolean;
 }
 
+export interface LocalBill {
+  id: string;
+  name: string;
+  amountMin: number;
+  amountMax: number;
+  repeatFrequency: string;
+  date: string;
+  nextDueDate?: string;
+  active: boolean;
+  isPaidThisPeriod?: boolean;
+}
+
+export interface LocalCurrency {
+  id: string;
+  code: string;
+  name: string;
+  symbol: string;
+  decimalPlaces: number;
+  enabled: boolean;
+}
+
 export interface LocalPiggyBank {
   id: string;
   name: string;
@@ -101,7 +122,7 @@ export interface LocalSyncLog {
 }
 
 const DB_NAME = 'financial_manager_offline_v2';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 // Starter accounts for fresh offline use
 const DEFAULT_ACCOUNTS: LocalAccount[] = [
@@ -153,6 +174,16 @@ const DEFAULT_CATEGORIES: LocalCategory[] = [
   { id: 'local-cat-investment', name: 'Đầu tư & Tiết kiệm', color: '#00df8f', icon: 'TrendingUp', type: 'Revenue', isLocalOnly: true },
 ];
 
+export const DEFAULT_CURRENCIES: LocalCurrency[] = [
+  { id: 'curr-vnd', code: 'VND', name: 'Việt Nam Đồng', symbol: '₫', decimalPlaces: 0, enabled: true },
+  { id: 'curr-usd', code: 'USD', name: 'Đô la Mỹ', symbol: '$', decimalPlaces: 2, enabled: true },
+  { id: 'curr-eur', code: 'EUR', name: 'Đồng Euro', symbol: '€', decimalPlaces: 2, enabled: true },
+  { id: 'curr-jpy', code: 'JPY', name: 'Yên Nhật', symbol: '¥', decimalPlaces: 0, enabled: true },
+  { id: 'curr-gbp', code: 'GBP', name: 'Bảng Anh', symbol: '£', decimalPlaces: 2, enabled: true },
+  { id: 'curr-krw', code: 'KRW', name: 'Won Hàn Quốc', symbol: '₩', decimalPlaces: 0, enabled: true },
+  { id: 'curr-cny', code: 'CNY', name: 'Nhân dân tệ', symbol: '¥', decimalPlaces: 2, enabled: true }
+];
+
 class LocalDatabaseManager {
   private dbPromise: Promise<IDBDatabase> | null = null;
 
@@ -196,6 +227,11 @@ class LocalDatabaseManager {
         // Store: budgets
         if (!db.objectStoreNames.contains('budgets')) {
           db.createObjectStore('budgets', { keyPath: 'id' });
+        }
+
+        // Store: bills
+        if (!db.objectStoreNames.contains('bills')) {
+          db.createObjectStore('bills', { keyPath: 'id' });
         }
 
         // Store: piggy_banks
@@ -647,7 +683,7 @@ class LocalDatabaseManager {
   }
 
   // --------------------------------------------------------------------------
-  // BUDGETS & PIGGY BANKS
+  // BUDGETS & BILLS CRUD & OFFLINE ENGINE
   // --------------------------------------------------------------------------
 
   public async getBudgets(): Promise<LocalBudget[]> {
@@ -656,8 +692,23 @@ class LocalDatabaseManager {
       const tx = db.transaction('budgets', 'readonly');
       const store = tx.objectStore('budgets');
       const req = store.getAll();
-      req.onsuccess = () => resolve(req.result || []);
+      req.onsuccess = () => {
+        const list = req.result || [];
+        resolve(list);
+      };
       req.onerror = () => reject(req.error);
+    });
+  }
+
+  public async saveBudgets(budgets: LocalBudget[]): Promise<void> {
+    if (!budgets || budgets.length === 0) return;
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('budgets', 'readwrite');
+      const store = tx.objectStore('budgets');
+      budgets.forEach((b) => store.put(b));
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
     });
   }
 
@@ -693,6 +744,112 @@ class LocalDatabaseManager {
       req.onerror = () => reject(req.error);
     });
   }
+
+  public async getBudgetStatuses(startDate?: string, endDate?: string): Promise<any[]> {
+    const [budgets, txs] = await Promise.all([
+      this.getBudgets(),
+      this.getTransactions({ startDate, endDate, type: 'Withdrawal' })
+    ]);
+
+    return budgets.map((b) => {
+      let spent = 0;
+      if (b.categoryId) {
+        spent = txs
+          .filter((t) => t.categoryId === b.categoryId && t.transactionType === 'Withdrawal')
+          .reduce((sum, t) => sum + t.amount, 0);
+      } else {
+        spent = txs
+          .filter((t) => t.budgetId === b.id && t.transactionType === 'Withdrawal')
+          .reduce((sum, t) => sum + t.amount, 0);
+      }
+
+      const limit = b.amount || 1;
+      const pct = (spent / limit) * 100;
+      let status = 'WithinLimit';
+      if (pct >= 100) status = 'Overspent';
+      else if (pct >= 80) status = 'Warning';
+
+      return {
+        budgetId: b.id,
+        budgetName: b.name,
+        limitAmount: b.amount,
+        spentAmount: spent,
+        remainingAmount: b.amount - spent,
+        percentageSpent: pct,
+        status,
+        startDate: startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString(),
+        endDate: endDate || new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString(),
+      };
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // BILLS CRUD
+  // --------------------------------------------------------------------------
+
+  public async getBills(): Promise<LocalBill[]> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('bills', 'readonly');
+      const store = tx.objectStore('bills');
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const list: LocalBill[] = req.result || [];
+        resolve(list);
+      };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  public async saveBills(bills: LocalBill[]): Promise<void> {
+    if (!bills || bills.length === 0) return;
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('bills', 'readwrite');
+      const store = tx.objectStore('bills');
+      bills.forEach((b) => store.put(b));
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  public async addBill(bill: Partial<LocalBill>): Promise<LocalBill> {
+    const db = await this.openDB();
+    const item: LocalBill = {
+      id: bill.id || `loc-bill-${Date.now()}`,
+      name: bill.name || 'Hóa đơn mới',
+      amountMin: bill.amountMin || 0,
+      amountMax: bill.amountMax || bill.amountMin || 0,
+      repeatFrequency: bill.repeatFrequency || 'Monthly',
+      date: bill.date || new Date().toISOString().slice(0, 10),
+      nextDueDate: bill.date || new Date().toISOString().slice(0, 10),
+      active: bill.active !== false,
+      isPaidThisPeriod: false
+    };
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('bills', 'readwrite');
+      const store = tx.objectStore('bills');
+      store.put(item);
+      tx.oncomplete = () => resolve(item);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  public async deleteBill(id: string): Promise<boolean> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('bills', 'readwrite');
+      const store = tx.objectStore('bills');
+      const req = store.delete(id);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // PIGGY BANKS CRUD
+  // --------------------------------------------------------------------------
 
   public async getPiggyBanks(): Promise<LocalPiggyBank[]> {
     const db = await this.openDB();
@@ -756,6 +913,14 @@ class LocalDatabaseManager {
       req.onsuccess = () => resolve(true);
       req.onerror = () => reject(req.error);
     });
+  }
+
+  // --------------------------------------------------------------------------
+  // CURRENCIES
+  // --------------------------------------------------------------------------
+
+  public async getCurrencies(): Promise<LocalCurrency[]> {
+    return DEFAULT_CURRENCIES;
   }
 
   // --------------------------------------------------------------------------
@@ -851,7 +1016,7 @@ class LocalDatabaseManager {
   }
 
   // --------------------------------------------------------------------------
-  // OFFLINE STATISTICS CALCULATOR
+  // OFFLINE STATISTICS & TREND CALCULATOR
   // --------------------------------------------------------------------------
 
   public async computeOfflineStats(startDate?: string, endDate?: string): Promise<{
@@ -883,6 +1048,80 @@ class LocalDatabaseManager {
       savingsRate,
       count: list.length,
     };
+  }
+
+  public async computeCategoryBreakdown(startDate?: string, endDate?: string): Promise<{
+    categoryId: string;
+    categoryName: string;
+    amount: number;
+    percentage: number;
+    color: string;
+  }[]> {
+    const [txs, cats] = await Promise.all([
+      this.getTransactions({ startDate, endDate, type: 'Withdrawal' }),
+      this.getCategories()
+    ]);
+
+    const catMap = new Map<string, { name: string; color: string; amount: number }>();
+    let totalExpense = 0;
+
+    for (const t of txs) {
+      if (t.transactionType !== 'Withdrawal') continue;
+      const catId = t.categoryId || 'uncategorized';
+      const catObj = cats.find((c) => c.id === catId);
+      const name = t.categoryName || catObj?.name || 'Chưa phân loại';
+      const color = catObj?.color || '#888888';
+
+      const existing = catMap.get(catId) || { name, color, amount: 0 };
+      existing.amount += t.amount;
+      catMap.set(catId, existing);
+      totalExpense += t.amount;
+    }
+
+    const result: any[] = [];
+    catMap.forEach((val, id) => {
+      result.push({
+        categoryId: id,
+        categoryName: val.name,
+        amount: val.amount,
+        percentage: totalExpense > 0 ? (val.amount / totalExpense) * 100 : 0,
+        color: val.color
+      });
+    });
+
+    return result.sort((a, b) => b.amount - a.amount);
+  }
+
+  public async computeCashflowTrend(startDate?: string, endDate?: string): Promise<{
+    date: string;
+    income: number;
+    expense: number;
+    net: number;
+  }[]> {
+    const list = await this.getTransactions({ startDate, endDate });
+    const dayMap = new Map<string, { income: number; expense: number }>();
+
+    for (const t of list) {
+      const d = t.date ? t.date.slice(0, 10) : new Date().toISOString().slice(0, 10);
+      const dayData = dayMap.get(d) || { income: 0, expense: 0 };
+      if (t.transactionType === 'Deposit') {
+        dayData.income += t.amount;
+      } else if (t.transactionType === 'Withdrawal') {
+        dayData.expense += t.amount;
+      }
+      dayMap.set(d, dayData);
+    }
+
+    const sortedDays = Array.from(dayMap.keys()).sort();
+    return sortedDays.map((date) => {
+      const data = dayMap.get(date)!;
+      return {
+        date: date.slice(5), // MM-DD
+        income: data.income,
+        expense: data.expense,
+        net: data.income - data.expense
+      };
+    });
   }
 }
 
