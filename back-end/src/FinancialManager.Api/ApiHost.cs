@@ -219,6 +219,21 @@ namespace FinancialManager.Api
                     CREATE TABLE ""__EFMigrationsHistory"" (""MigrationId"" varchar(150) PRIMARY KEY, ""ProductVersion"" varchar(32) NOT NULL);
                     INSERT INTO ""__EFMigrationsHistory"" VALUES ('{initialMigration}', '8.0.8');
                 END IF;
+
+                CREATE TABLE IF NOT EXISTS ""SyncHistories"" (
+                    ""Id"" uuid NOT NULL PRIMARY KEY,
+                    ""CreatedAt"" timestamp with time zone NOT NULL,
+                    ""UpdatedAt"" timestamp with time zone NULL,
+                    ""UserId"" uuid NOT NULL,
+                    ""DeviceId"" text NOT NULL,
+                    ""DeviceName"" text NOT NULL,
+                    ""SyncTime"" timestamp with time zone NOT NULL,
+                    ""UploadedCount"" integer NOT NULL,
+                    ""DownloadedCount"" integer NOT NULL,
+                    ""Status"" text NOT NULL,
+                    ""ErrorMessage"" text NULL,
+                    ""DurationMs"" bigint NOT NULL
+                );
             END $$;");
 #pragma warning restore EF1002
                     dbContext.Database.Migrate();
