@@ -7,11 +7,12 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 5000,
 });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
-  if (token) {
+  if (token && token !== 'offline-local-token') {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -22,7 +23,8 @@ api.interceptors.response.use(
     return response.data;
   },
   (error) => {
-    if (error.response?.status === 401) {
+    const currentToken = localStorage.getItem('accessToken');
+    if (error.response?.status === 401 && currentToken !== 'offline-local-token') {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
       if (window.location.pathname !== '/login') {
@@ -30,6 +32,6 @@ api.interceptors.response.use(
       }
     }
     const errData = error.response?.data;
-    return Promise.reject(errData || { message: 'Đã xảy ra lỗi kết nối máy chủ.' });
+    return Promise.reject(errData || { message: 'Không thể kết nối tới máy chủ (Ngoại tuyến).' });
   }
 );

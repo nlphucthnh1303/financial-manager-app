@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { localDb, type LocalCategory, type LocalTag } from '@/lib/localDb';
 import { formatDate } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
 import { FieldError } from '@/components/ui/field-error';
 import { check, collectErrors, type FormErrors } from '@/lib/validation';
 import { VIETNAMESE_STANDARD_CATEGORIES } from '@/lib/financial-frameworks';
+import { IconPicker, IconRenderer } from '@/components/ui/icon-picker';
 import { 
   Plus, 
   Pencil, 
@@ -16,7 +18,8 @@ import {
   Tag, 
   FolderTree, 
   CornerDownRight, 
-  Sparkles
+  Sparkles,
+  Layers
 } from 'lucide-react';
 
 type CategoryType = 'Expense' | 'Revenue';
@@ -40,14 +43,7 @@ interface TagItem {
   transactionCount: number;
 }
 
-const ICON_CHOICES = ['🍜', '☕', '🛒', '🏠', '💡', '🚗', '⛽', '🎬', '🎁', '💊', '📚', '👕', '✈️', '💰', '💼', '📈', '🐷', '📁', '💻', '🏋️', '👶', '❤️'];
-const COLOR_CHOICES = ['#171717', '#555555', '#888888', '#0070f3', '#10b981', '#ff5b4f', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
-
-const displayIcon = (icon?: string) => (icon && !/^[a-z0-9_-]+$/i.test(icon) ? icon : '📁');
-const toDateInput = (d?: string | null) => (d ? d.split('T')[0] : '');
-
 const labelCls = 'text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block';
-const selectCls = 'flex h-9 w-full rounded-md shadow-input bg-[#fafafa] dark:bg-[#111111] px-3 py-1 text-xs text-[#171717] dark:text-[#ededed] focus:outline-none';
 
 const CategoryFormModal: React.FC<{
   open: boolean;
@@ -57,7 +53,7 @@ const CategoryFormModal: React.FC<{
   defaultType: CategoryType;
   roots: Category[];
 }> = ({ open, onClose, onSuccess, editing, defaultType, roots }) => {
-  const empty = { name: '', parentId: '', icon: ICON_CHOICES[0], color: COLOR_CHOICES[0], type: defaultType };
+  const empty = { name: '', parentId: '', icon: 'Utensils', color: '#ff5b4f', type: defaultType };
   const [form, setForm] = useState(empty);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
@@ -66,12 +62,11 @@ const CategoryFormModal: React.FC<{
     if (!open) return;
     setErrors({});
     setForm(editing
-      ? { name: editing.name, parentId: editing.parentId || '', icon: displayIcon(editing.icon), color: editing.color || COLOR_CHOICES[0], type: editing.type }
+      ? { name: editing.name, parentId: editing.parentId || '', icon: editing.icon || 'Folder', color: editing.color || '#ff5b4f', type: editing.type }
       : { ...empty, type: defaultType });
-  }, [open, editing]);
+  }, [open, editing, defaultType]);
 
   const parentOptions = roots.filter(r => r.type === form.type && r.id !== editing?.id);
-  const hasChildren = (editing?.subCategories?.length || 0) > 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,87 +81,107 @@ const CategoryFormModal: React.FC<{
     try {
       setLoading(true);
       if (editing) {
-        await api.put(`/categories/${editing.id}`, payload);
+        try {
+          await api.put(`/categories/${editing.id}`, payload);
+        } catch {
+          await localDb.updateCategory(editing.id, payload);
+        }
         toast.success('Đã cập nhật danh mục.');
       } else {
-        await api.post('/categories', payload);
+        try {
+          const res: any = await api.post('/categories', payload);
+          if (res.data?.id) {
+            await localDb.saveCategories([{ ...payload, id: res.data.id }]);
+          }
+        } catch {
+          await localDb.addCategory(payload);
+        }
         toast.success('Đã thêm danh mục mới.');
       }
-      onClose(); onSuccess();
-    } catch (err: any) { toast.error(err?.message || 'Lưu danh mục thất bại.'); }
-    finally { setLoading(false); }
+      onClose(); 
+      onSuccess();
+    } catch (err: any) { 
+      toast.error(err?.message || 'Lưu danh mục thất bại.'); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
+      <DialogContent className="sm:max-w-md bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
         <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">{editing ? 'Sửa danh mục' : 'Thêm danh mục mới'}</DialogTitle>
-          <DialogDescription className="text-xs text-[#888888]">Phân loại chi tiêu hoặc nguồn thu nhập.</DialogDescription>
+          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">
+            {editing ? 'Sửa danh mục' : 'Thêm danh mục mới'}
+          </DialogTitle>
+          <DialogDescription className="text-xs text-[#888888]">
+            Chọn biểu tượng vector hiện đại từ ReUI Icons hoặc bộ Emoji.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} noValidate className="space-y-3.5 py-2">
+
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-2">
           <div>
             <label className={labelCls}>Tên danh mục *</label>
-            <Input placeholder="Cà phê, Tiền điện EVN…" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} aria-invalid={!!errors.name} maxLength={100} className="shadow-input text-xs" autoFocus />
+            <Input 
+              placeholder="Ăn uống, Tiền nhà, Mua sắm…" 
+              value={form.name} 
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))} 
+              aria-invalid={!!errors.name} 
+              maxLength={100} 
+              className="shadow-input text-xs" 
+              autoFocus 
+            />
             <FieldError message={errors.name} />
           </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>Thuộc nhóm *</label>
-              <Select value={form.type} onValueChange={v => setForm(f => ({ ...f, type: v as CategoryType, parentId: '' }))}>
+              <label className={labelCls}>Loại danh mục</label>
+              <Select value={form.type} onValueChange={(val: CategoryType) => setForm(f => ({ ...f, type: val, parentId: '' }))}>
                 <SelectTrigger className="shadow-input text-xs h-9">
-                  <SelectValue placeholder="Chọn loại" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Expense" className="text-xs text-[#ff5b4f]">Chi tiêu (−)</SelectItem>
-                  <SelectItem value="Revenue" className="text-xs text-[#10b981]">Thu nhập (+)</SelectItem>
+                  <SelectItem value="Expense">Chi tiêu (−)</SelectItem>
+                  <SelectItem value="Revenue">Thu nhập (+)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
             <div>
-              <label className={labelCls}>Danh mục cha</label>
-              <Select value={form.parentId || 'root'} onValueChange={v => setForm(f => ({ ...f, parentId: v === 'root' ? '' : v }))} disabled={hasChildren}>
+              <label className={labelCls}>Danh mục cha (Tùy chọn)</label>
+              <Select value={form.parentId || 'root'} onValueChange={val => setForm(f => ({ ...f, parentId: val === 'root' ? '' : val }))}>
                 <SelectTrigger className="shadow-input text-xs h-9">
-                  <SelectValue placeholder="— Không có (Gốc) —" />
+                  <SelectValue placeholder="Không có (Cấp gốc)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="root" className="text-xs text-[#888888]">— Không có (Gốc) —</SelectItem>
+                  <SelectItem value="root">Không có (Cấp gốc)</SelectItem>
                   {parentOptions.map(p => (
-                    <SelectItem key={p.id} value={p.id} className="text-xs">
-                      {displayIcon(p.icon)} {p.name}
-                    </SelectItem>
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-          {hasChildren && <p className="text-[11px] text-[#888888]">Danh mục đang có danh mục con nên không thể chuyển thành danh mục con.</p>}
+
           <div>
-            <label className={labelCls}>Biểu tượng *</label>
-            <div className="flex flex-wrap gap-1.5">
-              {ICON_CHOICES.map(ic => (
-                <button key={ic} type="button" onClick={() => setForm(f => ({ ...f, icon: ic }))}
-                  className={`w-8 h-8 rounded text-sm flex items-center justify-center transition-colors ${form.icon === ic ? 'bg-[#171717] dark:bg-[#ededed] shadow-xs' : 'shadow-border bg-[#fafafa] dark:bg-[#111111] hover:bg-[#f0f0f0]'}`}>
-                  {ic}
-                </button>
-              ))}
-            </div>
+            <label className={labelCls}>Biểu tượng (ReUI / Lucide Icons) & Màu sắc</label>
+            <IconPicker
+              value={form.icon}
+              color={form.color}
+              onChange={(icon, color) => {
+                setForm(f => ({ ...f, icon, color: color || f.color }));
+              }}
+            />
           </div>
-          <div>
-            <label className={labelCls}>Màu sắc hiển thị *</label>
-            <div className="flex flex-wrap items-center gap-2">
-              {COLOR_CHOICES.map(c => (
-                <button key={c} type="button" onClick={() => setForm(f => ({ ...f, color: c }))} aria-label={c}
-                  className={`w-6 h-6 rounded-full border-2 transition-transform ${form.color.toLowerCase() === c ? 'border-[#0070f3] scale-110' : 'border-transparent'}`}
-                  style={{ backgroundColor: c }} />
-              ))}
-              <input type="color" value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="w-6 h-6 rounded cursor-pointer bg-transparent" title="Chọn màu khác" />
-            </div>
-            <FieldError message={errors.color} />
-          </div>
+
           <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border">Hủy</Button>
-            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black">{loading ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Thêm danh mục'}</Button>
+            <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border">
+              Hủy
+            </Button>
+            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black">
+              {loading ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Tạo danh mục'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -174,7 +189,12 @@ const CategoryFormModal: React.FC<{
   );
 };
 
-const TagFormModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: () => void; editing: TagItem | null }> = ({ open, onClose, onSuccess, editing }) => {
+const TagFormModal: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  editing: TagItem | null;
+}> = ({ open, onClose, onSuccess, editing }) => {
   const [form, setForm] = useState({ tag: '', description: '', dateFrom: '', dateTo: '' });
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
@@ -183,19 +203,16 @@ const TagFormModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: ()
     if (!open) return;
     setErrors({});
     setForm(editing
-      ? { tag: editing.tag, description: editing.description || '', dateFrom: toDateInput(editing.dateFrom), dateTo: toDateInput(editing.dateTo) }
+      ? { tag: editing.tag, description: editing.description || '', dateFrom: editing.dateFrom?.split('T')[0] || '', dateTo: editing.dateTo?.split('T')[0] || '' }
       : { tag: '', description: '', dateFrom: '', dateTo: '' });
   }, [open, editing]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const tag = form.tag.trim().toLowerCase();
+    const tag = form.tag.trim().replace(/^#/, '');
     const found = collectErrors({
-      tag: !tag ? 'Vui lòng nhập tên tag.'
-        : !/^[a-z0-9_-]+$/.test(tag) ? 'Chỉ gồm chữ không dấu, số, "-" hoặc "_", không có khoảng trắng.'
-        : check.length(tag, 2, 50, 'Tên tag'),
-      description: check.maxLength(form.description, 500, 'Mô tả'),
-      dateTo: check.dateOrder(form.dateFrom, form.dateTo),
+      tag: check.required(tag, 'Vui lòng nhập tên thẻ tag.') || check.length(tag, 1, 50, 'Thẻ tag'),
+      dateTo: form.dateFrom && form.dateTo && form.dateTo < form.dateFrom && 'Ngày kết thúc phải sau ngày bắt đầu.',
     });
     setErrors(found);
     if (Object.keys(found).length) return;
@@ -203,10 +220,18 @@ const TagFormModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: ()
     try {
       setLoading(true);
       if (editing) {
-        await api.put(`/tags/${editing.id}`, payload);
+        try {
+          await api.put(`/tags/${editing.id}`, payload);
+        } catch {
+          // offline
+        }
         toast.success('Đã cập nhật thẻ tag.');
       } else {
-        await api.post('/tags', payload);
+        try {
+          await api.post('/tags', payload);
+        } catch {
+          await localDb.addTag(payload);
+        }
         toast.success('Đã tạo thẻ tag mới.');
       }
       onClose(); onSuccess();
@@ -254,19 +279,6 @@ const TagFormModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: ()
   );
 };
 
-const RowActions: React.FC<{ onEdit: () => void; onDelete: () => void }> = ({ onEdit, onDelete }) => (
-  <div className="flex items-center gap-1 shrink-0">
-    <button type="button" onClick={onEdit} title="Sửa" aria-label="Sửa" className="p-1 rounded text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed] transition-colors">
-      <Pencil className="w-3.5 h-3.5" />
-    </button>
-    <button type="button" onClick={onDelete} title="Xóa" aria-label="Xóa" className="p-1 rounded text-[#888888] hover:text-[#ff5b4f] transition-colors">
-      <Trash2 className="w-3.5 h-3.5" />
-    </button>
-  </div>
-);
-
-type PendingDelete = { kind: 'category'; item: Category } | { kind: 'tag'; item: TagItem } | null;
-
 export const CategoriesPage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<TagItem[]>([]);
@@ -274,17 +286,54 @@ export const CategoriesPage: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<CategoryType>('Expense');
   const [categoryModal, setCategoryModal] = useState<{ open: boolean; editing: Category | null }>({ open: false, editing: null });
   const [tagModal, setTagModal] = useState<{ open: boolean; editing: TagItem | null }>({ open: false, editing: null });
-  const [pendingDelete, setPendingDelete] = useState<PendingDelete>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ kind: 'category' | 'tag'; item: any } | null>(null);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [catRes, tagRes]: any[] = await Promise.all([api.get('/categories'), api.get('/tags')]);
-      setCategories(catRes.data || []);
+      const [catRes, tagRes]: any[] = await Promise.all([
+        api.get('/categories').catch(() => ({ data: null })),
+        api.get('/tags').catch(() => ({ data: [] }))
+      ]);
+      
+      let catList = catRes.data;
+      if (!catList || catList.length === 0) {
+        // Fallback to localDb
+        const offlineCats = await localDb.getCategories();
+        catList = offlineCats.map(c => ({
+          id: c.id,
+          name: c.name,
+          parentId: c.parentId || null,
+          icon: c.icon || 'Folder',
+          color: c.color || '#171717',
+          type: (c.type || 'Expense') as CategoryType
+        }));
+      } else {
+        await localDb.saveCategories(catList.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          color: c.color,
+          icon: c.icon,
+          parentId: c.parentId,
+          type: c.type
+        })));
+      }
+
+      setCategories(catList || []);
       setTags(tagRes.data || []);
     } catch {
-      toast.error('Không thể tải danh mục và thẻ tag.');
-    } finally { setLoading(false); }
+      const offlineCats = await localDb.getCategories();
+      setCategories(offlineCats.map(c => ({
+        id: c.id,
+        name: c.name,
+        parentId: c.parentId || null,
+        icon: c.icon || 'Folder',
+        color: c.color || '#171717',
+        type: (c.type || 'Expense') as CategoryType
+      })));
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   useEffect(() => { loadData(); }, []);
@@ -294,201 +343,271 @@ export const CategoriesPage: React.FC = () => {
     try {
       setLoading(true);
       for (const cat of VIETNAMESE_STANDARD_CATEGORIES) {
-        const res: any = await api.post('/categories', {
-          name: cat.name,
-          icon: cat.icon,
-          color: cat.color,
-          type: cat.type,
-          parentId: null
-        }).catch(() => null);
-
-        if (res?.data?.id && cat.sub?.length) {
-          for (const sub of cat.sub) {
-            await api.post('/categories', {
-              name: sub,
-              icon: cat.icon,
-              color: cat.color,
-              type: cat.type,
-              parentId: res.data.id
-            }).catch(() => null);
-          }
+        try {
+          await api.post('/categories', {
+            name: cat.name,
+            icon: cat.icon,
+            color: cat.color,
+            type: cat.type,
+          });
+        } catch {
+          await localDb.addCategory({
+            name: cat.name,
+            icon: cat.icon,
+            color: cat.color,
+            type: cat.type as any
+          });
         }
       }
-      toast.success('Đã nạp thành công bộ danh mục chuẩn Việt Nam!');
+      toast.success('Đã khởi tạo bộ danh mục Việt Nam chuẩn!');
       loadData();
-    } catch {
-      toast.error('Không thể tạo danh mục mẫu.');
+    } catch (err: any) {
+      toast.error(err?.message || 'Có lỗi khi áp dụng danh mục mẫu.');
     } finally {
       setLoading(false);
     }
   };
 
-  const visibleRoots = categories.filter(c => c.type === typeFilter);
-
   const handleDelete = async () => {
     if (!pendingDelete) return;
     try {
       if (pendingDelete.kind === 'category') {
-        await api.delete(`/categories/${pendingDelete.item.id}`);
-        toast.success('Đã xóa danh mục.');
+        await api.delete(`/categories/${pendingDelete.item.id}`).catch(() => {});
+        await localDb.deleteCategory(pendingDelete.item.id);
+        toast.success(`Đã xóa danh mục "${pendingDelete.item.name}".`);
       } else {
-        await api.delete(`/tags/${pendingDelete.item.id}`);
-        toast.success('Đã xóa thẻ tag.');
+        await api.delete(`/tags/${pendingDelete.item.id}`).catch(() => {});
+        await localDb.deleteTag(pendingDelete.item.id);
+        toast.success(`Đã xóa thẻ tag "#${pendingDelete.item.tag}".`);
       }
       setPendingDelete(null);
       loadData();
-    } catch (err: any) {
-      toast.error(err?.message || 'Xóa thất bại.');
-    }
+    } catch (err: any) { toast.error(err?.message || 'Xóa thất bại.'); }
   };
 
-  const renderCategoryRow = (c: Category, isChild = false) => (
-    <div key={c.id} className={`p-3 rounded-md shadow-border bg-[#ffffff] dark:bg-[#0a0a0a] flex items-center justify-between gap-3 hover:bg-[#fafafa] dark:hover:bg-[#111111] transition-colors ${isChild ? 'ml-6' : ''}`}>
-      <div className="flex items-center gap-2.5 min-w-0">
-        {isChild && <CornerDownRight className="w-3.5 h-3.5 text-[#888888] shrink-0 -ml-1" />}
-        <span className="w-7 h-7 rounded flex items-center justify-center text-sm shrink-0 bg-[#fafafa] dark:bg-[#111111] shadow-border">{displayIcon(c.icon)}</span>
-        <div className="min-w-0">
-          <h3 className="font-medium text-xs text-[#171717] dark:text-[#ededed] truncate">{c.name}</h3>
-          <span className="text-[11px] text-[#888888]">
-            {c.type === 'Revenue' ? 'Thu nhập' : 'Chi tiêu'}
-            {!isChild && (c.subCategories?.length || 0) > 0 && ` · ${c.subCategories!.length} mục con`}
-          </span>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
-        <RowActions onEdit={() => setCategoryModal({ open: true, editing: c })} onDelete={() => setPendingDelete({ kind: 'category', item: c })} />
-      </div>
-    </div>
-  );
+  const filteredCategories = categories.filter(c => (c.type || 'Expense') === typeFilter);
+  const rootCategories = filteredCategories.filter(c => !c.parentId);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-[#171717] dark:text-[#ededed]">Danh mục & Nhãn sự kiện</h1>
-          <p className="text-xs text-[#666666] dark:text-[#888888] mt-0.5">Phân loại dòng tiền và gom nhóm theo sự kiện dự án</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-[#171717] dark:text-[#ededed]">
+            Danh mục & Thẻ sự kiện
+          </h1>
+          <p className="text-xs text-[#666666] dark:text-[#888888] mt-0.5">
+            Phân loại thu chi đa tầng với biểu tượng ReUI / Lucide và thẻ tag dự án
+          </p>
         </div>
 
+        <div className="flex items-center flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handleApplyPresetCategories}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-xs font-medium text-[#171717] dark:text-[#ededed]"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#0070f3]" />
+            <span>Nạp bộ danh mục mẫu</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTagModal({ open: true, editing: null })}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-xs font-medium text-[#171717] dark:text-[#ededed]"
+          >
+            <Tag className="w-3.5 h-3.5 text-[#888888]" />
+            <span>Thêm thẻ tag</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setCategoryModal({ open: true, editing: null })}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] text-xs font-medium shadow-sm transition-colors duration-150"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>Thêm danh mục</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2">
         <button
           type="button"
-          onClick={handleApplyPresetCategories}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-xs font-medium text-[#171717] dark:text-[#ededed] self-start sm:self-auto"
+          onClick={() => setTypeFilter('Expense')}
+          className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            typeFilter === 'Expense'
+              ? 'bg-[#171717] dark:bg-[#ededed] text-white dark:text-black shadow-sm'
+              : 'text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed]'
+          }`}
         >
-          <Sparkles className="w-3.5 h-3.5 text-[#10b981]" />
-          <span>Áp dụng danh mục chuẩn VN</span>
+          Danh mục Chi tiêu (−)
+        </button>
+        <button
+          type="button"
+          onClick={() => setTypeFilter('Revenue')}
+          className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            typeFilter === 'Revenue'
+              ? 'bg-[#171717] dark:bg-[#ededed] text-white dark:text-black shadow-sm'
+              : 'text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed]'
+          }`}
+        >
+          Danh mục Thu nhập (+)
         </button>
       </div>
 
-      {/* Categories */}
-      <div className="rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a] p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <h2 className="text-xs font-semibold text-[#171717] dark:text-[#ededed] flex items-center gap-2">
-            <FolderTree className="w-4 h-4 text-[#888888]" /> Danh mục Thu / Chi
-          </h2>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center p-0.5 bg-[#fafafa] dark:bg-[#111111] shadow-border rounded-md">
-              {(['Expense', 'Revenue'] as CategoryType[]).map(t => (
-                <button key={t} type="button" onClick={() => setTypeFilter(t)}
-                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${typeFilter === t ? 'bg-[#ffffff] dark:bg-[#1f1f1f] text-[#171717] dark:text-[#ededed] shadow-xs' : 'text-[#666666] dark:text-[#888888]'}`}>
-                  {t === 'Expense' ? 'Chi tiêu (−)' : 'Thu nhập (+)'}
-                </button>
-              ))}
-            </div>
-            <button type="button" onClick={() => setCategoryModal({ open: true, editing: null })}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] text-xs font-medium shadow-sm transition-colors duration-150">
-              <Plus className="w-3.5 h-3.5 stroke-[2.5]" /> Thêm danh mục
-            </button>
-          </div>
-        </div>
-
+      {/* Category List */}
+      <div className="rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a] divide-y divide-zinc-100 dark:divide-zinc-900">
         {loading ? (
-          <div className="space-y-2">{[...Array(3)].map((_, i) => <div key={i} className="h-12 rounded-md shadow-border bg-[#fafafa] dark:bg-[#0a0a0a]" />)}</div>
-        ) : visibleRoots.length === 0 ? (
-          <div className="py-8 text-center text-xs text-[#888888] space-y-3">
-            <p>Chưa có danh mục {typeFilter === 'Expense' ? 'chi tiêu' : 'thu nhập'} nào…</p>
-            <Button size="sm" onClick={handleApplyPresetCategories} className="text-xs">
-              <Sparkles className="w-3.5 h-3.5 mr-1" /> Nạp danh mục chuẩn Việt Nam
+          <div className="p-8 text-center text-xs text-[#888888]">Đang tải danh mục…</div>
+        ) : rootCategories.length === 0 ? (
+          <div className="p-12 text-center space-y-3">
+            <p className="text-xs text-[#888888]">Chưa có danh mục nào thuộc nhóm này.</p>
+            <Button size="sm" onClick={() => setCategoryModal({ open: true, editing: null })} className="text-xs">
+              <Plus className="w-3.5 h-3.5 mr-1" /> Thêm danh mục đầu tiên
             </Button>
           </div>
         ) : (
-          <div className="space-y-2">
-            {visibleRoots.map(root => (
-              <React.Fragment key={root.id}>
-                {renderCategoryRow(root)}
-                {root.subCategories?.map(child => renderCategoryRow({ ...child, parentId: root.id }, true))}
-              </React.Fragment>
-            ))}
-          </div>
+          rootCategories.map(parent => {
+            const subs = filteredCategories.filter(c => c.parentId === parent.id);
+            return (
+              <div key={parent.id} className="p-3.5 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30 transition-colors">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
+                      style={{ backgroundColor: `${parent.color}20`, color: parent.color }}
+                    >
+                      <IconRenderer name={parent.icon} color={parent.color} size={16} className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-semibold text-xs text-[#171717] dark:text-[#ededed]">
+                        {parent.name}
+                      </span>
+                      {subs.length > 0 && (
+                        <span className="text-[10px] text-[#888888] ml-2">
+                          ({subs.length} danh mục con)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setCategoryModal({ open: true, editing: parent })}
+                      className="p-1 text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed] rounded transition-colors"
+                      title="Sửa"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPendingDelete({ kind: 'category', item: parent })}
+                      className="p-1 text-[#888888] hover:text-[#ff5b4f] rounded transition-colors"
+                      title="Xóa"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Subcategories */}
+                {subs.length > 0 && (
+                  <div className="mt-2.5 ml-6 space-y-1.5 pl-4 border-l-2 border-zinc-100 dark:border-zinc-800">
+                    {subs.map(sub => (
+                      <div key={sub.id} className="flex items-center justify-between py-1 text-xs">
+                        <div className="flex items-center gap-2">
+                          <CornerDownRight className="w-3 h-3 text-[#888888]" />
+                          <div
+                            className="w-5 h-5 rounded-md flex items-center justify-center shrink-0"
+                            style={{ backgroundColor: `${sub.color}20`, color: sub.color }}
+                          >
+                            <IconRenderer name={sub.icon} color={sub.color} size={12} className="w-3 h-3" />
+                          </div>
+                          <span className="text-[#171717] dark:text-[#ededed]">{sub.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setCategoryModal({ open: true, editing: sub })}
+                            className="p-1 text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed]"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPendingDelete({ kind: 'category', item: sub })}
+                            className="p-1 text-[#888888] hover:text-[#ff5b4f]"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
 
-      {/* Tags */}
-      <div className="rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a] p-5">
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <h2 className="text-xs font-semibold text-[#171717] dark:text-[#ededed] flex items-center gap-2">
-            <Tag className="w-4 h-4 text-[#888888]" /> Thẻ tag sự kiện / dự án
+      {/* Tags Section */}
+      {tags.length > 0 && (
+        <div className="space-y-3 pt-4">
+          <h2 className="text-xs font-semibold text-[#171717] dark:text-[#ededed] flex items-center gap-1.5">
+            <Tag className="w-3.5 h-3.5 text-[#0070f3]" />
+            <span>Thẻ sự kiện & Chiến dịch ({tags.length})</span>
           </h2>
-          <button type="button" onClick={() => setTagModal({ open: true, editing: null })}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] text-xs font-medium shadow-sm">
-            <Plus className="w-3.5 h-3.5 stroke-[2.5]" /> Thêm thẻ tag
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="h-12 rounded-md shadow-border bg-[#fafafa] dark:bg-[#0a0a0a]" />
-        ) : tags.length === 0 ? (
-          <p className="py-8 text-center text-xs text-[#888888]">Chưa có thẻ tag nào…</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="flex flex-wrap gap-2">
             {tags.map(t => (
-              <div key={t.id} className="p-3 rounded-md shadow-border bg-[#ffffff] dark:bg-[#0a0a0a] flex items-start justify-between gap-3 hover:bg-[#fafafa] dark:hover:bg-[#111111] transition-colors">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-xs text-[#171717] dark:text-[#ededed] truncate">#{t.tag}</span>
-                    <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] text-[#888888] shadow-border bg-[#fafafa] dark:bg-[#111111] shrink-0 tabular-nums">{t.transactionCount} giao dịch</span>
-                  </div>
-                  {t.description && <p className="text-[11px] text-[#888888] mt-0.5 line-clamp-2">{t.description}</p>}
-                  {(t.dateFrom || t.dateTo) && (
-                    <p className="text-[10px] text-[#888888] mt-1 tabular-nums">{t.dateFrom ? formatDate(t.dateFrom) : '…'} – {t.dateTo ? formatDate(t.dateTo) : '…'}</p>
-                  )}
-                </div>
-                <RowActions onEdit={() => setTagModal({ open: true, editing: t })} onDelete={() => setPendingDelete({ kind: 'tag', item: t })} />
+              <div
+                key={t.id}
+                className="px-3 py-1.5 rounded-md shadow-border bg-[#ffffff] dark:bg-[#0a0a0a] flex items-center gap-2 text-xs"
+              >
+                <span className="font-medium text-[#0070f3]">#{t.tag}</span>
+                {t.description && <span className="text-[11px] text-[#888888]">· {t.description}</span>}
+                <button
+                  type="button"
+                  onClick={() => setPendingDelete({ kind: 'tag', item: t })}
+                  className="text-[#888888] hover:text-[#ff5b4f]"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <CategoryFormModal
         open={categoryModal.open}
         editing={categoryModal.editing}
-        defaultType={typeFilter}
-        roots={categories}
         onClose={() => setCategoryModal({ open: false, editing: null })}
         onSuccess={loadData}
+        defaultType={typeFilter}
+        roots={rootCategories}
       />
+
       <TagFormModal
         open={tagModal.open}
         editing={tagModal.editing}
         onClose={() => setTagModal({ open: false, editing: null })}
         onSuccess={loadData}
       />
-      <Dialog open={pendingDelete !== null} onOpenChange={() => setPendingDelete(null)}>
+
+      {/* Delete Confirmation */}
+      <Dialog open={!!pendingDelete} onOpenChange={() => setPendingDelete(null)}>
         <DialogContent className="sm:max-w-sm bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">
-              {pendingDelete?.kind === 'tag' ? 'Xóa thẻ tag' : 'Xóa danh mục'}
-            </DialogTitle>
+            <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">Xác nhận xóa</DialogTitle>
             <DialogDescription className="text-xs text-[#888888]">
-              {pendingDelete?.kind === 'category'
-                ? `Xóa danh mục "${pendingDelete.item.name}"? Các giao dịch sẽ được giữ lại nhưng không còn danh mục.`
-                : `Xóa thẻ "#${pendingDelete?.item.tag}"?`}
+              Bạn có chắc chắn muốn xóa {pendingDelete?.kind === 'category' ? `danh mục "${pendingDelete?.item.name}"` : `thẻ tag "#${pendingDelete?.item.tag}"`}?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => setPendingDelete(null)} className="text-xs shadow-border">Hủy</Button>
-            <Button type="button" size="sm" onClick={handleDelete} className="text-xs bg-[#ff5b4f] text-white">Xóa</Button>
+          <DialogFooter>
+            <Button variant="outline" size="sm" className="text-xs shadow-border" onClick={() => setPendingDelete(null)}>Hủy</Button>
+            <Button size="sm" className="text-xs bg-[#ff5b4f] text-white" onClick={handleDelete}>Xóa ngay</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

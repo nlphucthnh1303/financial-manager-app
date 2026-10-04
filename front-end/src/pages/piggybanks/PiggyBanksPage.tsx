@@ -21,6 +21,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
+import { localDb } from '@/lib/localDb';
+
 type PiggyAction = 'Deposit' | 'Withdraw';
 
 const PiggyEventModal: React.FC<{ piggy: any; initialAction: PiggyAction; open: boolean; onClose: () => void; onSuccess: () => void }> = ({ piggy, initialAction, open, onClose, onSuccess }) => {
@@ -41,7 +43,11 @@ const PiggyEventModal: React.FC<{ piggy: any; initialAction: PiggyAction; open: 
     if (Object.keys(found).length) return;
     try {
       setLoading(true);
-      await api.post(`/piggy-banks/${piggy.id}/events`, { action, amount: num, notes });
+      try {
+        await api.post(`/piggy-banks/${piggy.id}/events`, { action, amount: num, notes });
+      } catch {
+        await localDb.updatePiggyAmount(piggy.id, action === 'Deposit' ? num : -num);
+      }
       toast.success(action === 'Deposit' ? `Đã nạp ${formatCurrency(num)} vào hũ!` : `Đã rút ${formatCurrency(num)} từ hũ!`);
       onClose(); onSuccess(); setAmount(''); setNotes('');
     } catch (err: any) { toast.error(err?.message || 'Thao tác thất bại.'); }
@@ -106,9 +112,14 @@ const AddPiggyModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: (
       setForm(empty);
       setErrors({});
       api.get('/accounts?type=Asset&active=true').then((res: any) => {
-        setAccounts(res.data || []);
-        if (res.data?.length > 0) setForm(f => ({ ...f, accountId: res.data[0].id }));
-      }).catch(() => { });
+        const list = res.data || [];
+        setAccounts(list);
+        if (list.length > 0) setForm(f => ({ ...f, accountId: list[0].id }));
+      }).catch(async () => {
+        const offlineAccs = await localDb.getAccounts();
+        setAccounts(offlineAccs);
+        if (offlineAccs.length > 0) setForm(f => ({ ...f, accountId: offlineAccs[0].id }));
+      });
     }
   }, [open]);
 
@@ -124,9 +135,14 @@ const AddPiggyModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: (
     });
     setErrors(found);
     if (Object.keys(found).length) return;
+    const payload = { ...form, name: form.name.trim(), targetAmount: Number(form.targetAmount), currentAmount: Number(form.currentAmount) || 0, targetDate: form.targetDate || null };
     try {
       setLoading(true);
-      await api.post('/piggy-banks', { ...form, name: form.name.trim(), targetAmount: Number(form.targetAmount), currentAmount: Number(form.currentAmount) || 0, targetDate: form.targetDate || null });
+      try {
+        await api.post('/piggy-banks', payload);
+      } catch {
+        await localDb.addPiggyBank(payload);
+      }
       toast.success('Đã tạo hũ tiết kiệm mới!');
       onClose(); onSuccess();
     } catch (err: any) { toast.error(err?.message || 'Tạo hũ thất bại.'); }
@@ -143,7 +159,7 @@ const AddPiggyModal: React.FC<{ open: boolean; onClose: () => void; onSuccess: (
         <form onSubmit={handleSubmit} noValidate className="space-y-3 py-2">
           <div>
             <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block">Tên mục tiêu *</label>
-            <Input placeholder="VD: Mua Laptop, Quỹ Du lịch…" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} aria-invalid={!!errors.name} maxLength={100} className="shadow-input text-xs" />
+            <Input placeholder="VD: Mua Laptop, Quỹ Du lịch…" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} aria-invalid={!!errors.name} maxLength={100} className="shadow-input text-xs" autoFocus />
             <FieldError message={errors.name} />
           </div>
           <div>
@@ -200,9 +216,11 @@ export const PiggyBanksPage: React.FC = () => {
     try {
       setLoading(true);
       const res: any = await api.get('/piggy-banks');
-      setPiggies(res.data || []);
+      const list = res.data || [];
+      setPiggies(list);
     } catch {
-      toast.error('Không thể tải danh sách hũ tiết kiệm.');
+      const offlineList = await localDb.getPiggyBanks();
+      setPiggies(offlineList);
     } finally { setLoading(false); }
   };
 

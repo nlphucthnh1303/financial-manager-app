@@ -1,15 +1,17 @@
 /**
- * Financial Manager - Local Database Engine (IndexedDB)
- * Hỗ trợ lưu trữ ngoại tuyến (Offline-First) cho ứng dụng Mobile & Web:
- * - Lưu trữ giao dịch ngoại tuyến khi ra ngoài không có kết nối máy tính
- * - Theo dõi trạng thái đồng bộ: isSynced, syncAction, updatedAt
- * - Snapshot danh mục & tài khoản cục bộ
- * - Ghi nhận nhật ký đồng bộ cáp USB (Local Sync Logs)
+ * Financial Manager - Local Database Engine (IndexedDB v2.0)
+ * Hỗ trợ lưu trữ ngoại tuyến (Offline-First) toàn diện:
+ * - Giao dịch (Transactions CRUD & Balance Auto-Recalculation)
+ * - Tài khoản & Thẻ ngân hàng (Accounts CRUD)
+ * - Danh mục & Thẻ tag (Categories & Tags CRUD)
+ * - Ngân sách (Budgets CRUD)
+ * - Heo đất tiết kiệm (Piggy Banks CRUD & Events)
+ * - Lịch sử đồng bộ cáp USB (Sync Logs)
  */
 
 export interface LocalTransaction {
-  id: string; // UUID định danh client
-  serverId?: string | null; // ID trên CSDL PostgreSQL máy tính
+  id: string; // UUID / client ID
+  serverId?: string | null; // ID trên CSDL PostgreSQL
   transactionType: 'Withdrawal' | 'Deposit' | 'Transfer';
   amount: number;
   currencyCode: string;
@@ -38,6 +40,14 @@ export interface LocalAccount {
   accountRole?: string;
   active: boolean;
   isLocalOnly?: boolean;
+  includeInNetWorth?: boolean;
+  metadata?: {
+    bank_name?: string;
+    account_number?: string;
+    bank_code?: string;
+    color?: string;
+    icon?: string;
+  };
 }
 
 export interface LocalCategory {
@@ -45,7 +55,39 @@ export interface LocalCategory {
   name: string;
   color?: string;
   icon?: string;
+  parentId?: string | null;
+  type?: 'Expense' | 'Revenue';
   isLocalOnly?: boolean;
+}
+
+export interface LocalTag {
+  id: string;
+  tag: string;
+  description?: string | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  transactionCount?: number;
+}
+
+export interface LocalBudget {
+  id: string;
+  name: string;
+  amount: number;
+  spent?: number;
+  period: 'Monthly' | 'Weekly' | 'Custom';
+  categoryId?: string | null;
+  categoryName?: string | null;
+  active: boolean;
+}
+
+export interface LocalPiggyBank {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  targetDate?: string | null;
+  accountId?: string | null;
+  notes?: string | null;
 }
 
 export interface LocalSyncLog {
@@ -58,10 +100,10 @@ export interface LocalSyncLog {
   deviceId?: string;
 }
 
-const DB_NAME = 'financial_manager_offline_v1';
-const DB_VERSION = 1;
+const DB_NAME = 'financial_manager_offline_v2';
+const DB_VERSION = 2;
 
-// Default starter accounts for offline use
+// Starter accounts for fresh offline use
 const DEFAULT_ACCOUNTS: LocalAccount[] = [
   {
     id: 'local-acc-cash',
@@ -71,39 +113,55 @@ const DEFAULT_ACCOUNTS: LocalAccount[] = [
     currencyCode: 'VND',
     accountRole: 'cashWalletAsset',
     active: true,
+    includeInNetWorth: true,
     isLocalOnly: true,
+    metadata: { bank_name: 'Tiền mặt', icon: 'Wallet', color: '#059669' }
   },
   {
-    id: 'local-acc-bank',
-    name: 'Tài khoản Ngân hàng (Mặc định)',
+    id: 'local-acc-vcb',
+    name: 'Vietcombank Digibank',
     accountType: 'Asset',
     currentBalance: 0,
     currencyCode: 'VND',
     accountRole: 'defaultAsset',
     active: true,
+    includeInNetWorth: true,
     isLocalOnly: true,
+    metadata: { bank_name: 'Vietcombank', bank_code: 'VCB', icon: 'Landmark', color: '#005a3c' }
   },
+  {
+    id: 'local-acc-momo',
+    name: 'Ví điện tử MoMo',
+    accountType: 'Asset',
+    currentBalance: 0,
+    currencyCode: 'VND',
+    accountRole: 'defaultAsset',
+    active: true,
+    includeInNetWorth: true,
+    isLocalOnly: true,
+    metadata: { bank_name: 'Ví MoMo', bank_code: 'MOMO', icon: 'Smartphone', color: '#a50064' }
+  }
 ];
 
-// Default starter categories for offline use
+// Starter categories for fresh offline use
 const DEFAULT_CATEGORIES: LocalCategory[] = [
-  { id: 'local-cat-food', name: 'Ăn uống & Cà phê', color: '#ff5b4f', icon: 'Utensils', isLocalOnly: true },
-  { id: 'local-cat-transport', name: 'Đi lại & Xăng xe', color: '#0070f3', icon: 'Car', isLocalOnly: true },
-  { id: 'local-cat-shopping', name: 'Mua sắm & Sinh hoạt', color: '#7928ca', icon: 'ShoppingBag', isLocalOnly: true },
-  { id: 'local-cat-bills', name: 'Hóa đơn & Tiện ích', color: '#f5a623', icon: 'Receipt', isLocalOnly: true },
-  { id: 'local-cat-salary', name: 'Lương & Thưởng', color: '#00df8f', icon: 'DollarSign', isLocalOnly: true },
-  { id: 'local-cat-investment', name: 'Đầu tư & Tiết kiệm', color: '#171717', icon: 'TrendingUp', isLocalOnly: true },
+  { id: 'local-cat-food', name: 'Ăn uống & Cà phê', color: '#ff5b4f', icon: 'Utensils', type: 'Expense', isLocalOnly: true },
+  { id: 'local-cat-transport', name: 'Đi lại & Xăng xe', color: '#0070f3', icon: 'Car', type: 'Expense', isLocalOnly: true },
+  { id: 'local-cat-shopping', name: 'Mua sắm & Sinh hoạt', color: '#7928ca', icon: 'ShoppingBag', type: 'Expense', isLocalOnly: true },
+  { id: 'local-cat-housing', name: 'Nhà cửa & Hóa đơn', color: '#f5a623', icon: 'Home', type: 'Expense', isLocalOnly: true },
+  { id: 'local-cat-salary', name: 'Lương & Thưởng', color: '#10b981', icon: 'DollarSign', type: 'Revenue', isLocalOnly: true },
+  { id: 'local-cat-investment', name: 'Đầu tư & Tiết kiệm', color: '#00df8f', icon: 'TrendingUp', type: 'Revenue', isLocalOnly: true },
 ];
 
 class LocalDatabaseManager {
   private dbPromise: Promise<IDBDatabase> | null = null;
 
-  private openDB(): Promise<IDBDatabase> {
+  public async openDB(): Promise<IDBDatabase> {
     if (this.dbPromise) return this.dbPromise;
 
     this.dbPromise = new Promise((resolve, reject) => {
       if (typeof window === 'undefined' || !window.indexedDB) {
-        reject(new Error('IndexedDB không được hỗ trợ trên môi trường này.'));
+        reject(new Error('IndexedDB không được hỗ trợ trên thiết bị này.'));
         return;
       }
 
@@ -130,6 +188,21 @@ class LocalDatabaseManager {
           db.createObjectStore('categories', { keyPath: 'id' });
         }
 
+        // Store: tags
+        if (!db.objectStoreNames.contains('tags')) {
+          db.createObjectStore('tags', { keyPath: 'id' });
+        }
+
+        // Store: budgets
+        if (!db.objectStoreNames.contains('budgets')) {
+          db.createObjectStore('budgets', { keyPath: 'id' });
+        }
+
+        // Store: piggy_banks
+        if (!db.objectStoreNames.contains('piggy_banks')) {
+          db.createObjectStore('piggy_banks', { keyPath: 'id' });
+        }
+
         // Store: sync_logs
         if (!db.objectStoreNames.contains('sync_logs')) {
           const logStore = db.createObjectStore('sync_logs', { keyPath: 'id' });
@@ -139,13 +212,12 @@ class LocalDatabaseManager {
 
       req.onsuccess = async () => {
         const db = req.result;
-        // Auto-seed defaults if needed
         await this.ensureSeedData(db);
         resolve(db);
       };
 
       req.onerror = () => {
-        reject(req.error || new Error('Không thể mở IndexedDB.'));
+        reject(req.error || new Error('Không thể khởi tạo IndexedDB.'));
       };
     });
 
@@ -197,7 +269,6 @@ class LocalDatabaseManager {
 
       req.onsuccess = () => {
         let list: LocalTransaction[] = req.result || [];
-        // Filter out soft-deleted
         list = list.filter((t) => t.syncAction !== 'delete');
 
         if (options?.type && options.type !== 'all') {
@@ -214,7 +285,6 @@ class LocalDatabaseManager {
           list = list.filter((t) => new Date(t.date).getTime() <= e);
         }
 
-        // Sort descending by date
         list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         resolve(list);
       };
@@ -236,12 +306,41 @@ class LocalDatabaseManager {
     };
 
     return new Promise((resolve, reject) => {
-      const tx = db.transaction('transactions', 'readwrite');
+      const tx = db.transaction(['transactions', 'accounts'], 'readwrite');
       const store = tx.objectStore('transactions');
-      const req = store.put(item);
+      const accStore = tx.objectStore('accounts');
 
-      req.onsuccess = () => resolve(item);
-      req.onerror = () => reject(req.error);
+      store.put(item);
+
+      // Adjust Account Balance
+      if (item.sourceAccountId) {
+        const getSrc = accStore.get(item.sourceAccountId);
+        getSrc.onsuccess = () => {
+          const srcAcc = getSrc.result as LocalAccount | undefined;
+          if (srcAcc) {
+            if (item.transactionType === 'Withdrawal' || item.transactionType === 'Transfer') {
+              srcAcc.currentBalance = (srcAcc.currentBalance || 0) - item.amount;
+            } else if (item.transactionType === 'Deposit') {
+              srcAcc.currentBalance = (srcAcc.currentBalance || 0) + item.amount;
+            }
+            accStore.put(srcAcc);
+          }
+        };
+      }
+
+      if (item.transactionType === 'Transfer' && item.destinationAccountId) {
+        const getDest = accStore.get(item.destinationAccountId);
+        getDest.onsuccess = () => {
+          const destAcc = getDest.result as LocalAccount | undefined;
+          if (destAcc) {
+            destAcc.currentBalance = (destAcc.currentBalance || 0) + item.amount;
+            accStore.put(destAcc);
+          }
+        };
+      }
+
+      tx.oncomplete = () => resolve(item);
+      tx.onerror = () => reject(tx.error);
     });
   }
 
@@ -281,8 +380,9 @@ class LocalDatabaseManager {
   public async deleteTransaction(id: string): Promise<boolean> {
     const db = await this.openDB();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction('transactions', 'readwrite');
+      const tx = db.transaction(['transactions', 'accounts'], 'readwrite');
       const store = tx.objectStore('transactions');
+      const accStore = tx.objectStore('accounts');
       const getReq = store.get(id);
 
       getReq.onsuccess = () => {
@@ -292,23 +392,369 @@ class LocalDatabaseManager {
           return;
         }
 
-        // If never synced to server, just remove completely
+        // Reverse Account Balance Adjustment
+        if (existing.sourceAccountId) {
+          const getSrc = accStore.get(existing.sourceAccountId);
+          getSrc.onsuccess = () => {
+            const srcAcc = getSrc.result as LocalAccount | undefined;
+            if (srcAcc) {
+              if (existing.transactionType === 'Withdrawal' || existing.transactionType === 'Transfer') {
+                srcAcc.currentBalance = (srcAcc.currentBalance || 0) + existing.amount;
+              } else if (existing.transactionType === 'Deposit') {
+                srcAcc.currentBalance = (srcAcc.currentBalance || 0) - existing.amount;
+              }
+              accStore.put(srcAcc);
+            }
+          };
+        }
+
+        if (existing.transactionType === 'Transfer' && existing.destinationAccountId) {
+          const getDest = accStore.get(existing.destinationAccountId);
+          getDest.onsuccess = () => {
+            const destAcc = getDest.result as LocalAccount | undefined;
+            if (destAcc) {
+              destAcc.currentBalance = (destAcc.currentBalance || 0) - existing.amount;
+              accStore.put(destAcc);
+            }
+          };
+        }
+
         if (!existing.serverId) {
-          const delReq = store.delete(id);
-          delReq.onsuccess = () => resolve(true);
-          delReq.onerror = () => reject(delReq.error);
+          store.delete(id);
         } else {
-          // Soft delete to sync deletion to Desktop Central DB
           existing.syncAction = 'delete';
           existing.isSynced = false;
           existing.updatedAt = new Date().toISOString();
-          const putReq = store.put(existing);
-          putReq.onsuccess = () => resolve(true);
-          putReq.onerror = () => reject(putReq.error);
+          store.put(existing);
         }
       };
 
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // ACCOUNTS CRUD
+  // --------------------------------------------------------------------------
+
+  public async getAccounts(): Promise<LocalAccount[]> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('accounts', 'readonly');
+      const store = tx.objectStore('accounts');
+      const req = store.getAll();
+
+      req.onsuccess = () => {
+        const list = req.result || [];
+        resolve(list.length > 0 ? list : DEFAULT_ACCOUNTS);
+      };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  public async saveAccounts(accounts: LocalAccount[]): Promise<void> {
+    if (!accounts || accounts.length === 0) return;
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('accounts', 'readwrite');
+      const store = tx.objectStore('accounts');
+      accounts.forEach((a) => store.put(a));
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  public async addAccount(acc: Partial<LocalAccount>): Promise<LocalAccount> {
+    const db = await this.openDB();
+    const item: LocalAccount = {
+      id: acc.id || `loc-acc-${Date.now()}`,
+      name: acc.name || 'Tài khoản mới',
+      accountType: acc.accountType || 'Asset',
+      currentBalance: acc.currentBalance || 0,
+      currencyCode: acc.currencyCode || 'VND',
+      active: acc.active !== false,
+      includeInNetWorth: acc.includeInNetWorth !== false,
+      isLocalOnly: true,
+      metadata: acc.metadata || {}
+    };
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('accounts', 'readwrite');
+      const store = tx.objectStore('accounts');
+      const req = store.put(item);
+      req.onsuccess = () => resolve(item);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  public async updateAccount(id: string, updates: Partial<LocalAccount>): Promise<LocalAccount | null> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('accounts', 'readwrite');
+      const store = tx.objectStore('accounts');
+      const getReq = store.get(id);
+
+      getReq.onsuccess = () => {
+        const existing = getReq.result as LocalAccount | undefined;
+        if (!existing) {
+          resolve(null);
+          return;
+        }
+        const updated = { ...existing, ...updates, id };
+        store.put(updated);
+        resolve(updated);
+      };
       getReq.onerror = () => reject(getReq.error);
+    });
+  }
+
+  public async deleteAccount(id: string): Promise<boolean> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('accounts', 'readwrite');
+      const store = tx.objectStore('accounts');
+      const req = store.delete(id);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // CATEGORIES & TAGS CRUD
+  // --------------------------------------------------------------------------
+
+  public async getCategories(): Promise<LocalCategory[]> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('categories', 'readonly');
+      const store = tx.objectStore('categories');
+      const req = store.getAll();
+
+      req.onsuccess = () => {
+        const list = req.result || [];
+        resolve(list.length > 0 ? list : DEFAULT_CATEGORIES);
+      };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  public async saveCategories(categories: LocalCategory[]): Promise<void> {
+    if (!categories || categories.length === 0) return;
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('categories', 'readwrite');
+      const store = tx.objectStore('categories');
+      categories.forEach((c) => store.put(c));
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  public async addCategory(cat: Partial<LocalCategory>): Promise<LocalCategory> {
+    const db = await this.openDB();
+    const item: LocalCategory = {
+      id: cat.id || `loc-cat-${Date.now()}`,
+      name: cat.name || 'Danh mục mới',
+      color: cat.color || '#171717',
+      icon: cat.icon || 'Utensils',
+      parentId: cat.parentId || null,
+      type: cat.type || 'Expense',
+      isLocalOnly: true
+    };
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('categories', 'readwrite');
+      const store = tx.objectStore('categories');
+      const req = store.put(item);
+      req.onsuccess = () => resolve(item);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  public async updateCategory(id: string, updates: Partial<LocalCategory>): Promise<LocalCategory | null> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('categories', 'readwrite');
+      const store = tx.objectStore('categories');
+      const getReq = store.get(id);
+
+      getReq.onsuccess = () => {
+        const existing = getReq.result as LocalCategory | undefined;
+        if (!existing) {
+          resolve(null);
+          return;
+        }
+        const updated = { ...existing, ...updates, id };
+        store.put(updated);
+        resolve(updated);
+      };
+      getReq.onerror = () => reject(getReq.error);
+    });
+  }
+
+  public async deleteCategory(id: string): Promise<boolean> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('categories', 'readwrite');
+      const store = tx.objectStore('categories');
+      const req = store.delete(id);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  public async getTags(): Promise<LocalTag[]> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('tags', 'readonly');
+      const store = tx.objectStore('tags');
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  public async addTag(tag: Partial<LocalTag>): Promise<LocalTag> {
+    const db = await this.openDB();
+    const item: LocalTag = {
+      id: tag.id || `loc-tag-${Date.now()}`,
+      tag: tag.tag || 'tag',
+      description: tag.description || null,
+      dateFrom: tag.dateFrom || null,
+      dateTo: tag.dateTo || null,
+      transactionCount: 0
+    };
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('tags', 'readwrite');
+      const store = tx.objectStore('tags');
+      store.put(item);
+      tx.oncomplete = () => resolve(item);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  public async deleteTag(id: string): Promise<boolean> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('tags', 'readwrite');
+      const store = tx.objectStore('tags');
+      const req = store.delete(id);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // BUDGETS & PIGGY BANKS
+  // --------------------------------------------------------------------------
+
+  public async getBudgets(): Promise<LocalBudget[]> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('budgets', 'readonly');
+      const store = tx.objectStore('budgets');
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  public async addBudget(budget: Partial<LocalBudget>): Promise<LocalBudget> {
+    const db = await this.openDB();
+    const item: LocalBudget = {
+      id: budget.id || `loc-bg-${Date.now()}`,
+      name: budget.name || 'Ngân sách',
+      amount: budget.amount || 0,
+      period: budget.period || 'Monthly',
+      categoryId: budget.categoryId || null,
+      categoryName: budget.categoryName || null,
+      active: true,
+      spent: 0
+    };
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('budgets', 'readwrite');
+      const store = tx.objectStore('budgets');
+      store.put(item);
+      tx.oncomplete = () => resolve(item);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  public async deleteBudget(id: string): Promise<boolean> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('budgets', 'readwrite');
+      const store = tx.objectStore('budgets');
+      const req = store.delete(id);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  public async getPiggyBanks(): Promise<LocalPiggyBank[]> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('piggy_banks', 'readonly');
+      const store = tx.objectStore('piggy_banks');
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  public async addPiggyBank(piggy: Partial<LocalPiggyBank>): Promise<LocalPiggyBank> {
+    const db = await this.openDB();
+    const item: LocalPiggyBank = {
+      id: piggy.id || `loc-pg-${Date.now()}`,
+      name: piggy.name || 'Mục tiêu tiết kiệm',
+      targetAmount: piggy.targetAmount || 0,
+      currentAmount: piggy.currentAmount || 0,
+      targetDate: piggy.targetDate || null,
+      accountId: piggy.accountId || null,
+      notes: piggy.notes || null
+    };
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('piggy_banks', 'readwrite');
+      const store = tx.objectStore('piggy_banks');
+      store.put(item);
+      tx.oncomplete = () => resolve(item);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  public async updatePiggyAmount(id: string, delta: number): Promise<LocalPiggyBank | null> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('piggy_banks', 'readwrite');
+      const store = tx.objectStore('piggy_banks');
+      const getReq = store.get(id);
+
+      getReq.onsuccess = () => {
+        const item = getReq.result as LocalPiggyBank | undefined;
+        if (!item) {
+          resolve(null);
+          return;
+        }
+        item.currentAmount = Math.max(0, (item.currentAmount || 0) + delta);
+        store.put(item);
+        resolve(item);
+      };
+      getReq.onerror = () => reject(getReq.error);
+    });
+  }
+
+  public async deletePiggyBank(id: string): Promise<boolean> {
+    const db = await this.openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('piggy_banks', 'readwrite');
+      const store = tx.objectStore('piggy_banks');
+      const req = store.delete(id);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
     });
   }
 
@@ -363,58 +809,6 @@ class LocalDatabaseManager {
         }
       }
 
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  }
-
-  // --------------------------------------------------------------------------
-  // ACCOUNTS & CATEGORIES CACHING
-  // --------------------------------------------------------------------------
-
-  public async getAccounts(): Promise<LocalAccount[]> {
-    const db = await this.openDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction('accounts', 'readonly');
-      const store = tx.objectStore('accounts');
-      const req = store.getAll();
-
-      req.onsuccess = () => resolve(req.result || DEFAULT_ACCOUNTS);
-      req.onerror = () => reject(req.error);
-    });
-  }
-
-  public async saveAccounts(accounts: LocalAccount[]): Promise<void> {
-    if (!accounts || accounts.length === 0) return;
-    const db = await this.openDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction('accounts', 'readwrite');
-      const store = tx.objectStore('accounts');
-      accounts.forEach((a) => store.put(a));
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  }
-
-  public async getCategories(): Promise<LocalCategory[]> {
-    const db = await this.openDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction('categories', 'readonly');
-      const store = tx.objectStore('categories');
-      const req = store.getAll();
-
-      req.onsuccess = () => resolve(req.result || DEFAULT_CATEGORIES);
-      req.onerror = () => reject(req.error);
-    });
-  }
-
-  public async saveCategories(categories: LocalCategory[]): Promise<void> {
-    if (!categories || categories.length === 0) return;
-    const db = await this.openDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction('categories', 'readwrite');
-      const store = tx.objectStore('categories');
-      categories.forEach((c) => store.put(c));
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });

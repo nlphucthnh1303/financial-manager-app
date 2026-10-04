@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Sparkles, ArrowRight, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Sparkles, ArrowRight, Loader2, Smartphone, ShieldCheck } from 'lucide-react';
 import { FieldError } from '@/components/ui/field-error';
 import { AppLogo } from '@/components/brand/AppLogo';
 import { check, collectErrors, type FormErrors } from '@/lib/validation';
@@ -39,6 +39,17 @@ export const LoginPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEnterOfflineMode = () => {
+    localStorage.setItem('accessToken', 'offline-local-token');
+    localStorage.setItem('user', JSON.stringify({
+      id: 'local-mobile-user',
+      email: 'offline@financialmanager.local',
+      fullName: 'Người dùng Ngoại tuyến'
+    }));
+    toast.success('Đã vào Chế độ Ngoại tuyến (Offline-First)!');
+    navigate('/');
   };
 
   const fillDemoAccount = () => {
@@ -118,12 +129,21 @@ export const LoginPage: React.FC = () => {
               <span>{loading ? 'Đang xác thực…' : 'Đăng nhập'}</span>
             </button>
 
-            {/* Demo Account Button */}
-            <div className="pt-2">
+            {/* Offline Mode Button */}
+            <div className="pt-2 space-y-2">
+              <button
+                type="button"
+                onClick={handleEnterOfflineMode}
+                className="w-full py-2 px-3 rounded-md shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-xs font-medium text-[#171717] dark:text-[#ededed] flex items-center justify-center gap-1.5 hover:border-[#0070f3]"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-[#10b981]" />
+                <span>Sử dụng Ngoại tuyến trên Điện thoại (Offline Mode)</span>
+              </button>
+
               <button
                 type="button"
                 onClick={fillDemoAccount}
-                className="w-full py-2 px-3 rounded-md shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-xs font-medium text-[#171717] dark:text-[#ededed] flex items-center justify-center gap-1.5"
+                className="w-full py-2 px-3 rounded-md shadow-border-interactive bg-[#ffffff] dark:bg-[#0a0a0a] text-xs font-medium text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed] flex items-center justify-center gap-1.5"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#0070f3]" />
                 <span>Trải nghiệm nhanh với Tài khoản Demo</span>
@@ -198,55 +218,46 @@ export const RegisterPage: React.FC = () => {
         <div className="rounded-xl shadow-card p-6 bg-[#ffffff] dark:bg-[#0a0a0a]">
           <form onSubmit={handleRegister} noValidate className="space-y-3.5">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] block">
-                Họ và tên
-              </label>
-              <input 
-                placeholder="Nguyễn Văn An…" 
-                value={form.fullName} 
-                onChange={e => setField('fullName', e.target.value)} 
-                aria-invalid={!!errors.fullName} 
-                maxLength={100} 
-                className="w-full px-3 py-2 text-sm md:text-xs rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-input text-[#171717] dark:text-[#ededed] placeholder-[#888888] focus:outline-none transition-shadow"
+              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] block">Họ và tên *</label>
+              <input
+                placeholder="Nguyễn Văn A…"
+                value={form.fullName}
+                onChange={e => setField('fullName', e.target.value)}
+                aria-invalid={!!errors.fullName}
+                className="w-full px-3 py-2 text-xs rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-input text-[#171717] dark:text-[#ededed] placeholder-[#888888] focus:outline-none"
+                autoFocus
               />
               <FieldError message={errors.fullName} />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] block">
-                Địa chỉ Email
-              </label>
-              <input 
-                type="email" 
-                placeholder="name@example.com…" 
-                value={form.email} 
-                onChange={e => setField('email', e.target.value)} 
-                aria-invalid={!!errors.email} 
-                autoComplete="email" 
-                className="w-full px-3 py-2 text-sm md:text-xs rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-input text-[#171717] dark:text-[#ededed] placeholder-[#888888] focus:outline-none transition-shadow"
+              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] block">Địa chỉ Email *</label>
+              <input
+                type="email"
+                placeholder="name@example.com…"
+                value={form.email}
+                onChange={e => setField('email', e.target.value)}
+                aria-invalid={!!errors.email}
+                className="w-full px-3 py-2 text-xs rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-input text-[#171717] dark:text-[#ededed] placeholder-[#888888] focus:outline-none"
               />
               <FieldError message={errors.email} />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] block">
-                Mật khẩu
-              </label>
+              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] block">Mật khẩu (Ít nhất 6 ký tự gồm chữ và số) *</label>
               <div className="relative">
-                <input 
-                  type={showPassword ? 'text' : 'password'} 
-                  placeholder="••••••••…" 
-                  value={form.password} 
-                  onChange={e => setField('password', e.target.value)} 
-                  aria-invalid={!!errors.password} 
-                  autoComplete="new-password" 
-                  className="w-full px-3 py-2 pr-10 text-sm md:text-xs rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-input text-[#171717] dark:text-[#ededed] placeholder-[#888888] focus:outline-none transition-shadow"
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••…"
+                  value={form.password}
+                  onChange={e => setField('password', e.target.value)}
+                  aria-invalid={!!errors.password}
+                  className="w-full px-3 py-2 pr-10 text-xs rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-input text-[#171717] dark:text-[#ededed] placeholder-[#888888] focus:outline-none"
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(!showPassword)} 
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#171717] dark:hover:text-[#ededed]"
-                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -255,25 +266,22 @@ export const RegisterPage: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] block">
-                Xác nhận mật khẩu
-              </label>
-              <input 
-                type="password" 
-                placeholder="••••••••…" 
-                value={form.confirmPassword} 
-                onChange={e => setField('confirmPassword', e.target.value)} 
-                aria-invalid={!!errors.confirmPassword} 
-                autoComplete="new-password" 
-                className="w-full px-3 py-2 text-sm md:text-xs rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-input text-[#171717] dark:text-[#ededed] placeholder-[#888888] focus:outline-none transition-shadow"
+              <label className="text-xs font-medium text-[#171717] dark:text-[#ededed] block">Nhập lại mật khẩu *</label>
+              <input
+                type="password"
+                placeholder="••••••••…"
+                value={form.confirmPassword}
+                onChange={e => setField('confirmPassword', e.target.value)}
+                aria-invalid={!!errors.confirmPassword}
+                className="w-full px-3 py-2 text-xs rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-input text-[#171717] dark:text-[#ededed] placeholder-[#888888] focus:outline-none"
               />
               <FieldError message={errors.confirmPassword} />
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading}
-              className="w-full py-2 px-3 text-xs font-medium rounded-md bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] shadow-sm transition-colors duration-150 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-60"
+              className="w-full py-2 px-3 text-xs font-medium rounded-md bg-[#171717] hover:bg-[#333333] dark:bg-[#ededed] dark:hover:bg-[#ffffff] text-[#ffffff] dark:text-[#000000] shadow-sm transition-colors duration-150 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-60 mt-2"
             >
               {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>{loading ? 'Đang tạo tài khoản…' : 'Đăng ký ngay'}</span>

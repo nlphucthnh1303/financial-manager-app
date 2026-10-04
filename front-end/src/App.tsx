@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -17,9 +17,34 @@ import { DebtsPage } from '@/pages/debts/DebtsPage';
 import { FinancialCalendarPage } from '@/pages/calendar/FinancialCalendarPage';
 import { FrameworksPage } from '@/pages/frameworks/FrameworksPage';
 import { UtilitiesPage } from '@/pages/utilities/UtilitiesPage';
+import { localDb } from '@/lib/localDb';
+
+const isMobileOrCapacitor = () => {
+  return (
+    typeof window !== 'undefined' &&
+    ((window as any).Capacitor?.isNativePlatform() ||
+      window.location.protocol === 'capacitor:' ||
+      window.location.protocol === 'ionic:' ||
+      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent))
+  );
+};
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const token = localStorage.getItem('accessToken');
+  let token = localStorage.getItem('accessToken');
+  
+  // Auto-activate offline guest mode on mobile or when running in native app
+  if (!token && isMobileOrCapacitor()) {
+    token = 'offline-local-token';
+    localStorage.setItem('accessToken', token);
+    if (!localStorage.getItem('user')) {
+      localStorage.setItem('user', JSON.stringify({
+        id: 'local-mobile-user',
+        email: 'offline@financialmanager.local',
+        fullName: 'Người dùng Ngoại tuyến'
+      }));
+    }
+  }
+
   if (!token) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
@@ -27,6 +52,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const AppWithLayout: React.FC = () => {
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    // Pre-initialize Local IndexedDB engine
+    localDb.openDB().catch(() => {});
+  }, []);
 
   return (
     <AppLayout 

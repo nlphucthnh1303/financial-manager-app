@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { localDb, type LocalAccount } from '@/lib/localDb';
 import { formatCurrency } from '@/lib/utils';
 import { 
   Plus, 
   RefreshCw, 
   ArrowLeftRight, 
-  Pencil,
-  Trash2,
-  QrCode,
-  Copy,
-  Check,
-  ShieldCheck
+  Pencil, 
+  Trash2, 
+  QrCode, 
+  Copy, 
+  Check, 
+  ShieldCheck,
+  Building2,
+  Wallet,
+  Sparkles
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -18,15 +22,33 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { Button } from '@/components/ui/button';
 import { FieldError } from '@/components/ui/field-error';
 import { check, collectErrors, type FormErrors } from '@/lib/validation';
-import { VIETNAM_BANKS, numberToVietnameseWords, findBankByKeyword } from '@/lib/vietnam-banks';
+import { VIETNAM_BANKS, numberToVietnameseWords, findBankByKeyword, type VietnamBank } from '@/lib/vietnam-banks';
+import { BankSelector, BankLogoView } from '@/components/ui/bank-selector';
+import { IconPicker, IconRenderer } from '@/components/ui/icon-picker';
 import { VietQrModal } from '@/components/modals/VietQrModal';
 import { CreateTransactionModal } from '@/components/modals/CreateTransactionModal';
 import { toast } from 'sonner';
 
 const labelCls = 'text-xs font-medium text-[#171717] dark:text-[#ededed] mb-1.5 block';
 
-const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: () => void; onSuccess: () => void }> = ({ open, editing, onClose, onSuccess }) => {
-  const empty = { name: '', currencyId: '', openingBalance: '', includeInNetWorth: true, bankName: 'Vietcombank', accountNumber: '', notes: '' };
+const AccountFormModal: React.FC<{
+  open: boolean;
+  editing: any | null;
+  onClose: () => void;
+  onSuccess: () => void;
+}> = ({ open, editing, onClose, onSuccess }) => {
+  const empty = {
+    name: '',
+    currencyId: '',
+    openingBalance: '',
+    includeInNetWorth: true,
+    bankName: 'Vietcombank',
+    bankCode: 'VCB',
+    accountNumber: '',
+    icon: 'Landmark',
+    color: '#005a3c',
+    notes: ''
+  };
   const [form, setForm] = useState(empty);
   const [errors, setErrors] = useState<FormErrors>({});
   const [currencies, setCurrencies] = useState<any[]>([]);
@@ -35,14 +57,21 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
   useEffect(() => {
     if (!open) return;
     setErrors({});
-    setForm(editing ? {
-      ...empty,
-      name: editing.name,
-      includeInNetWorth: editing.includeInNetWorth,
-      bankName: editing.metadata?.bank_name || 'Vietcombank',
-      accountNumber: editing.metadata?.account_number || '',
-    } : empty);
-    if (!editing) {
+    if (editing) {
+      const matched = findBankByKeyword(editing.metadata?.bank_name || editing.name);
+      setForm({
+        ...empty,
+        name: editing.name,
+        includeInNetWorth: editing.includeInNetWorth !== false,
+        bankName: editing.metadata?.bank_name || matched?.shortName || 'Vietcombank',
+        bankCode: editing.metadata?.bank_code || matched?.code || 'VCB',
+        accountNumber: editing.metadata?.account_number || '',
+        icon: editing.metadata?.icon || (matched?.type === 'wallet' ? 'Wallet' : 'Landmark'),
+        color: editing.metadata?.color || matched?.color || '#005a3c',
+        notes: editing.notes || ''
+      });
+    } else {
+      setForm(empty);
       api.get('/currencies').then((res: any) => {
         const list = res.data || [];
         setCurrencies(list);
@@ -54,15 +83,17 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
 
   const set = (field: keyof typeof empty, value: any) => setForm(f => ({ ...f, [field]: value }));
 
-  const handleSelectPresetBank = (bankCode: string) => {
-    const bank = VIETNAM_BANKS.find(b => b.code === bankCode);
-    if (bank) {
-      setForm(f => ({
-        ...f,
-        bankName: bank.shortName,
-        name: f.name ? f.name : `Tài khoản ${bank.shortName}`
-      }));
-    }
+  const handleSelectBank = (bank: VietnamBank) => {
+    setForm(f => ({
+      ...f,
+      bankName: bank.shortName,
+      bankCode: bank.code,
+      color: bank.color || f.color,
+      icon: bank.type === 'wallet' ? 'Wallet' : bank.type === 'digital' ? 'Smartphone' : 'Landmark',
+      name: f.name.trim() === '' || f.name.startsWith('Tài khoản') || f.name.startsWith('Ví')
+        ? (bank.type === 'wallet' ? bank.shortName : `Tài khoản ${bank.shortName}`)
+        : f.name
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,27 +107,76 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
     setErrors(found);
     if (Object.keys(found).length) return;
 
+    const common = { 
+      name: form.name.trim(), 
+      includeInNetWorth: form.includeInNetWorth, 
+      bankName: form.bankName.trim(), 
+      accountNumber: form.accountNumber.trim(), 
+      notes: form.notes,
+      metadata: {
+        bank_name: form.bankName.trim(),
+        bank_code: form.bankCode,
+        account_number: form.accountNumber.trim(),
+        icon: form.icon,
+        color: form.color
+      }
+    };
+
     try {
       setLoading(true);
-      const common = { 
-        name: form.name.trim(), 
-        includeInNetWorth: form.includeInNetWorth, 
-        bankName: form.bankName.trim(), 
-        accountNumber: form.accountNumber.trim(), 
-        notes: form.notes 
-      };
       if (editing) {
-        await api.put(`/accounts/${editing.id}`, { ...common, active: editing.active });
+        try {
+          await api.put(`/accounts/${editing.id}`, { ...common, active: editing.active });
+        } catch {
+          // Offline fallback
+          await localDb.updateAccount(editing.id, {
+            name: common.name,
+            includeInNetWorth: common.includeInNetWorth,
+            metadata: common.metadata
+          });
+        }
         toast.success('Đã cập nhật thông tin tài khoản.');
       } else {
-        await api.post('/accounts', { ...common, currencyId: form.currencyId || null, openingBalance: Number(form.openingBalance) || 0 });
+        const openingNum = Number(form.openingBalance) || 0;
+        try {
+          const res: any = await api.post('/accounts', {
+            ...common,
+            currencyId: form.currencyId || null,
+            openingBalance: openingNum
+          });
+          if (res.data?.id) {
+            await localDb.saveAccounts([{
+              id: res.data.id,
+              name: common.name,
+              accountType: 'Asset',
+              currentBalance: openingNum,
+              currencyCode: 'VND',
+              active: true,
+              includeInNetWorth: common.includeInNetWorth,
+              metadata: common.metadata
+            }]);
+          }
+        } catch {
+          // Offline fallback
+          await localDb.addAccount({
+            name: common.name,
+            accountType: 'Asset',
+            currentBalance: openingNum,
+            currencyCode: 'VND',
+            active: true,
+            includeInNetWorth: common.includeInNetWorth,
+            metadata: common.metadata
+          });
+        }
         toast.success('Tạo tài khoản / ví mới thành công!');
       }
       onClose();
       onSuccess();
     } catch (err: any) {
       toast.error(err?.message || 'Không thể lưu tài khoản.');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const numOpening = Number(form.openingBalance) || 0;
@@ -105,38 +185,29 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto bg-[#ffffff] dark:bg-[#0a0a0a] shadow-dropdown border-0">
         <DialogHeader>
-          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">
-            {editing ? 'Sửa tài khoản' : 'Thêm tài khoản / Ví ngân hàng'}
+          <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed] flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-[#0070f3]" />
+            {editing ? 'Sửa thông tin tài khoản' : 'Thêm tài khoản / Ví ngân hàng'}
           </DialogTitle>
           <DialogDescription className="text-xs text-[#888888]">
-            {editing ? 'Cập nhật thông tin hiển thị của tài khoản.' : 'Chọn ngân hàng hoặc ví điện tử Việt Nam để tạo nhanh.'}
+            {editing ? 'Cập nhật logo, ngân hàng và thông tin hiển thị.' : 'Chọn ngân hàng hoặc ví điện tử Việt Nam để tạo nhanh.'}
           </DialogDescription>
         </DialogHeader>
 
-        {!editing && (
-          <div>
-            <span className="text-[11px] text-[#888888] font-medium block mb-1.5">Ngân hàng & Ví gợi ý:</span>
-            <div className="flex flex-wrap gap-1.5">
-              {VIETNAM_BANKS.slice(0, 8).map(b => (
-                <button
-                  key={b.id}
-                  type="button"
-                  onClick={() => handleSelectPresetBank(b.code)}
-                  className="px-2 py-1 rounded text-[11px] font-medium shadow-border bg-[#fafafa] dark:bg-[#111111] text-[#171717] dark:text-[#ededed] flex items-center gap-1 hover:bg-[#f0f0f0] transition-colors"
-                >
-                  <span>{b.logo}</span>
-                  <span>{b.shortName}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Bank & E-Wallet Picker Selector */}
+        <div className="space-y-1.5 pt-1">
+          <label className={labelCls}>Chọn Ngân hàng / Ví điện tử</label>
+          <BankSelector
+            selectedCode={form.bankCode || form.bankName}
+            onSelect={handleSelectBank}
+          />
+        </div>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-3.5 py-1">
           <div>
             <label className={labelCls}>Tên ví / Tài khoản hiển thị *</label>
             <Input 
-              placeholder="Vietcombank Digi, Ví MoMo…" 
+              placeholder="Vietcombank Digibank, Ví MoMo…" 
               value={form.name} 
               onChange={e => set('name', e.target.value)} 
               aria-invalid={!!errors.name} 
@@ -161,7 +232,7 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
             </div>
 
             <div>
-              <label className={labelCls}>Số tài khoản</label>
+              <label className={labelCls}>Số tài khoản (STK)</label>
               <Input 
                 placeholder="0123456789…" 
                 inputMode="numeric" 
@@ -173,6 +244,19 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
               />
               <FieldError message={errors.accountNumber} />
             </div>
+          </div>
+
+          {/* Icon & Color Picker */}
+          <div>
+            <label className={labelCls}>Biểu tượng & Màu sắc nhận diện</label>
+            <IconPicker
+              value={form.icon}
+              color={form.color}
+              onChange={(icon, color) => {
+                set('icon', icon);
+                if (color) set('color', color);
+              }}
+            />
           </div>
 
           {!editing && (
@@ -202,7 +286,7 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
               onChange={e => set('includeInNetWorth', e.target.checked)}
               className="w-4 h-4 rounded border-zinc-300 text-black focus:ring-0"
             />
-            <label htmlFor="netWorth" className="text-xs text-[#171717] dark:text-[#ededed]">
+            <label htmlFor="netWorth" className="text-xs text-[#171717] dark:text-[#ededed] cursor-pointer">
               Tính vào Tổng tài sản ròng (Net Worth)
             </label>
           </div>
@@ -211,7 +295,7 @@ const AccountFormModal: React.FC<{ open: boolean; editing: any | null; onClose: 
             <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs shadow-border whitespace-nowrap min-h-[36px] px-4">
               Hủy
             </Button>
-            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black whitespace-nowrap min-h-[36px] px-4">
+            <Button type="submit" disabled={loading} size="sm" className="text-xs bg-[#171717] dark:bg-[#ededed] text-white dark:text-black whitespace-nowrap min-h-[36px] px-4 font-medium">
               {loading ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Tạo tài khoản'}
             </Button>
           </DialogFooter>
@@ -235,9 +319,25 @@ export const AccountsPage: React.FC = () => {
     try {
       setLoading(true);
       const res: any = await api.get('/accounts?type=Asset');
-      setAccounts(res.data || []);
+      const list = res.data || [];
+      setAccounts(list);
+      // Cache in LocalDB for offline use
+      if (list.length > 0) {
+        await localDb.saveAccounts(list.map((a: any) => ({
+          id: a.id,
+          name: a.name,
+          accountType: a.accountType || 'Asset',
+          currentBalance: a.currentBalance || 0,
+          currencyCode: a.currencyCode || 'VND',
+          active: a.active !== false,
+          includeInNetWorth: a.includeInNetWorth !== false,
+          metadata: a.metadata || {}
+        })));
+      }
     } catch {
-      toast.error('Không thể tải danh sách tài khoản.');
+      // Offline fallback: load from Local DB!
+      const offlineList = await localDb.getAccounts();
+      setAccounts(offlineList);
     } finally {
       setLoading(false);
     }
@@ -249,11 +349,14 @@ export const AccountsPage: React.FC = () => {
     const acc = pendingDelete;
     if (!acc) return;
     try {
-      await api.delete(`/accounts/${acc.id}`);
+      await api.delete(`/accounts/${acc.id}`).catch(() => {});
+      await localDb.deleteAccount(acc.id);
       toast.success(`Đã xóa "${acc.name}".`);
       setPendingDelete(null);
       loadAccounts();
-    } catch (err: any) { toast.error(err?.message || 'Không thể xóa tài khoản.'); }
+    } catch (err: any) { 
+      toast.error(err?.message || 'Không thể xóa tài khoản.'); 
+    }
   };
 
   const handleCopyAccNumber = (id: string, num: string) => {
@@ -266,8 +369,8 @@ export const AccountsPage: React.FC = () => {
   const openCreate = () => { setEditing(null); setShowAddModal(true); };
   const openEdit = (acc: any) => { setEditing(acc); setShowAddModal(true); };
 
-  const totalNetWorth = accounts.filter(a => a.active && a.includeInNetWorth).reduce((sum, acc) => sum + (acc.currentBalance || 0), 0);
-  const activeCount = accounts.filter(a => a.active).length;
+  const totalNetWorth = accounts.filter(a => a.active && a.includeInNetWorth !== false).reduce((sum, acc) => sum + (acc.currentBalance || 0), 0);
+  const activeCount = accounts.filter(a => a.active !== false).length;
 
   return (
     <div className="space-y-6">
@@ -278,7 +381,7 @@ export const AccountsPage: React.FC = () => {
             Tài khoản & Thẻ ngân hàng
           </h1>
           <p className="text-xs text-[#666666] dark:text-[#888888] mt-0.5">
-            Quản lý số dư thanh khoản và tạo mã VietQR Napas247 từng thẻ
+            Quản lý số dư, logo ngân hàng Việt Nam và tạo mã VietQR Napas247 từng thẻ
           </p>
         </div>
 
@@ -334,7 +437,9 @@ export const AccountsPage: React.FC = () => {
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(3)].map((_, i) => <div key={i} className="h-36 rounded-lg shadow-border bg-[#fafafa] dark:bg-[#0a0a0a]" />)}
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-36 rounded-lg shadow-border bg-[#fafafa] dark:bg-[#0a0a0a]" />
+            ))}
           </div>
         ) : accounts.length === 0 ? (
           <div className="p-12 shadow-card rounded-lg bg-[#ffffff] dark:bg-[#0a0a0a] text-center space-y-3">
@@ -346,21 +451,29 @@ export const AccountsPage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {accounts.map(acc => {
-              const matchedBank = findBankByKeyword(acc.metadata?.bank_name || acc.name);
+              const matchedBank = findBankByKeyword(acc.metadata?.bank_code || acc.metadata?.bank_name || acc.name);
               const bankName = acc.metadata?.bank_name || matchedBank?.shortName || 'Ví thanh toán';
               const accNum = acc.metadata?.account_number;
+              const cardColor = acc.metadata?.color || matchedBank?.color || '#171717';
 
               return (
                 <div
                   key={acc.id}
-                  className={`rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a] p-4 flex flex-col justify-between hover:shadow-card-hover transition-shadow ${acc.active ? '' : 'opacity-60'}`}
+                  className={`rounded-lg shadow-card bg-[#ffffff] dark:bg-[#0a0a0a] p-4 flex flex-col justify-between hover:shadow-card-hover transition-shadow ${acc.active !== false ? '' : 'opacity-60'}`}
                 >
                   <div>
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        <div className="w-8 h-8 rounded-md bg-[#fafafa] dark:bg-[#111111] shadow-border flex items-center justify-center text-sm shrink-0">
-                          {matchedBank?.logo || '💳'}
-                        </div>
+                        {matchedBank ? (
+                          <BankLogoView bank={matchedBank} size="md" />
+                        ) : (
+                          <div 
+                            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
+                            style={{ backgroundColor: `${cardColor}20`, color: cardColor }}
+                          >
+                            <IconRenderer name={acc.metadata?.icon || 'Wallet'} color={cardColor} size={16} className="w-4 h-4" />
+                          </div>
+                        )}
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold text-xs text-[#171717] dark:text-[#ededed] truncate">{acc.name}</h3>
                           <span className="text-[11px] text-[#888888] block truncate">
@@ -392,17 +505,15 @@ export const AccountsPage: React.FC = () => {
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
-                        {acc.active && (
-                          <button 
-                            type="button" 
-                            onClick={() => setPendingDelete(acc)} 
-                            className="p-1 text-[#888888] hover:text-[#ff5b4f] transition-colors rounded" 
-                            title="Xóa tài khoản"
-                            aria-label="Xóa tài khoản"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
+                        <button 
+                          type="button" 
+                          onClick={() => setPendingDelete(acc)} 
+                          className="p-1 text-[#888888] hover:text-[#ff5b4f] transition-colors rounded" 
+                          title="Xóa tài khoản"
+                          aria-label="Xóa tài khoản"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
 
@@ -456,7 +567,7 @@ export const AccountsPage: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-[#171717] dark:text-[#ededed]">Xóa tài khoản</DialogTitle>
             <DialogDescription className="text-xs text-[#888888]">
-              Xóa "{pendingDelete?.name}"? Tài khoản sẽ bị ẩn khỏi danh sách, giao dịch cũ vẫn được lưu trong sổ cái.
+              Xóa "{pendingDelete?.name}"? Tài khoản sẽ bị xóa khỏi danh sách, các giao dịch cũ vẫn được lưu.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

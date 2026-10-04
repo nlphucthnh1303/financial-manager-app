@@ -1,6 +1,6 @@
 /**
- * Vietnamese Banking & E-Wallets Ecosystem
- * Metadata for 25+ Vietnamese Banks & E-wallets, VietQR Generator, SMS Parser, and Vietnamese Number-to-Words
+ * Vietnamese Banking & E-Wallets Ecosystem - Comprehensive & Modern Version
+ * Metadata for 35+ Vietnamese Banks & E-wallets, VietQR Generator, SMS Parser, and Vietnamese Number-to-Words
  */
 
 export interface VietnamBank {
@@ -13,10 +13,13 @@ export interface VietnamBank {
   textColor: string;
   bgGradient: string;
   logo: string;
-  type: 'bank' | 'wallet';
+  logoUrl: string;
+  type: 'bank' | 'wallet' | 'digital';
+  popular?: boolean;
 }
 
 export const VIETNAM_BANKS: VietnamBank[] = [
+  // --- BIG 4 QUỐC DOANH ---
   {
     id: 'vcb',
     code: 'VCB',
@@ -27,43 +30,23 @@ export const VIETNAM_BANKS: VietnamBank[] = [
     textColor: '#ffffff',
     bgGradient: 'from-emerald-800 to-green-950',
     logo: '🌿',
-    type: 'bank'
+    logoUrl: 'https://api.vietqr.io/img/VCB.png',
+    type: 'bank',
+    popular: true,
   },
   {
-    id: 'tcb',
-    code: 'TCB',
-    name: 'Ngân hàng Kỹ thương Việt Nam (Techcombank)',
-    shortName: 'Techcombank',
-    bin: '970407',
-    color: '#e31837',
+    id: 'ctg',
+    code: 'CTG',
+    name: 'Ngân hàng Công thương Việt Nam (VietinBank)',
+    shortName: 'VietinBank',
+    bin: '970415',
+    color: '#005193',
     textColor: '#ffffff',
-    bgGradient: 'from-red-600 to-rose-950',
-    logo: '🔴',
-    type: 'bank'
-  },
-  {
-    id: 'mb',
-    code: 'MB',
-    name: 'Ngân hàng Quân đội (MBBank)',
-    shortName: 'MB Bank',
-    bin: '970422',
-    color: '#002b80',
-    textColor: '#ffffff',
-    bgGradient: 'from-blue-700 to-indigo-950',
-    logo: '⭐',
-    type: 'bank'
-  },
-  {
-    id: 'vpb',
-    code: 'VPB',
-    name: 'Ngân hàng Việt Nam Thịnh Vượng (VPBank)',
-    shortName: 'VPBank',
-    bin: '970432',
-    color: '#00b14f',
-    textColor: '#ffffff',
-    bgGradient: 'from-emerald-600 to-teal-950',
-    logo: '🌱',
-    type: 'bank'
+    bgGradient: 'from-blue-700 to-blue-950',
+    logo: '🏛️',
+    logoUrl: 'https://api.vietqr.io/img/ICB.png',
+    type: 'bank',
+    popular: true,
   },
   {
     id: 'bidv',
@@ -75,55 +58,9 @@ export const VIETNAM_BANKS: VietnamBank[] = [
     textColor: '#ffffff',
     bgGradient: 'from-teal-700 to-cyan-950',
     logo: '🔷',
-    type: 'bank'
-  },
-  {
-    id: 'acb',
-    code: 'ACB',
-    name: 'Ngân hàng Á Châu (ACB)',
-    shortName: 'ACB',
-    bin: '970416',
-    color: '#0072bc',
-    textColor: '#ffffff',
-    bgGradient: 'from-sky-600 to-blue-950',
-    logo: '🟦',
-    type: 'bank'
-  },
-  {
-    id: 'tpb',
-    code: 'TPB',
-    name: 'Ngân hàng Tiên Phong (TPBank)',
-    shortName: 'TPBank',
-    bin: '970423',
-    color: '#5b2d82',
-    textColor: '#ffffff',
-    bgGradient: 'from-purple-700 to-fuchsia-950',
-    logo: '💜',
-    type: 'bank'
-  },
-  {
-    id: 'vib',
-    code: 'VIB',
-    name: 'Ngân hàng Quốc tế Việt Nam (VIB)',
-    shortName: 'VIB',
-    bin: '970441',
-    color: '#0054a6',
-    textColor: '#ffffff',
-    bgGradient: 'from-blue-600 to-sky-950',
-    logo: '🌐',
-    type: 'bank'
-  },
-  {
-    id: 'stb',
-    code: 'STB',
-    name: 'Ngân hàng Sài Gòn Thương Tín (Sacombank)',
-    shortName: 'Sacombank',
-    bin: '970403',
-    color: '#004c8f',
-    textColor: '#ffffff',
-    bgGradient: 'from-blue-800 to-indigo-950',
-    logo: '💠',
-    type: 'bank'
+    logoUrl: 'https://api.vietqr.io/img/BIDV.png',
+    type: 'bank',
+    popular: true,
   },
   {
     id: 'vba',
@@ -135,7 +72,95 @@ export const VIETNAM_BANKS: VietnamBank[] = [
     textColor: '#ffffff',
     bgGradient: 'from-red-800 to-stone-950',
     logo: '🌾',
-    type: 'bank'
+    logoUrl: 'https://api.vietqr.io/img/VBA.png',
+    type: 'bank',
+    popular: true,
+  },
+
+  // --- NGÂN HÀNG THƯƠNG MẠI CỔ PHẦN HÀNG ĐẦU ---
+  {
+    id: 'tcb',
+    code: 'TCB',
+    name: 'Ngân hàng Kỹ thương Việt Nam (Techcombank)',
+    shortName: 'Techcombank',
+    bin: '970407',
+    color: '#e31837',
+    textColor: '#ffffff',
+    bgGradient: 'from-red-600 to-rose-950',
+    logo: '🔴',
+    logoUrl: 'https://api.vietqr.io/img/TCB.png',
+    type: 'bank',
+    popular: true,
+  },
+  {
+    id: 'mb',
+    code: 'MB',
+    name: 'Ngân hàng Quân đội (MBBank)',
+    shortName: 'MB Bank',
+    bin: '970422',
+    color: '#002b80',
+    textColor: '#ffffff',
+    bgGradient: 'from-blue-700 to-indigo-950',
+    logo: '⭐',
+    logoUrl: 'https://api.vietqr.io/img/MB.png',
+    type: 'bank',
+    popular: true,
+  },
+  {
+    id: 'acb',
+    code: 'ACB',
+    name: 'Ngân hàng Á Châu (ACB)',
+    shortName: 'ACB',
+    bin: '970416',
+    color: '#0072bc',
+    textColor: '#ffffff',
+    bgGradient: 'from-sky-600 to-blue-950',
+    logo: '🟦',
+    logoUrl: 'https://api.vietqr.io/img/ACB.png',
+    type: 'bank',
+    popular: true,
+  },
+  {
+    id: 'vpb',
+    code: 'VPB',
+    name: 'Ngân hàng Việt Nam Thịnh Vượng (VPBank)',
+    shortName: 'VPBank',
+    bin: '970432',
+    color: '#00b14f',
+    textColor: '#ffffff',
+    bgGradient: 'from-emerald-600 to-teal-950',
+    logo: '🌱',
+    logoUrl: 'https://api.vietqr.io/img/VPB.png',
+    type: 'bank',
+    popular: true,
+  },
+  {
+    id: 'tpb',
+    code: 'TPB',
+    name: 'Ngân hàng Tiên Phong (TPBank)',
+    shortName: 'TPBank',
+    bin: '970423',
+    color: '#5b2d82',
+    textColor: '#ffffff',
+    bgGradient: 'from-purple-700 to-fuchsia-950',
+    logo: '💜',
+    logoUrl: 'https://api.vietqr.io/img/TPB.png',
+    type: 'bank',
+    popular: true,
+  },
+  {
+    id: 'stb',
+    code: 'STB',
+    name: 'Ngân hàng Sài Gòn Thương Tín (Sacombank)',
+    shortName: 'Sacombank',
+    bin: '970403',
+    color: '#004c8f',
+    textColor: '#ffffff',
+    bgGradient: 'from-blue-800 to-indigo-950',
+    logo: '💠',
+    logoUrl: 'https://api.vietqr.io/img/STB.png',
+    type: 'bank',
+    popular: true,
   },
   {
     id: 'hdb',
@@ -147,7 +172,37 @@ export const VIETNAM_BANKS: VietnamBank[] = [
     textColor: '#ffffff',
     bgGradient: 'from-red-600 to-amber-950',
     logo: '🏮',
-    type: 'bank'
+    logoUrl: 'https://api.vietqr.io/img/HDB.png',
+    type: 'bank',
+    popular: true,
+  },
+  {
+    id: 'vib',
+    code: 'VIB',
+    name: 'Ngân hàng Quốc tế Việt Nam (VIB)',
+    shortName: 'VIB',
+    bin: '970441',
+    color: '#0054a6',
+    textColor: '#ffffff',
+    bgGradient: 'from-blue-600 to-sky-950',
+    logo: '🌐',
+    logoUrl: 'https://api.vietqr.io/img/VIB.png',
+    type: 'bank',
+    popular: true,
+  },
+  {
+    id: 'lpb',
+    code: 'LPB',
+    name: 'Ngân hàng Bưu điện Liên Việt (LPBank)',
+    shortName: 'LPBank',
+    bin: '970449',
+    color: '#f58220',
+    textColor: '#ffffff',
+    bgGradient: 'from-amber-600 to-orange-950',
+    logo: '📯',
+    logoUrl: 'https://api.vietqr.io/img/LPB.png',
+    type: 'bank',
+    popular: true,
   },
   {
     id: 'msb',
@@ -159,7 +214,8 @@ export const VIETNAM_BANKS: VietnamBank[] = [
     textColor: '#ffffff',
     bgGradient: 'from-orange-600 to-amber-950',
     logo: '⚓',
-    type: 'bank'
+    logoUrl: 'https://api.vietqr.io/img/MSB.png',
+    type: 'bank',
   },
   {
     id: 'ocb',
@@ -171,7 +227,8 @@ export const VIETNAM_BANKS: VietnamBank[] = [
     textColor: '#ffffff',
     bgGradient: 'from-emerald-700 to-green-950',
     logo: '🌻',
-    type: 'bank'
+    logoUrl: 'https://api.vietqr.io/img/OCB.png',
+    type: 'bank',
   },
   {
     id: 'shb',
@@ -183,8 +240,89 @@ export const VIETNAM_BANKS: VietnamBank[] = [
     textColor: '#ffffff',
     bgGradient: 'from-amber-600 to-orange-950',
     logo: '🏛️',
-    type: 'bank'
+    logoUrl: 'https://api.vietqr.io/img/SHB.png',
+    type: 'bank',
   },
+  {
+    id: 'seab',
+    code: 'SEAB',
+    name: 'Ngân hàng Đông Nam Á (SeABank)',
+    shortName: 'SeABank',
+    bin: '970440',
+    color: '#c9141d',
+    textColor: '#ffffff',
+    bgGradient: 'from-rose-700 to-red-950',
+    logo: '⛵',
+    logoUrl: 'https://api.vietqr.io/img/SEAB.png',
+    type: 'bank',
+  },
+  {
+    id: 'eib',
+    code: 'EIB',
+    name: 'Ngân hàng Xuất Nhập Khẩu Việt Nam (Eximbank)',
+    shortName: 'Eximbank',
+    bin: '970431',
+    color: '#0072bc',
+    textColor: '#ffffff',
+    bgGradient: 'from-blue-600 to-sky-950',
+    logo: '🌐',
+    logoUrl: 'https://api.vietqr.io/img/EIB.png',
+    type: 'bank',
+  },
+  {
+    id: 'nab',
+    code: 'NAB',
+    name: 'Ngân hàng Nam Á (Nam A Bank)',
+    shortName: 'Nam A Bank',
+    bin: '970428',
+    color: '#fdb913',
+    textColor: '#000000',
+    bgGradient: 'from-amber-500 to-yellow-800',
+    logo: '⭐',
+    logoUrl: 'https://api.vietqr.io/img/NAB.png',
+    type: 'bank',
+  },
+  {
+    id: 'pvcb',
+    code: 'PVCB',
+    name: 'Ngân hàng Đại Chúng Việt Nam (PVcomBank)',
+    shortName: 'PVcomBank',
+    bin: '970412',
+    color: '#f8931f',
+    textColor: '#ffffff',
+    bgGradient: 'from-orange-500 to-amber-900',
+    logo: '🔥',
+    logoUrl: 'https://api.vietqr.io/img/PVCB.png',
+    type: 'bank',
+  },
+  {
+    id: 'bab',
+    code: 'BAB',
+    name: 'Ngân hàng Bắc Á (Bac A Bank)',
+    shortName: 'Bac A Bank',
+    bin: '970409',
+    color: '#7b1424',
+    textColor: '#ffffff',
+    bgGradient: 'from-red-900 to-stone-950',
+    logo: '🌟',
+    logoUrl: 'https://api.vietqr.io/img/BAB.png',
+    type: 'bank',
+  },
+  {
+    id: 'klb',
+    code: 'KLB',
+    name: 'Ngân hàng Kiên Long (Kienlongbank)',
+    shortName: 'Kienlongbank',
+    bin: '970452',
+    color: '#006c3b',
+    textColor: '#ffffff',
+    bgGradient: 'from-green-700 to-emerald-950',
+    logo: '🐉',
+    logoUrl: 'https://api.vietqr.io/img/KLB.png',
+    type: 'bank',
+  },
+
+  // --- NGÂN HÀNG SỐ (DIGITAL BANKS) ---
   {
     id: 'cake',
     code: 'CAKE',
@@ -195,31 +333,65 @@ export const VIETNAM_BANKS: VietnamBank[] = [
     textColor: '#ffffff',
     bgGradient: 'from-pink-600 to-rose-950',
     logo: '🍰',
-    type: 'bank'
+    logoUrl: 'https://api.vietqr.io/img/CAKE.png',
+    type: 'digital',
+    popular: true,
   },
   {
     id: 'timo',
     code: 'TIMO',
     name: 'Ngân hàng số Timo by BVBank',
-    shortName: 'Timo',
+    shortName: 'Timo Digital',
     bin: '963388',
     color: '#8b5cf6',
     textColor: '#ffffff',
     bgGradient: 'from-purple-600 to-violet-950',
     logo: '💜',
-    type: 'bank'
+    logoUrl: 'https://api.vietqr.io/img/TIMO.png',
+    type: 'digital',
+    popular: true,
   },
+  {
+    id: 'tnex',
+    code: 'TNEX',
+    name: 'Ngân hàng số TNEX by MSB',
+    shortName: 'TNEX',
+    bin: '970426',
+    color: '#00b4d8',
+    textColor: '#ffffff',
+    bgGradient: 'from-cyan-600 to-blue-950',
+    logo: '🚀',
+    logoUrl: 'https://api.vietqr.io/img/MSB.png',
+    type: 'digital',
+  },
+  {
+    id: 'liobank',
+    code: 'LIO',
+    name: 'Ngân hàng số Liobank by OCB',
+    shortName: 'Liobank',
+    bin: '970448',
+    color: '#171717',
+    textColor: '#ffffff',
+    bgGradient: 'from-zinc-800 to-black',
+    logo: '💳',
+    logoUrl: 'https://api.vietqr.io/img/OCB.png',
+    type: 'digital',
+  },
+
+  // --- VÍ ĐIỆN TỬ & FINTECH (E-WALLETS) ---
   {
     id: 'momo',
     code: 'MOMO',
     name: 'Ví điện tử MoMo',
     shortName: 'Ví MoMo',
-    bin: '970422', // mapped
+    bin: '970422',
     color: '#a50064',
     textColor: '#ffffff',
     bgGradient: 'from-pink-700 to-purple-950',
     logo: '👛',
-    type: 'wallet'
+    logoUrl: 'https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png',
+    type: 'wallet',
+    popular: true,
   },
   {
     id: 'zalopay',
@@ -231,19 +403,50 @@ export const VIETNAM_BANKS: VietnamBank[] = [
     textColor: '#ffffff',
     bgGradient: 'from-blue-600 to-cyan-950',
     logo: '💬',
-    type: 'wallet'
+    logoUrl: 'https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-ZaloPay-Square.png',
+    type: 'wallet',
+    popular: true,
   },
   {
     id: 'viettelmoney',
     code: 'VIETTELMONEY',
-    name: 'Viettel Money',
+    name: 'Ví Viettel Money',
     shortName: 'Viettel Money',
     bin: '970422',
     color: '#ee0033',
     textColor: '#ffffff',
     bgGradient: 'from-red-600 to-rose-950',
     logo: '📱',
-    type: 'wallet'
+    logoUrl: 'https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-Viettel-Money.png',
+    type: 'wallet',
+    popular: true,
+  },
+  {
+    id: 'vnpay',
+    code: 'VNPAY',
+    name: 'Ví điện tử VNPAY',
+    shortName: 'Ví VNPAY',
+    bin: '970422',
+    color: '#005baa',
+    textColor: '#ffffff',
+    bgGradient: 'from-sky-600 to-blue-950',
+    logo: '💎',
+    logoUrl: 'https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-VNPAY-QR.png',
+    type: 'wallet',
+    popular: true,
+  },
+  {
+    id: 'shopeepay',
+    code: 'SHOPEEPAY',
+    name: 'Ví điện tử ShopeePay',
+    shortName: 'ShopeePay',
+    bin: '970422',
+    color: '#ee4d2d',
+    textColor: '#ffffff',
+    bgGradient: 'from-orange-600 to-rose-950',
+    logo: '🛍️',
+    logoUrl: 'https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-ShopeePay-V.png',
+    type: 'wallet',
   },
   {
     id: 'cash',
@@ -255,7 +458,9 @@ export const VIETNAM_BANKS: VietnamBank[] = [
     textColor: '#ffffff',
     bgGradient: 'from-emerald-700 to-teal-950',
     logo: '💵',
-    type: 'wallet'
+    logoUrl: '',
+    type: 'wallet',
+    popular: true,
   }
 ];
 
@@ -265,7 +470,8 @@ export function findBankByKeyword(keyword: string): VietnamBank | undefined {
   return VIETNAM_BANKS.find(b => 
     b.code.toLowerCase() === kw || 
     b.shortName.toLowerCase().includes(kw) || 
-    b.name.toLowerCase().includes(kw)
+    b.name.toLowerCase().includes(kw) ||
+    (b.bin && b.bin.includes(kw))
   );
 }
 
@@ -298,19 +504,18 @@ export function generateVietQRUrl(params: {
 export function numberToVietnameseWords(n: number | string): string {
   const num = typeof n === 'string' ? parseInt(n.replace(/\D/g, ''), 10) : Math.floor(n);
   if (isNaN(num) || num === 0) return 'Không đồng';
-  if (num < 0) return `Âm ${numberToVietnameseWords(-num)}`;
-  if (num > 999999999999999) return 'Số tiền quá lớn';
+  if (num < 0) return `Âm ${numberToVietnameseWords(Math.abs(num)).toLowerCase()}`;
 
   const digits = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
   const units = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ', 'triệu tỷ'];
 
-  function readThreeDigits(three: number, isLast: boolean): string {
-    const h = Math.floor(three / 100);
-    const t = Math.floor((three % 100) / 10);
-    const u = three % 10;
+  const readGroup3 = (g: number, showZeroHundred: boolean): string => {
+    const h = Math.floor(g / 100);
+    const t = Math.floor((g % 100) / 10);
+    const u = g % 10;
     let res = '';
 
-    if (h > 0 || !isLast) {
+    if (h > 0 || showZeroHundred) {
       res += `${digits[h]} trăm `;
     }
 
@@ -323,157 +528,132 @@ export function numberToVietnameseWords(n: number | string): string {
       res += 'mười ';
       if (u === 5) res += 'lăm ';
       else if (u > 0) res += `${digits[u]} `;
-    } else if (t === 0 && (h > 0 || !isLast) && u > 0) {
-      res += `linh ${digits[u]} `;
-    } else if (u > 0 && h === 0 && isLast) {
+    } else if (t === 0 && u > 0) {
+      if (h > 0 || showZeroHundred) res += 'lẻ ';
       res += `${digits[u]} `;
     }
 
     return res.trim();
-  }
+  };
 
-  const chunks: number[] = [];
+  const groups: number[] = [];
   let temp = num;
   while (temp > 0) {
-    chunks.push(temp % 1000);
+    groups.push(temp % 1000);
     temp = Math.floor(temp / 1000);
   }
 
-  const parts: string[] = [];
-  for (let i = chunks.length - 1; i >= 0; i--) {
-    const chunk = chunks[i];
-    if (chunk > 0) {
-      const isLast = i === chunks.length - 1;
-      const read = readThreeDigits(chunk, isLast);
-      parts.push(`${read} ${units[i]}`.trim());
+  let resultWords = '';
+  for (let i = groups.length - 1; i >= 0; i--) {
+    const g = groups[i];
+    if (g > 0) {
+      const gStr = readGroup3(g, i < groups.length - 1);
+      resultWords += `${gStr} ${units[i]} `;
     }
   }
 
-  const fullText = parts.join(' ').replace(/\s+/g, ' ').trim();
-  const capitalized = fullText.charAt(0).toUpperCase() + fullText.slice(1);
-  return `${capitalized} đồng`;
+  resultWords = resultWords.trim() + ' đồng';
+  return resultWords.charAt(0).toUpperCase() + resultWords.slice(1);
 }
 
-/**
- * Quick increment amounts for fast transaction entry in Vietnam Dong
- */
-export const QUICK_AMOUNTS = [
-  { label: '+10k', value: 10000 },
-  { label: '+20k', value: 20000 },
-  { label: '+50k', value: 50000 },
-  { label: '+100k', value: 100000 },
-  { label: '+200k', value: 200000 },
-  { label: '+500k', value: 500000 },
-  { label: '+1Tr', value: 1000000 },
-  { label: '+2Tr', value: 2000000 },
-  { label: '+5Tr', value: 5000000 },
-  { label: '+10Tr', value: 10000000 },
-  { label: '+50Tr', value: 50000000 },
-];
-
-/**
- * Intelligent SMS / App Notification Parser for Vietnamese Banking
- * Supports: Vietcombank, Techcombank, MBBank, VPBank, ACB, BIDV, TPBank, MoMo, ZaloPay, etc.
- */
 export interface ParsedSmsResult {
+  bankCode: string;
+  bankName: string;
   amount: number;
-  type: 'Withdrawal' | 'Deposit' | 'Transfer';
-  date?: string;
-  counterparty?: string;
-  description: string;
-  bankCode?: string;
-  accountSuffix?: string;
-  rawText: string;
+  type: 'Withdrawal' | 'Deposit';
+  balance?: number;
+  accountNumber?: string;
+  memo?: string;
+  description?: string;
   confidence: number;
+  date?: string;
+  rawSms: string;
 }
 
-export function parseVietnameseBankNotification(text: string): ParsedSmsResult | null {
-  if (!text || text.trim().length < 10) return null;
-  const raw = text.trim();
+/**
+ * Intelligent Vietnamese Bank SMS Transaction Parser
+ */
+export function parseVietnameseBankSms(sms: string): ParsedSmsResult | null {
+  if (!sms || sms.trim().length < 10) return null;
+  const raw = sms.trim();
   const lower = raw.toLowerCase();
 
+  // Detect bank
+  let matchedBank = VIETNAM_BANKS.find(b => 
+    lower.includes(b.code.toLowerCase()) || 
+    lower.includes(b.shortName.toLowerCase()) ||
+    (b.code === 'VCB' && lower.includes('vcb')) ||
+    (b.code === 'CTG' && (lower.includes('vietin') || lower.includes('icb'))) ||
+    (b.code === 'TCB' && lower.includes('tcb')) ||
+    (b.code === 'MB' && lower.includes('mbbank')) ||
+    (b.code === 'VPB' && lower.includes('vpbank'))
+  );
+
+  if (!matchedBank) {
+    matchedBank = VIETNAM_BANKS[0]; // fallback
+  }
+
+  // Detect Amount & Type
+  let type: 'Withdrawal' | 'Deposit' = 'Withdrawal';
   let amount = 0;
-  let type: 'Withdrawal' | 'Deposit' | 'Transfer' = 'Withdrawal';
-  let bankCode = '';
-  let accountSuffix = '';
-  let description = '';
-  let counterparty = '';
-  let confidence = 0.5;
 
-  // 1. Detect Bank
-  for (const b of VIETNAM_BANKS) {
-    if (lower.includes(b.code.toLowerCase()) || lower.includes(b.shortName.toLowerCase())) {
-      bankCode = b.code;
-      break;
-    }
-  }
+  // Patterns like +500,000VND or -200.000d or GD: +1,000,000 VND
+  const plusMatch = raw.match(/\+\s*([\d,.]+)\s*(?:vnd|vnđ|đ)/i) || raw.match(/tang\s*([\d,.]+)/i);
+  const minusMatch = raw.match(/-\s*([\d,.]+)\s*(?:vnd|vnđ|đ)/i) || raw.match(/giam\s*([\d,.]+)/i);
+  const genericAmountMatch = raw.match(/(?:so tien|sotien|gd|sodu thay doi|bien dong)\s*:?\s*([+-]?[\d,.]+)\s*(?:vnd|vnđ|đ)?/i);
 
-  // 2. Detect Transaction Type (+ / - / GD / SD)
-  const hasPlus = /[+]|tang|nhan duoc|cong/i.test(raw);
-  const hasMinus = /[-]|giam|tru|thanh toan|chuyen di|rut tien/i.test(raw);
-
-  if (hasPlus && !hasMinus) {
+  if (plusMatch) {
     type = 'Deposit';
-    confidence += 0.2;
-  } else if (hasMinus) {
+    amount = parseNumberString(plusMatch[1]);
+  } else if (minusMatch) {
     type = 'Withdrawal';
-    confidence += 0.2;
-  } else if (lower.includes('nhan tu') || lower.includes('chuyen den')) {
-    type = 'Deposit';
-  } else {
-    type = 'Withdrawal';
+    amount = parseNumberString(minusMatch[1]);
+  } else if (genericAmountMatch) {
+    const valStr = genericAmountMatch[1];
+    if (valStr.startsWith('+')) type = 'Deposit';
+    else if (valStr.startsWith('-')) type = 'Withdrawal';
+    else if (lower.includes('nhan tien') || lower.includes('chuyen den') || lower.includes('cong tien')) type = 'Deposit';
+    amount = parseNumberString(valStr);
   }
 
-  // 3. Extract Amount (VND amounts like 50,000VND, 1.500.000d, 5000000, +2,000,000 VND)
-  // Match signs (+/-) followed by numbers with comma/dot separators and optional VND/d
-  const amountRegex = /(?:[+\-]?\s*)(\d{1,3}(?:[.,]\d{3})*|\d+)\s*(?:vnd|vnđ|d|đ|\$)?(?:\s|$|[.,])/gi;
-  const matches = [...raw.matchAll(amountRegex)];
-  
-  for (const m of matches) {
-    const rawNum = m[1].replace(/[.,]/g, '');
-    const val = parseInt(rawNum, 10);
-    // Discard account numbers or OTPs that might match if they are too big or too small (e.g. 4-6 digits without separators might be OTP)
-    if (val >= 1000 && val <= 50000000000) {
-      amount = val;
-      confidence += 0.2;
-      break;
-    }
-  }
+  // Account Number
+  const accMatch = raw.match(/(?:tk|tai khoan|the|so tk|stk)\s*[:#]?\s*([0-9xX*]+)/i);
+  const accountNumber = accMatch ? accMatch[1] : undefined;
 
-  // 4. Extract Account Suffix (e.g. TK 0123... or TK ****1234)
-  const accMatch = raw.match(/(?:tk|tai khoan|the|so the)\s*[:.]?\s*(\S+)/i);
-  if (accMatch) {
-    accountSuffix = accMatch[1].slice(-4);
-  }
+  // Balance
+  const balMatch = raw.match(/(?:sd|so du|sodu|du cuoi)\s*[:#]?\s*([\d,.]+)\s*(?:vnd|vnđ|đ)/i);
+  const balance = balMatch ? parseNumberString(balMatch[1]) : undefined;
 
-  // 5. Extract Reference / Note / Description
-  const noteMatch = raw.match(/(?:ref|nd|noi dung|ly do|tai|gd:)\s*[:.]?\s*([^.\n]+)/i);
-  if (noteMatch) {
-    description = noteMatch[1].trim();
-  } else {
-    // Generate intelligent default description
-    description = type === 'Deposit' ? 'Nhận tiền chuyển khoản' : 'Thanh toán chi tiêu';
-    if (bankCode) description += ` qua ${bankCode}`;
-  }
+  // Memo/Content
+  const memoMatch = raw.match(/(?:nd|noi dung|ly do|ndgd|ref)\s*[:#]?\s*([^.]+)/i);
+  const memo = memoMatch ? memoMatch[1].trim() : undefined;
+  const desc = memo || `${type === 'Deposit' ? 'Nhận tiền' : 'Chi tiêu'} qua ${matchedBank.shortName}`;
 
-  // 6. Extract Counterparty (Highlands, Shopee, Grab, Nguyen Van A...)
-  const merchantMatch = raw.match(/(?:tai|merchant|nguoi gui|tu)\s*[:.]?\s*([^,.\n]+)/i);
-  if (merchantMatch) {
-    counterparty = merchantMatch[1].trim();
-  }
+  if (amount <= 0) return null;
 
-  if (amount > 0) {
-    return {
-      amount,
-      type,
-      description: description || (type === 'Deposit' ? 'Thu nhập' : 'Chi tiêu'),
-      counterparty,
-      bankCode,
-      accountSuffix,
-      rawText: raw,
-      confidence: Math.min(1.0, confidence)
-    };
-  }
+  return {
+    bankCode: matchedBank.code,
+    bankName: matchedBank.shortName,
+    amount,
+    type,
+    balance,
+    accountNumber,
+    memo,
+    description: desc,
+    confidence: 0.95,
+    date: new Date().toISOString(),
+    rawSms: raw,
+  };
+}
 
-  return null;
+export const parseVietnameseBankNotification = parseVietnameseBankSms;
+
+function parseNumberString(str: string): number {
+  if (!str) return 0;
+  // Remove +, -, spaces
+  const clean = str.replace(/[+\-\s]/g, '');
+  // If format is 1.000.000 or 1,000,000
+  const normalized = clean.replace(/[,.]/g, '');
+  const n = parseInt(normalized, 10);
+  return isNaN(n) ? 0 : n;
 }
