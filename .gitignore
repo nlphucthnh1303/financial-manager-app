@@ -3,6 +3,8 @@ node_modules/
 dist/
 bin/
 obj/
+back-end/src/FinancialManager.Desktop/wwwroot/
+*.zip
 *.user
 .vs/
 .idea/
